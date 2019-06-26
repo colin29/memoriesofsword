@@ -1,0 +1,53 @@
+## Assets
+
+
+## Java
+*.class
+hs_err_pid*
+*.jar
+
+!libs/**/*.jar
+
+
+## Eclipse
+
+.metadata/
+/core/bin/
+/desktop/bin/
+*.tmp
+*.bak
+*.swp
+*~.nib
+.settings/
+.loadpath
+.externalToolBuilders/
+*.laun
+/**/.classpath
+
+tmp/**
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+
+### Gradle ###
+.gradle
+
+### Build directories ###
+
+/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+
+## Windows
+ 
+# Windows image file caches
+Thumbs.db 
+ 
+# Folder config file
+Desktop.ini

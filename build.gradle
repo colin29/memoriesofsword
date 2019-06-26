@@ -1,0 +1,29 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+
+sourceCompatibility = 1.8
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+
+def gdxVersion =  '1.9.8' //'1.9.9-SNAPSHOT'
+def visuiVersion = '1.4.1'
+
+
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+	compile "com.badlogicgames.gdx:gdx:$gdxVersion"
+	compile "com.badlogicgames.gdx:gdx-backend-lwjgl:$gdxVersion"
+    compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+        
+	// UI
+	compile "com.kotcrab.vis:vis-ui:$visuiVersion"
+	
+	// Logging
+	compile group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
+	compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+}
