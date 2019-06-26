@@ -1,7 +1,6 @@
 package colin29.memoriesofsword.game.match;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +68,9 @@ public class Match {
 
 	private boolean useTestDecks;
 
+	/**
+	 * Instead of needing to provide decks, use the built-in test decks.
+	 */
 	public void useTestDecks() {
 		useTestDecks = true;
 	}
@@ -91,8 +93,8 @@ public class Match {
 
 		// TODO: Actually read from decks to generate players' initial libraries
 
-		player1.drawCardsFromDeck(4);
-		player2.drawCardsFromDeck(5);
+		player1.drawCardsFromDeck(3);
+		player2.drawCardsFromDeck(4);
 
 		turnNumber = 0;
 
@@ -128,27 +130,23 @@ public class Match {
 	}
 
 	public void beginTurn(Player player) {
-		if (player == player1)
+		if (player == player1) {
 			turnNumber += 1;
+		}
+		activePlayer = player;
 
 		logger.debug("Started Turn " + turnNumber + ", player " + getActivePlayerNumber());
-
-		activePlayer = player;
 
 		activePlayer.maxPP += 1;
 		activePlayer.playPoints = activePlayer.maxPP;
 
+		simple.notifyTurnedChanged();
 		simple.notifyPlayPointsModified(player.playerNumber);
-		traceCurrentState();
-	}
 
-	/**
-	 * Should be used for display purposes, not logically.
-	 * 
-	 * @return
-	 */
-	private int getActivePlayerNumber() {
-		return isItPlayersTurn(player1) ? 1 : 2;
+		// Player draws
+
+		activePlayer.drawFromDeck();
+
 	}
 
 	public void nextTurn() {
@@ -157,14 +155,6 @@ public class Match {
 		} else {
 			beginTurn(player1);
 		}
-	}
-
-	public List<Card> getPlayer1Hand() {
-		return player1.hand.getCards();
-	}
-
-	public List<Card> getPlayer2Hand() {
-		return player2.hand.getCards();
 	}
 
 	/**
@@ -211,22 +201,6 @@ public class Match {
 		return player1.name;
 	}
 
-	public int getPlayer1PlayPoints() {
-		return player1.playPoints;
-	}
-
-	public int getPlayer1MaxPlayPoints() {
-		return player1.maxPP;
-	}
-
-	public int getPlayer1HP() {
-		return player1.hp;
-	}
-
-	public int getPlayer1MaxHP() {
-		return player1.maxHp;
-	}
-
 	/**
 	 * Throw exceptions if player number is outside of normal bounds
 	 * 
@@ -244,14 +218,16 @@ public class Match {
 		}
 	}
 
-	/**
-	 * 
-	 * 
-	 * @return
-	 */
-	public Player getPlayer1ReadOnly() {
-		return player1;
-		// TODO: should add a playerinfo type to should change later to only expose read-only information
+	public Player getActivePlayerInfo() {
+		return activePlayer;
+	}
+
+	public int getActivePlayerNumber() {
+		return isItPlayersTurn(player1) ? 1 : 2;
+	}
+
+	public int getTurnNumber() {
+		return turnNumber;
 	}
 
 }

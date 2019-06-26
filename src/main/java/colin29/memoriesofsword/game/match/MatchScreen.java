@@ -12,12 +12,14 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Container;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Value;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 
@@ -66,7 +68,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		multiplexer.addProcessor(stage);
 		multiplexer.addProcessor(this);
 
-		player1 = match.getPlayer1ReadOnly();
+		player1 = match.getPlayerReadOnly(1);
 
 		// Sandbox area
 		match.nextTurn();
@@ -98,6 +100,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		createPlayerPartition(2);
 		createPlayerPartition(1); // Player 1's area should be on the bottom
+		turnChanged();
 
 		root.pack();
 	}
@@ -118,6 +121,16 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		playerPartition.add(mainArea).expand().fill();
 
 		TextButton endTurnButton = new TextButton("End Turn", skin);
+		endTurnButton.addListener(new ChangeListener() {
+			@Override
+			public void changed(ChangeEvent event, Actor actor) {
+				if (playerNumber == match.getActivePlayerNumber()) {
+					match.nextTurn();
+				}
+
+			}
+		});
+		elements.endTurnButton = endTurnButton;
 
 		Table fieldPanel = new Table();
 		fieldPanel.defaults().space(20);
@@ -146,22 +159,98 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		sidePanel.defaults().expandX().left();
 
 		Color DARK_GRAY = RenderUtil.rgb(40, 40, 40);
+		Color DARK_RED = RenderUtil.rgb(128, 0, 0);
 
 		Label nameText = new Label(match.getPlayer1Name(), skin);
 		RenderUtil.setLabelBackgroundColor(nameText, DARK_GRAY);
 
+		Label hpText = new Label("initial hp text", skin);
+		RenderUtil.setLabelBackgroundColor(hpText, DARK_RED);
+
+		Label aTwoDigitLabel = new Label("00", skin); // example label for sizing purposes
+		int hpTextPadding = 8;
+		Container<Label> hpTextWrapper = new Container<Label>(hpText);
+		hpTextWrapper.size(aTwoDigitLabel.getWidth() + hpTextPadding,
+				hpText.getHeight() + hpTextPadding);
+		hpText.setAlignment(Align.center);
+
 		Label playPointsText = new Label("intial pp text", skin);
-		refreshPlayPointsText();
-		RenderUtil.setLabelBackgroundColor(nameText, DARK_GRAY);
+		RenderUtil.setLabelBackgroundColor(playPointsText, DARK_GRAY);
+
+		Table zoneCountPanel = new Table(); // contains counts for current graveyard, deck, and hand size
+		zoneCountPanel.defaults().left().padLeft(5).padRight(5).spaceLeft(10);
+		zoneCountPanel.pad(5);
+		zoneCountPanel.setBackground(RenderUtil.getSolidBG(DARK_GRAY));
+
+		Label graveyardCountText = new Label("", skin);
+		Label deckCountText = new Label("", skin);
+		Label handCountText = new Label("", skin);
+
+		zoneCountPanel.add(new Label("Graveyard:", skin));
+		zoneCountPanel.add(graveyardCountText).row();
+		zoneCountPanel.add(new Label("Deck:", skin));
+		zoneCountPanel.add(deckCountText).row();
+		zoneCountPanel.add(new Label("Hand:", skin));
+		zoneCountPanel.add(handCountText);
+
+		// add ui elements to panel
+
+		sidePanel.defaults().padLeft(5).padRight(5).spaceTop(5);
 
 		sidePanel.add(nameText);
 		sidePanel.row();
+		sidePanel.add(hpTextWrapper).center();
+		sidePanel.row();
 		sidePanel.add(playPointsText).center();
+		sidePanel.row();
+		sidePanel.add(zoneCountPanel).expandX();
 
 		PlayerPartitionUIElements elements = getUIElements(playerNumber);
+
+		// store reference to elements that need to be updated
+
+		elements.hpText = hpText;
 		elements.playPointsText = playPointsText;
 
+		elements.graveyardCountText = graveyardCountText;
+		elements.deckCountText = deckCountText;
+		elements.handCountText = handCountText;
+
+		refreshHpText(playerNumber);
+		refreshPlayPointsText(playerNumber);
+		refreshZoneCountTexts(playerNumber);
+
 		return sidePanel;
+	}
+
+	private final Color hpTextWoundedColor = RenderUtil.rgb(255, 128, 128); // pale red
+
+	private void refreshHpText(int playerNumber) {
+		Label hpText = getUIElements(playerNumber).hpText;
+		Player player = match.getPlayerReadOnly(playerNumber);
+		hpText.setText("" + player.getHp());
+		if (player.getHp() != player.getMaxHp()) {
+			hpText.setColor(hpTextWoundedColor);
+		} else {
+			hpText.setColor(Color.WHITE);
+		}
+	}
+
+	private void refreshPlayPointsText(int playerNumber) {
+		Label playPointsText = getUIElements(playerNumber).playPointsText;
+		Player player = match.getPlayerReadOnly(playerNumber);
+		playPointsText.setText("PP: " + player.getPlayPoints() + " / " + player.getMaxPlayPoints());
+	}
+
+	private void refreshZoneCountTexts(int playerNumber) {
+
+		PlayerPartitionUIElements elements = getUIElements(playerNumber);
+		Player player = match.getPlayerReadOnly(playerNumber);
+
+		elements.graveyardCountText.setText("" + player.getGraveyard().size());
+		elements.deckCountText.setText("" + player.getDeck().size());
+		elements.handCountText.setText("" + player.getHand().size());
+
 	}
 
 	private PlayerPartitionUIElements getUIElements(int playerNumber) {
@@ -217,20 +306,23 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		return permGraphic;
 	}
 
-	private void refreshPlayPointsText() {
-
-	}
-
 	private void regenerateHandDisplay(int playerNumber) {
 		Table handPanel = getUIElements(playerNumber).handPanel;
 		handPanel.clear();
-		List<Card> p1CardsInHand = match.getPlayer1Hand();
-		for (Card card : p1CardsInHand) {
+		List<CardInfo> p1CardsInHand = match.getPlayerReadOnly(playerNumber).getHand();
+		for (CardInfo card : p1CardsInHand) {
 			handPanel.add(constructHandCardGraphic(card)).size(cardGraphicWidth, cardGraphicHeight);
 		}
 	}
 
-	private Table constructHandCardGraphic(Card card) {
+	private void updateEndTurnButtonDisabledStatus() {
+		for (int playerNumber = 1; playerNumber <= 2; playerNumber++) {
+			PlayerPartitionUIElements elements = getUIElements(playerNumber);
+			elements.endTurnButton.setDisabled(playerNumber != match.getActivePlayerNumber());
+		}
+	}
+
+	private Table constructHandCardGraphic(CardInfo card) {
 
 		// Should have a label that shows the card name
 
@@ -297,8 +389,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	public boolean keyDown(int keycode) {
 
 		if (keycode == Keys.D) {
-			Player p1 = match.getPlayer1Sandboxing();
-			p1.drawFromDeck();
+			Player player = match.getActivePlayerInfo();
+			player.drawFromDeck();
 		}
 
 		return false;
@@ -360,37 +452,34 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	@Override
 	public void handModified(int playerNumber) {
 		regenerateHandDisplay(playerNumber);
+		refreshZoneCountTexts(playerNumber);
 	}
 
 	@Override
 	public void deckModified(int playerNumber) {
-		// TODO Auto-generated method stub
+		refreshZoneCountTexts(playerNumber);
 	}
 
 	@Override
 	public void graveyardModified(int playerNumber) {
-		// TODO Auto-generated method stub
+		refreshZoneCountTexts(playerNumber);
 
 	}
 
 	@Override
 	public void playerHPModified(int playerNumber) {
-		// TODO Auto-generated method stub
+		refreshHpText(playerNumber);
 
 	}
 
 	@Override
 	public void playPointsModified(int playerNumber) {
-		logger.debug("Recieved pp modified callback");
-		Label playPointsText = getUIElements(playerNumber).playPointsText;
-		Player player = match.getPlayerReadOnly(playerNumber);
-		playPointsText.setText("PP: " + player.getPlayPoints() + " / " + player.getMaxPlayPoints());
+		refreshPlayPointsText(playerNumber);
 	}
 
 	@Override
 	public void turnChanged() {
-		// TODO Auto-generated method stub
-
+		updateEndTurnButtonDisabledStatus();
 	}
 
 	/**
@@ -404,9 +493,11 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		public Label playPointsText;
 		public Label hpText;
 
-		public Label graveyardSizeText;
-		public Label deckSizeText;
-		public Label handSizeText;
+		public Label graveyardCountText;
+		public Label deckCountText;
+		public Label handCountText;
+
+		public TextButton endTurnButton;
 	}
 
 }
