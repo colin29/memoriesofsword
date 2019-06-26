@@ -100,7 +100,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		createPlayerPartition(2);
 		createPlayerPartition(1); // Player 1's area should be on the bottom
-		turnChanged();
 
 		root.pack();
 	}
@@ -131,6 +130,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			}
 		});
 		elements.endTurnButton = endTurnButton;
+		updateEndTurnButtonDisabledStatus(playerNumber);
 
 		Table fieldPanel = new Table();
 		fieldPanel.defaults().space(20);
@@ -315,11 +315,15 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		}
 	}
 
-	private void updateEndTurnButtonDisabledStatus() {
+	private void updateAllEndTurnButtonDisabledStatus() {
 		for (int playerNumber = 1; playerNumber <= 2; playerNumber++) {
-			PlayerPartitionUIElements elements = getUIElements(playerNumber);
-			elements.endTurnButton.setDisabled(playerNumber != match.getActivePlayerNumber());
+			updateEndTurnButtonDisabledStatus(playerNumber);
 		}
+	}
+
+	private void updateEndTurnButtonDisabledStatus(int playerNumber) {
+		PlayerPartitionUIElements elements = getUIElements(playerNumber);
+		elements.endTurnButton.setDisabled(playerNumber != match.getActivePlayerNumber());
 	}
 
 	private Table constructHandCardGraphic(CardInfo card) {
@@ -336,11 +340,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		// make the cost symbol, etc.
 
 		Label costText = new Label(String.valueOf(card.getCost()), skin);
-		Label atkText = new Label(String.valueOf(card.getAtk()), skin);
-		Label defText = new Label(String.valueOf(card.getDef()), skin);
-
 		costText.setAlignment(Align.center);
-
 		Label aOneDigitLabel = new Label("0", skin); // example label for sizing purposes
 
 		Container<Label> costPanel = new Container<Label>(costText);
@@ -348,15 +348,15 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		int costPanelPadding = 4; // make the cost icon slightly bigger, but it might have to expand anyways if it's a two digit cost
 		costPanel.size(Math.max(aOneDigitLabel.getWidth() + costPanelPadding, costPanel.getActor().getWidth()),
 				aOneDigitLabel.getHeight() + costPanelPadding);
+		costPanel.setBackground(RenderUtil.getSolidBG(Color.FOREST));
 
 		Color DARK_BLUE = RenderUtil.rgb(51, 51, 204);
 		Color DARK_RED = RenderUtil.rgb(128, 0, 0);
 
-		// RenderUtil.setLabelBackgroundColor(costPanel.getActor(), Color.FOREST);
+		Label atkText = new Label(String.valueOf(card.getAtk()), skin);
 		RenderUtil.setLabelBackgroundColor(atkText, DARK_BLUE);
+		Label defText = new Label(String.valueOf(card.getDef()), skin);
 		RenderUtil.setLabelBackgroundColor(defText, DARK_RED);
-
-		costPanel.setBackground(RenderUtil.getSolidBG(Color.FOREST));
 
 		cardGraphic.top().left();
 
@@ -390,7 +390,11 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		if (keycode == Keys.D) {
 			Player player = match.getActivePlayerInfo();
-			player.drawFromDeck();
+			try {
+				player.drawFromDeck();
+			} catch (ListOfCardsEmptyException e) {
+				logger.info("Can't draw, deck is empty");
+			}
 		}
 
 		return false;
@@ -479,7 +483,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	@Override
 	public void turnChanged() {
-		updateEndTurnButtonDisabledStatus();
+		updateAllEndTurnButtonDisabledStatus();
 	}
 
 	/**

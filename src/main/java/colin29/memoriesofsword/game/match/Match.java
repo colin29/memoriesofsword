@@ -145,7 +145,12 @@ public class Match {
 
 		// Player draws
 
-		activePlayer.drawFromDeck();
+		// lets disable deck out problems from new turn draw for now.
+		try {
+			activePlayer.drawFromDeck();
+		} catch (ListOfCardsEmptyException e) {
+			// do nothing
+		}
 
 	}
 
