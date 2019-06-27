@@ -1,5 +1,8 @@
 package colin29.memoriesofsword.game.match;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * An follower instance that exists on the battlefield
  * 
@@ -8,10 +11,10 @@ package colin29.memoriesofsword.game.match;
  */
 public class Follower extends Permanent implements FollowerInfo {
 
+	Logger logger = LoggerFactory.getLogger(this.getClass());
+
 	// Later on in development, all buffs will be treated as enchantments that stay attached to the follower. Instead of being modified discreetly,
 	// atk will be calculated when requested
-
-	Match match;
 
 	private int atk;
 	private int def;
@@ -43,6 +46,66 @@ public class Follower extends Permanent implements FollowerInfo {
 
 	public int getMaxDef() {
 		return maxDef;
+	}
+
+	/**
+	 * Deals damage to the follower, applying any modification effects on the follower.
+	 * 
+	 * @return The actual amount of damage dealt (can be overkill).
+	 */
+	public int dealDamage(int damage) {
+
+		if (!isOnOwnersBattlefield()) {
+			logger.warn("Tried to heal, permanent not on owner's battlefield.");
+			return 0;
+		}
+
+		if (damage < 0) {
+			logger.warn("Tried to damage for a negative amount {}. Ignoring.", damage);
+			return 0;
+		}
+
+		def -= damage;
+
+		logger.debug("Dealt {} damage to {}", damage, this.getName());
+		match.simple.notifyCardStatsModified();
+		if (def <= 0) {
+			match.handleDeath(this);
+		}
+		return damage;
+	}
+
+	/**
+	 * 
+	 * @param healAmount
+	 * @return The amount actually healed (doesn't count overheal)
+	 */
+	public int heal(int healAmount) {
+
+		if (!isOnOwnersBattlefield()) {
+			logger.warn("Tried to heal, permanent not on owner's battlefield.");
+			return 0;
+		}
+
+		if (healAmount < 0) {
+			logger.warn("Tried to heal for a negative amount {}. Ignoring.", healAmount);
+			return 0;
+		}
+
+		int oldDef = def;
+		def = Math.max(def + healAmount, maxDef);
+
+		int amountHealed = def - oldDef;
+		logger.debug("Healed {} damage on {}", amountHealed, this.getName());
+
+		if (amountHealed != 0) {
+			match.simple.notifyCardStatsModified();
+		}
+		return amountHealed;
+	}
+
+	public boolean isMaxDef() {
+		return def == maxDef;
 	}
 
 }

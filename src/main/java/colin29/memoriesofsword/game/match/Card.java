@@ -20,6 +20,8 @@ public class Card implements CardInfo {
 	private int atk;
 	private int def;
 
+	private final Match match;
+
 	private Player owner;
 
 	public enum Type { // Card includes all the fields. Unused fields for a type (such as 'atk' for a spell) will simply be left default.
@@ -28,15 +30,16 @@ public class Card implements CardInfo {
 
 	public final Type type;
 
-	public Card(String name, int cost, int atk, int def, Player owner) {
+	public Card(String name, Card.Type type, int cost, int atk, int def, Player owner, Match match) {
 		this.name = name;
 		this.cost = cost;
 		this.atk = atk;
 		this.def = def;
 
 		this.owner = owner;
+		this.match = match;
 
-		type = Type.FOLLOWER;
+		this.type = type;
 	}
 
 	/**
@@ -63,8 +66,17 @@ public class Card implements CardInfo {
 		return def;
 	}
 
+	@Override
 	public Player getOwner() {
 		return owner;
+	}
+
+	public Match getMatch() {
+		return this.match;
+	}
+
+	public Type getType() {
+		return type;
 	}
 
 }

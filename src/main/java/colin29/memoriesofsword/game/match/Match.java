@@ -10,6 +10,7 @@ import colin29.memoriesofsword.game.CardListing;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.Deck;
 import colin29.memoriesofsword.game.User;
+import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 /**
  * Contains all the state for a match <br>
@@ -115,18 +116,19 @@ public class Match {
 		testListings.add(cardRepo.getCardById(9000));
 		testListings.add(cardRepo.getCardById(9001));
 		testListings.add(cardRepo.getCardById(9002));
+		testListings.add(cardRepo.getCardById(9003));
 
 		// Let's make a deck of 10 cards, alternating between these
 
 		for (int n = 0; n < 10; n++) {
-			int index = n % 3;
+			int index = n % 4;
 			CardListing listing = testListings.get(index);
-			player.deck.addCardToBottom((createCardFromCardListing(listing, player)));
+			player.deck.addCardToBottom((createCard(listing, player)));
 		}
 	}
 
-	private Card createCardFromCardListing(CardListing listing, Player owner) {
-		return new Card(listing.getName(), listing.getCost(), listing.getAtk(), listing.getDef(), owner);
+	private Card createCard(CardListing listing, Player owner) {
+		return new Card(listing.getName(), listing.getType(), listing.getCost(), listing.getAtk(), listing.getDef(), owner, this);
 	}
 
 	public void beginTurn(Player player) {
@@ -137,7 +139,8 @@ public class Match {
 
 		logger.debug("Started Turn " + turnNumber + ", player " + getActivePlayerNumber());
 
-		activePlayer.maxPP += 1;
+		if (activePlayer.maxPP < 10)
+			activePlayer.maxPP += 1;
 		activePlayer.playPoints = activePlayer.maxPP;
 
 		simple.notifyTurnedChanged();
@@ -152,6 +155,42 @@ public class Match {
 			// do nothing
 		}
 
+	}
+
+	/**
+	 * Handles the removal of a follower and moving the parent card to the graveyard
+	 * 
+	 * @param follower
+	 */
+	void handleDeath(Follower follower) {
+		executeLastWordEffects(follower);
+
+		Card card = follower.getParentCard();
+		Player owner = card.getOwner();
+		removeFromField(follower);
+		owner.graveyard.addCardToTop(card);
+
+		logger.debug("Follower '{}' died and was removed from the battlefield.", follower.getName());
+
+		simple.notifyFieldModified(owner.playerNumber);
+		simple.notifyGraveyardModified(owner.playerNumber);
+	}
+
+	private void executeLastWordEffects(Follower follower) {
+		// TODO: stub
+	}
+
+	/**
+	 * Removes a permanent from field, effectively discarding it for good
+	 * 
+	 * @param permanent
+	 */
+	private void removeFromField(Permanent permanent) {
+		Player owner = permanent.getParentCard().getOwner();
+		if (!owner.field.contains(permanent)) {
+			logger.warn("Tried removing a permanent from a player's field, permanent was not found. Ignoring.");
+		}
+		owner.field.remove(permanent);
 	}
 
 	public void nextTurn() {
@@ -169,12 +208,6 @@ public class Match {
 	 */
 	public Player getPlayer1Sandboxing() {
 		return player1;
-	}
-
-	void sendCardOnFieldToGraveyard(Card card) {
-		// TODO: if it doesn't exist, throw SpecifiedCardNotFoundInZoneException
-		// TODO: remove this card from the battlefield
-		// TODO: add this card to the graveyard
 	}
 
 	private boolean isItPlayersTurn(Player player) {

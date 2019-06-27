@@ -1,4 +1,4 @@
-package colin29.memoriesofsword.game.match;
+package colin29.memoriesofsword.util.exceptions;
 
 import colin29.memoriesofsword.GameException;
 
@@ -9,11 +9,11 @@ public class InvalidArgumentException extends GameException {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	InvalidArgumentException() {
+	public InvalidArgumentException() {
 		super();
 	}
 
-	InvalidArgumentException(String msg) {
+	public InvalidArgumentException(String msg) {
 		super(msg);
 	}
 

@@ -1,4 +1,4 @@
-package colin29.memoriesofsword.game.match;
+package colin29.memoriesofsword.game.matchscreen;
 
 import java.util.List;
 
@@ -35,7 +35,22 @@ import com.badlogic.gdx.utils.Align;
 import colin29.memoriesofsword.App;
 import colin29.memoriesofsword.MyFonts;
 import colin29.memoriesofsword.game.CardRepository;
+import colin29.memoriesofsword.game.match.Amulet;
+import colin29.memoriesofsword.game.match.Card;
+import colin29.memoriesofsword.game.match.Card.Type;
+import colin29.memoriesofsword.game.match.CardInfo;
+import colin29.memoriesofsword.game.match.Follower;
+import colin29.memoriesofsword.game.match.ListOfCardsEmptyException;
+import colin29.memoriesofsword.game.match.Match;
+import colin29.memoriesofsword.game.match.Permanent;
+import colin29.memoriesofsword.game.match.Player;
+import colin29.memoriesofsword.game.match.SimpleMatchStateListener;
+import colin29.memoriesofsword.game.matchscreen.graphics.AmuletGraphic;
+import colin29.memoriesofsword.game.matchscreen.graphics.FollowerGraphic;
+import colin29.memoriesofsword.game.matchscreen.graphics.HandCardGraphic;
+import colin29.memoriesofsword.game.matchscreen.graphics.PermanentGraphic;
 import colin29.memoriesofsword.util.RenderUtil;
+import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 import colin29.memoriesofsword.util.template.AppWithResources;
 import colin29.memoriesofsword.util.template.BaseScreen;
 
@@ -53,8 +68,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	final MyFonts fonts;
 
 	InputMultiplexer multiplexer = new InputMultiplexer();
-
-	Player player1; // should be changed to playerinfo later, or some thing like that
 
 	private final int NUM_PLAYERS = 2;
 	/**
@@ -75,7 +88,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		outlineRenderer = new OutlineRenderer(app.getShapeRenderer());
 		for (int i = 0; i < NUM_PLAYERS; i++) {
-			playerUIElements[i] = new PlayerPartitionUIElements(outlineRenderer);
+			playerUIElements[i] = new PlayerPartitionUIElements(outlineRenderer, i + 1);
 		}
 
 		/// Set up Match
@@ -89,20 +102,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		multiplexer.addProcessor(stage);
 		multiplexer.addProcessor(this);
-
-		player1 = match.getPlayer(1);
-
-		// Sandbox area
-		match.nextTurn();
-		match.nextTurn();
-		match.nextTurn();
-		match.nextTurn();
-		match.nextTurn();
-		match.nextTurn();
-		Player player1 = match.getPlayer1Sandboxing();
-		player1.playCardWithoutPayingCost((Card) player1.getHand().get(0));
-		player1.playCardWithoutPayingCost((Card) player1.getHand().get(0));
-		// player1.playCardWithoutPayingCost((Card) player1.getHand().get(0));
 	}
 
 	private int sidePanelWidth = 150;
@@ -305,43 +304,61 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		Table fieldPanel = getUIElements(playerNumber).fieldPanel;
 		fieldPanel.clear();
 		for (Permanent entity : entitiesOnField) {
-			fieldPanel.add(createPermanentCardGraphic(entity)).size(permanentGraphicWidth, permanentGraphicHeight);
+			fieldPanel.add(createPermanentGraphic(entity)).size(permanentGraphicWidth, permanentGraphicHeight);
 		}
 	}
 
-	private Table createPermanentCardGraphic(Permanent entity) {
+	private Table createPermanentGraphic(final Permanent permanent) {
 
 		// Should have a label that shows the card name
 
-		Table permGraphic = new Table();
+		PermanentGraphic permanentGraphic;
+
+		if (permanent instanceof Follower) {
+			permanentGraphic = new FollowerGraphic((Follower) permanent);
+		} else if (permanent instanceof Amulet) {
+			permanentGraphic = new AmuletGraphic((Amulet) permanent);
+		} else {
+			permanentGraphic = new PermanentGraphic(permanent);
+		}
 
 		// Set the background card art
-		Texture img = assets.get("img/image01.jpg", Texture.class);
-		TextureRegionDrawable imgDrawable = new TextureRegionDrawable(new TextureRegion(img));
-		permGraphic.setBackground(imgDrawable);
 
-		// make the cost symbol, etc.
+		setPermanentGraphicBackGround(permanentGraphic);
+		permanentGraphic.bottom().defaults().space(10);
 
-		permGraphic.bottom().defaults().space(10);
+		if (permanent instanceof Follower) {
+			final Follower follower = (Follower) permanent;
 
-		if (entity instanceof Follower) {
+			LabelStyle style = new LabelStyle(fonts.permanentStatsBorderedText(), Color.WHITE);
+			LabelStyle woundedTextStyle = new LabelStyle(fonts.damagedFollowerDefText(), Color.WHITE);
 
-			Follower follower = (Follower) entity;
-
-			Label atkText = new Label(String.valueOf(follower.getAtk()), skin);
-			Label defText = new Label(String.valueOf(follower.getDef()), skin);
+			Label atkText = new Label(String.valueOf(follower.getAtk()), style);
+			Label defText = new Label(String.valueOf(follower.getDef()), style);
 
 			Color DARK_BLUE = RenderUtil.rgb(51, 51, 204);
 			Color DARK_RED = RenderUtil.rgb(128, 0, 0);
 
+			if (!follower.isMaxDef()) {
+				defText.setStyle(woundedTextStyle);
+			}
+
 			RenderUtil.setLabelBackgroundColor(atkText, DARK_BLUE);
 			RenderUtil.setLabelBackgroundColor(defText, DARK_RED);
 
-			permGraphic.add(atkText);
-			permGraphic.add(defText);
+			atkText.setAlignment(Align.center);
+			defText.setAlignment(Align.center);
+			permanentGraphic.add(atkText).size(atkText.getWidth() + 7, atkText.getHeight() + 1);
+			permanentGraphic.add(defText).size(defText.getWidth() + 7, defText.getHeight() + 1);
 		}
 
-		return permGraphic;
+		return permanentGraphic;
+	}
+
+	private void setPermanentGraphicBackGround(PermanentGraphic permanentGraphic) {
+		Texture img = assets.get("img/image01.jpg", Texture.class);
+		TextureRegionDrawable imgDrawable = new TextureRegionDrawable(new TextureRegion(img));
+		permanentGraphic.setBackground(imgDrawable);
 	}
 
 	private void regenerateHandDisplay(int playerNumber) {
@@ -387,19 +404,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		Table costPanel = new Table();
 		costPanel.add(costText);
-		// int costPanelHorizontalPadding = 0; // make the cost icon slightly bigger, but it might have to expand anyways if it's a two digit cost
-		// costPanel.add(costText).size(Math.max(aOneDigitLabel.getWidth() + costPanelHorizontalPadding, costText.getWidth()),
-		// aOneDigitLabel.getHeight());
-		// // costPanel.add(costText).height(Math.max(aOneDigitLabel.getWidth() + costPanelPadding, costText.getWidth()));
 		costPanel.setBackground(RenderUtil.getSolidBG(Color.FOREST));
-
-		Color DARK_BLUE = RenderUtil.rgb(51, 51, 204);
-		Color DARK_RED = RenderUtil.rgb(128, 0, 0);
-
-		Label atkText = new Label(String.valueOf(card.getAtk()), mediumStyle);
-		RenderUtil.setLabelBackgroundColor(atkText, DARK_BLUE);
-		Label defText = new Label(String.valueOf(card.getDef()), mediumStyle);
-		RenderUtil.setLabelBackgroundColor(defText, DARK_RED);
 
 		Label nameText = new Label(card.getName(), smallStyle);
 		nameText.setEllipsis(true);
@@ -409,13 +414,25 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		cardBody.top().left();
 
-		Table cardStatsColumn = new Table();
-		cardStatsColumn.defaults().left();
-		cardStatsColumn.add(atkText).row();
-		cardStatsColumn.add(defText).row();
-
 		cardBody.add(cardHeader).expandX().fillX().row();
-		cardBody.add(cardStatsColumn).left();
+
+		if (card.getType() == Type.FOLLOWER) {
+
+			Color DARK_BLUE = RenderUtil.rgb(51, 51, 204);
+			Color DARK_RED = RenderUtil.rgb(128, 0, 0);
+
+			Label atkText = new Label(String.valueOf(card.getAtk()), mediumStyle);
+			RenderUtil.setLabelBackgroundColor(atkText, DARK_BLUE);
+			Label defText = new Label(String.valueOf(card.getDef()), mediumStyle);
+			RenderUtil.setLabelBackgroundColor(defText, DARK_RED);
+
+			Table cardAtkDefColumn = new Table();
+			cardAtkDefColumn.defaults().left();
+			cardAtkDefColumn.add(atkText).row();
+			cardAtkDefColumn.add(defText).row();
+
+			cardBody.add(cardAtkDefColumn).left();
+		}
 
 		cardHeader.defaults().top();
 
@@ -592,6 +609,14 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	@Override
 	public void cardOrPermanentStatsModified() {
+
+		// need to update values in hand and field
+
+		for (PlayerPartitionUIElements elements : playerUIElements) {
+			regenerateHandDisplay(elements.playerNumber);
+			regenerateFieldDisplay(elements.playerNumber);
+		}
+
 		makeValidHandCardsDraggable();
 	}
 
@@ -636,16 +661,21 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		makeValidHandCardsDraggable();
 	}
 
+	public Match getMatch() {
+		return match;
+	}
+
 	/**
 	 * Is not the Partition itself, but the UI elements we need a reference to.
 	 * 
 	 */
 	private static class PlayerPartitionUIElements {
 
-		private OutlineRenderer outlineRenderer;
-
 		public Table handPanel;
 		List<HandCardGraphic> listOfHandGraphics;
+
+		List<PermanentGraphic> listOfFieldGraphics;
+
 		public Table fieldPanel;
 
 		public Label playPointsText;
@@ -657,10 +687,13 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		public TextButton endTurnButton;
 
-		public PlayerPartitionUIElements(OutlineRenderer outlineRenderer) {
-			this.outlineRenderer = outlineRenderer;
+		public final int playerNumber;
+
+		public PlayerPartitionUIElements(OutlineRenderer outlineRenderer, int playerNumber) {
 			listOfHandGraphics = new OutlineSmartArrayList<HandCardGraphic>(outlineRenderer);
+			this.playerNumber = playerNumber;
 		}
+
 	}
 
 }

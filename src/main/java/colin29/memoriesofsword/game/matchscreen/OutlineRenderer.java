@@ -1,4 +1,4 @@
-package colin29.memoriesofsword.game.match;
+package colin29.memoriesofsword.game.matchscreen;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

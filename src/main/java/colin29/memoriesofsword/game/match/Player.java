@@ -63,9 +63,7 @@ public class Player {
 	}
 
 	private boolean playCard(Card card, boolean ignoreCost) {
-		logger.debug("Player " + playerNumber + " tries to play a card");
-
-		// TODO: check that the card is actually in the players hand
+		logger.debug("Player " + playerNumber + " tries to play card '{}'", card.getName());
 
 		if (!hand.contains(card)) {
 			throw new CardNotFoundInHandException();
@@ -92,7 +90,7 @@ public class Player {
 			field.add(follower);
 			notifyForPlayToFieldAction();
 
-			logger.debug("Card was played " + (ignoreCost ? "(ignoring cost)" : ""));
+			logger.debug("Card '{}' was played " + (ignoreCost ? "(ignoring cost)" : ""), card.getName());
 
 			return true;
 		} else {
@@ -121,6 +119,10 @@ public class Player {
 	private void notifyForPlayToFieldAction() {
 		simple.notifyHandModified(playerNumber);
 		simple.notifyFieldModified(playerNumber);
+	}
+
+	public boolean isOnMyField(Permanent permanent) {
+		return field.contains(permanent);
 	}
 
 	public String getName() {

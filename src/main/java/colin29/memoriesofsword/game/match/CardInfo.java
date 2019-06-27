@@ -12,4 +12,6 @@ public interface CardInfo {
 
 	Player getOwner();
 
+	Card.Type getType();
+
 }

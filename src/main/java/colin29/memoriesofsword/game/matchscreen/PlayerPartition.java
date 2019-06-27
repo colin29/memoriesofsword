@@ -1,4 +1,6 @@
-package colin29.memoriesofsword.game.match;
+package colin29.memoriesofsword.game.matchscreen;
+
+import colin29.memoriesofsword.game.match.Player;
 
 /*
  * A UI element that holds half of the match screen -- everything for one player

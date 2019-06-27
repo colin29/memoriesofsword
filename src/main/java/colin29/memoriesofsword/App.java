@@ -18,7 +18,7 @@ import com.kotcrab.vis.ui.VisUI;
 
 import colin29.memoriesofsword.game.CardListing;
 import colin29.memoriesofsword.game.CardRepository;
-import colin29.memoriesofsword.game.match.MatchScreen;
+import colin29.memoriesofsword.game.SandBoxMatchDriver;
 import colin29.memoriesofsword.util.PrefixingAssetManager;
 import colin29.memoriesofsword.util.template.AppWithResources;
 
@@ -58,7 +58,8 @@ public class App extends Game implements AppWithResources {
 
 		populateCardRepositoryWithTestCards();
 
-		this.setScreen(new MatchScreen(this, cardRepo));
+		SandBoxMatchDriver sandboxDriver = new SandBoxMatchDriver(this, cardRepo);
+		// this.setScreen(new MatchScreen(this, cardRepo));
 	}
 
 	private void loadImages() {
@@ -82,11 +83,13 @@ public class App extends Game implements AppWithResources {
 
 	private void populateCardRepositoryWithTestCards() {
 
-		CardListing c1 = CardListing.makeTempCardListing("Healing Angel", 3, 2, 3);
-		CardListing c2 = CardListing.makeTempCardListing("Shield Dude", 4, 1, 7);
-		CardListing c3 = CardListing.makeTempCardListing("Goblin", 1, 1, 2);
+		CardListing c1 = CardListing.makeTempFollowerCardListing("Healing Angel", 3, 2, 3);
+		CardListing c2 = CardListing.makeTempFollowerCardListing("Shield Dude", 4, 1, 7);
+		CardListing c3 = CardListing.makeTempFollowerCardListing("Goblin", 1, 1, 2);
 
-		cardRepo.addCard(c1, c2, c3);
+		CardListing c4 = CardListing.makeTempAmuletCardListing("Horn of Unica", 3);
+
+		cardRepo.addCard(c1, c2, c3, c4);
 	}
 
 	@Override
@@ -104,6 +107,7 @@ public class App extends Game implements AppWithResources {
 		return assets;
 	}
 
+	@Override
 	public MyFonts getFonts() {
 		return fonts;
 	}

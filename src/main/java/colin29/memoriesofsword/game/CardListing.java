@@ -1,5 +1,8 @@
 package colin29.memoriesofsword.game;
 
+import colin29.memoriesofsword.game.match.Card;
+import colin29.memoriesofsword.game.match.Card.Type;
+
 /**
  * A Card outside the context of a match. Unlike a cards within a match, a card listing is generally not modified.
  * 
@@ -14,6 +17,8 @@ public class CardListing {
 	private int atk;
 	private int def;
 
+	final private Card.Type type;
+
 	/**
 	 * Card listings may be stored on disk, however, their ids should always remain unique.
 	 */
@@ -21,16 +26,22 @@ public class CardListing {
 
 	private String name;
 
-	CardListing(String name, int cost, int atk, int def, int id) {
+	CardListing(String name, int cost, int atk, int def, int id, Card.Type type) {
 		this.name = name;
 		this.cost = cost;
 		this.atk = atk;
 		this.def = def;
 		this.id = id;
+
+		this.type = type;
 	}
 
-	public static CardListing makeTempCardListing(String name, int cost, int atk, int def) {
-		return new CardListing(name, cost, atk, def, generateNextTempId());
+	public static CardListing makeTempFollowerCardListing(String name, int cost, int atk, int def) {
+		return new CardListing(name, cost, atk, def, generateNextTempId(), Type.FOLLOWER);
+	}
+
+	public static CardListing makeTempAmuletCardListing(String name, int cost) {
+		return new CardListing(name, cost, 0, 0, generateNextTempId(), Type.AMULET);
 	}
 
 	public int getAtk() {
@@ -51,6 +62,10 @@ public class CardListing {
 
 	public int getId() {
 		return id;
+	}
+
+	public Card.Type getType() {
+		return type;
 	}
 
 	private static int curTempId = 9000;
