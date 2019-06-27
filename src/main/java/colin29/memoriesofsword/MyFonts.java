@@ -21,6 +21,8 @@ public class MyFonts {
 	private final String MS_GOTHIC_path = "fonts/MS_Gothic.ttf";
 	private final String OPEN_SANS_path = "fonts/OpenSans.ttf";
 
+	final String ASSETS_PATH = App.ASSETS_PATH;
+
 	BitmapFont largishFont;
 
 	MyFonts() {
@@ -43,7 +45,7 @@ public class MyFonts {
 	BitmapFont generateFontWithBorder(String path, Color color, int size, Color borderColor,
 			float borderWidth) {
 		FreeTypeFontGenerator.setMaxTextureSize(FreeTypeFontGenerator.NO_MAXIMUM);
-		FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal(App.ASSETS_PATH + path));
+		FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal(ASSETS_PATH + path));
 		FreeTypeFontParameter parameter = new FreeTypeFontParameter();
 		parameter.size = size;
 		parameter.borderWidth = borderWidth;

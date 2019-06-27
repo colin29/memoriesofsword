@@ -22,6 +22,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Value;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop;
@@ -138,7 +139,10 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		Table mainArea = new Table();
 		playerPartition.add(mainArea).expand().fill();
 
-		TextButton endTurnButton = new TextButton("End Turn", skin);
+		TextButtonStyle bigTextButtonStyle = skin.get(TextButtonStyle.class);
+		bigTextButtonStyle.font = fonts.largishFont();
+
+		TextButton endTurnButton = new TextButton("End Turn", bigTextButtonStyle);
 		endTurnButton.addListener(new ChangeListener() {
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
@@ -150,6 +154,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		});
 		elements.endTurnButton = endTurnButton;
 		updateEndTurnButtonDisabledStatus(playerNumber);
+		endTurnButton.pad(20, 10, 20, 10);
 
 		Table fieldPanel = new Table();
 		fieldPanel.defaults().space(20);
@@ -538,43 +543,36 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	@Override
 	public boolean keyUp(int keycode) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean keyTyped(char character) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean mouseMoved(int screenX, int screenY) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean scrolled(int amount) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
