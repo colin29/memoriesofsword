@@ -1,6 +1,5 @@
 package colin29.memoriesofsword.game.match;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -62,21 +61,26 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	 * Use the helper {@link #getUIElements(int), getComponentAt} to access
 	 */
 	PlayerPartitionUIElements[] playerUIElements = new PlayerPartitionUIElements[NUM_PLAYERS];
-	{
-		for (int i = 0; i < NUM_PLAYERS; i++) {
-			playerUIElements[i] = new PlayerPartitionUIElements();
-		}
-	}
 
 	AppWithResources app;
 
 	DragAndDrop dragAndDrop = new DragAndDrop();
 
+	OutlineRenderer outlineRenderer;
+
 	public MatchScreen(AppWithResources app, CardRepository cardRepo) {
 		super(app);
-		match = new Match(cardRepo);
 		this.app = app;
 		fonts = app.getFonts();
+
+		outlineRenderer = new OutlineRenderer(app.getShapeRenderer());
+		for (int i = 0; i < NUM_PLAYERS; i++) {
+			playerUIElements[i] = new PlayerPartitionUIElements(outlineRenderer);
+		}
+
+		/// Set up Match
+
+		match = new Match(cardRepo);
 
 		match.useTestDecks();
 		match.beginMatch();
@@ -425,14 +429,23 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	}
 
 	private void makeValidHandCardsDraggable() {
-		// Currently, cards in hand can be dragged on their owner's turn -- that is the only restriction
+		// Currently, cards in hand can be dragged on their owner's turn
+		// and the player has enough pp to play them
 		dragAndDrop.clear();
 
 		for (int playerNumber = 1; playerNumber <= 2; playerNumber++) {
 			List<HandCardGraphic> graphics = getUIElements(playerNumber).listOfHandGraphics;
+
+			Player activePlayer = match.getActivePlayer();
+
 			for (HandCardGraphic graphic : graphics) {
-				if (match.getActivePlayer() == graphic.getParentCard().getOwner()) {
+				CardInfo card = graphic.getParentCard();
+				if (activePlayer == card.getOwner() &&
+						activePlayer.getPlayPoints() >= card.getCost()) {
 					makeDraggable(graphic);
+					outlineRenderer.startDrawingMyOutline(graphic);
+				} else {
+					outlineRenderer.stopDrawingMyOutline(graphic);
 				}
 			}
 		}
@@ -515,6 +528,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	public void render(float delta) {
 		RenderUtil.clearGLScreen(Color.BLACK);
 		stage.draw();
+
+		outlineRenderer.renderOutlines();
 
 		root.setDebug(Gdx.input.isKeyPressed(Keys.SPACE), true);
 
@@ -612,6 +627,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	@Override
 	public void playPointsModified(int playerNumber) {
 		updatePlayPointsText(playerNumber);
+		makeValidHandCardsDraggable();
 	}
 
 	@Override
@@ -625,8 +641,11 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	 * 
 	 */
 	private static class PlayerPartitionUIElements {
+
+		private OutlineRenderer outlineRenderer;
+
 		public Table handPanel;
-		List<HandCardGraphic> listOfHandGraphics = new ArrayList<HandCardGraphic>();
+		List<HandCardGraphic> listOfHandGraphics;
 		public Table fieldPanel;
 
 		public Label playPointsText;
@@ -638,6 +657,10 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		public TextButton endTurnButton;
 
+		public PlayerPartitionUIElements(OutlineRenderer outlineRenderer) {
+			this.outlineRenderer = outlineRenderer;
+			listOfHandGraphics = new OutlineSmartArrayList<HandCardGraphic>(outlineRenderer);
+		}
 	}
 
 }
