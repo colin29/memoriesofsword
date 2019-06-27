@@ -10,4 +10,6 @@ public interface CardInfo {
 
 	int getDef();
 
+	Player getOwner();
+
 }

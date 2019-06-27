@@ -1,5 +1,6 @@
 package colin29.memoriesofsword.game.match;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -26,6 +27,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source;
+import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 
@@ -82,7 +85,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		multiplexer.addProcessor(stage);
 		multiplexer.addProcessor(this);
 
-		player1 = match.getPlayerReadOnly(1);
+		player1 = match.getPlayer(1);
 
 		// Sandbox area
 		match.nextTurn();
@@ -114,6 +117,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		createPlayerPartition(2);
 		createPlayerPartition(1); // Player 1's area should be on the bottom
+
+		makeValidHandCardsDraggable();
 
 		root.pack();
 	}
@@ -166,6 +171,9 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		regenerateHandDisplay(playerNumber);
 		regenerateFieldDisplay(playerNumber);
+
+		fieldPanel.setTouchable(Touchable.enabled);
+
 	}
 
 	private Table createSidePanel(int playerNumber) {
@@ -241,7 +249,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	private void refreshHpText(int playerNumber) {
 		Label hpText = getUIElements(playerNumber).hpText;
-		Player player = match.getPlayerReadOnly(playerNumber);
+		Player player = match.getPlayer(playerNumber);
 		hpText.setText("" + player.getHp());
 		if (player.getHp() != player.getMaxHp()) {
 			hpText.setColor(hpTextWoundedColor);
@@ -252,14 +260,14 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	private void refreshPlayPointsText(int playerNumber) {
 		Label playPointsText = getUIElements(playerNumber).playPointsText;
-		Player player = match.getPlayerReadOnly(playerNumber);
+		Player player = match.getPlayer(playerNumber);
 		playPointsText.setText("PP: " + player.getPlayPoints() + " / " + player.getMaxPlayPoints());
 	}
 
 	private void refreshZoneCountTexts(int playerNumber) {
 
 		PlayerPartitionUIElements elements = getUIElements(playerNumber);
-		Player player = match.getPlayerReadOnly(playerNumber);
+		Player player = match.getPlayer(playerNumber);
 
 		elements.graveyardCountText.setText("" + player.getGraveyard().size());
 		elements.deckCountText.setText("" + player.getDeck().size());
@@ -276,7 +284,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	}
 
 	private void regenerateFieldDisplay(int playerNumber) {
-		List<Permanent> entitiesOnField = match.getPlayerReadOnly(playerNumber).getFieldInfo();
+		List<Permanent> entitiesOnField = match.getPlayer(playerNumber).getFieldInfo();
 
 		Table fieldPanel = getUIElements(playerNumber).fieldPanel;
 		fieldPanel.clear();
@@ -321,36 +329,100 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	}
 
 	private void regenerateHandDisplay(int playerNumber) {
-		Table handPanel = getUIElements(playerNumber).handPanel;
+		PlayerPartitionUIElements elements = getUIElements(playerNumber);
+
+		elements.listOfHandGraphics.clear();
+
+		Table handPanel = elements.handPanel;
 		handPanel.clear();
-		List<CardInfo> p1CardsInHand = match.getPlayerReadOnly(playerNumber).getHand();
+
+		List<CardInfo> p1CardsInHand = match.getPlayer(playerNumber).getHand();
 		for (CardInfo card : p1CardsInHand) {
 			HandCardGraphic cardGraphic = constructHandCardGraphic(card);
-
+			cardGraphic.setTouchable(Touchable.enabled);
 			handPanel.add(cardGraphic).width(cardGraphicWidth);
 
-			cardGraphic.setTouchable(Touchable.enabled);
+			elements.listOfHandGraphics.add(cardGraphic);
+		}
+	}
 
-			dragAndDrop.addSource(new Source(cardGraphic) {
+	private void addFieldsAsDragTargets() {
+		for (int i = 1; i <= 2; i++) {
+			final int playerNumber = i;
+			Table fieldPanel = getUIElements(playerNumber).fieldPanel;
+			dragAndDrop.addTarget(new Target(fieldPanel) {
+
+				Drawable coloredBG = RenderUtil.getSolidBG(Color.DARK_GRAY);
+
+				private boolean isValidTarget(Payload payload) {
+					Card card = (Card) payload.getObject();
+					return match.getPlayer(playerNumber) == card.getOwner(); // can only drop cards onto their owner's field
+				}
 
 				@Override
-				public Payload dragStart(InputEvent event, float x, float y, int pointer) {
-					Payload payload = new Payload();
+				public boolean drag(Source source, Payload payload, float x, float y, int pointer) {
+					if (isValidTarget(payload)) {
 
-					logger.debug("drag started!");
-					payload.setObject("Some payload!");
+						fieldPanel.background(coloredBG);
+						return true;
+					}
 
-					// it's a seperate temporary graphic based on the same card
-					Container<HandCardGraphic> dragGraphic = new Container<HandCardGraphic>(constructHandCardGraphic(card)).width(cardGraphicWidth);
+					return false;
+				}
 
-					payload.setDragActor(dragGraphic);
-					payload.setInvalidDragActor(dragGraphic);
-					payload.setValidDragActor(dragGraphic);
-					return payload;
+				/** Called when the payload is no longer over the target, whether because the touch was moved or a drop occurred. */
+				@Override
+				public void reset(Source source, Payload payload) {
+					fieldPanel.background((Drawable) null);
+				}
+
+				@Override
+				public void drop(Source source, Payload payload, float x, float y, int pointer) {
+					if (isValidTarget(payload)) {
+						Card card = (Card) payload.getObject();
+						card.getOwner().playCard(card);
+					}
+
 				}
 			});
 		}
-		handPanel.pack();
+	}
+
+	private void makeValidHandCardsDraggable() {
+		// Currently, cards in hand can be dragged on their owner's turn -- that is the only restriction
+		dragAndDrop.clear();
+
+		for (int playerNumber = 1; playerNumber <= 2; playerNumber++) {
+			List<HandCardGraphic> graphics = getUIElements(playerNumber).listOfHandGraphics;
+			for (HandCardGraphic graphic : graphics) {
+				if (match.getActivePlayer() == graphic.getParentCard().getOwner()) {
+					makeDraggable(graphic);
+				}
+			}
+		}
+
+		addFieldsAsDragTargets();
+	}
+
+	private void makeDraggable(HandCardGraphic cardGraphic) { // cards are cast by dragging to the field
+		dragAndDrop.addSource(new Source(cardGraphic) {
+
+			@Override
+			public Payload dragStart(InputEvent event, float x, float y, int pointer) {
+				Payload payload = new Payload();
+
+				payload.setObject(cardGraphic.getParentCard());
+
+				// Make a seperate temporary graphic based on the same card
+				Container<HandCardGraphic> dragGraphic = new Container<HandCardGraphic>(constructHandCardGraphic(cardGraphic.getParentCard()))
+						.width(cardGraphicWidth);
+
+				payload.setDragActor(dragGraphic);
+				payload.setInvalidDragActor(dragGraphic);
+				payload.setValidDragActor(dragGraphic);
+				return payload;
+			}
+		});
 	}
 
 	private void updateAllEndTurnButtonDisabledStatus() {
@@ -361,7 +433,12 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	private void updateEndTurnButtonDisabledStatus(int playerNumber) {
 		PlayerPartitionUIElements elements = getUIElements(playerNumber);
-		elements.endTurnButton.setDisabled(playerNumber != match.getActivePlayerNumber());
+		if (playerNumber == match.getActivePlayerNumber()) {
+			elements.endTurnButton.setDisabled(false);
+		} else {
+			elements.endTurnButton.setDisabled(true);
+		}
+
 	}
 
 	private HandCardGraphic constructHandCardGraphic(CardInfo card) {
@@ -448,7 +525,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	public boolean keyDown(int keycode) {
 
 		if (keycode == Keys.D) {
-			Player player = match.getActivePlayerInfo();
+			Player player = match.getActivePlayer();
 			try {
 				player.drawFromDeck();
 			} catch (ListOfCardsEmptyException e) {
@@ -503,8 +580,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	@Override
 	public void cardOrPermanentStatsModified() {
-		// TODO Auto-generated method stub
-
+		makeValidHandCardsDraggable();
 	}
 
 	@Override
@@ -515,6 +591,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	@Override
 	public void handModified(int playerNumber) {
 		regenerateHandDisplay(playerNumber);
+		makeValidHandCardsDraggable();
 		refreshZoneCountTexts(playerNumber);
 	}
 
@@ -543,6 +620,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	@Override
 	public void turnChanged() {
 		updateAllEndTurnButtonDisabledStatus();
+		makeValidHandCardsDraggable();
 	}
 
 	/**
@@ -551,6 +629,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	 */
 	private static class PlayerPartitionUIElements {
 		public Table handPanel;
+		List<HandCardGraphic> listOfHandGraphics = new ArrayList<HandCardGraphic>();
 		public Table fieldPanel;
 
 		public Label playPointsText;
@@ -561,6 +640,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		public Label handCountText;
 
 		public TextButton endTurnButton;
+
 	}
 
 }

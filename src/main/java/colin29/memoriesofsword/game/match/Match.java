@@ -121,12 +121,12 @@ public class Match {
 		for (int n = 0; n < 10; n++) {
 			int index = n % 3;
 			CardListing listing = testListings.get(index);
-			player.deck.addCardToBottom((createCardFromCardListing(listing)));
+			player.deck.addCardToBottom((createCardFromCardListing(listing, player)));
 		}
 	}
 
-	private Card createCardFromCardListing(CardListing listing) {
-		return new Card(listing.getName(), listing.getCost(), listing.getAtk(), listing.getDef());
+	private Card createCardFromCardListing(CardListing listing, Player owner) {
+		return new Card(listing.getName(), listing.getCost(), listing.getAtk(), listing.getDef(), owner);
 	}
 
 	public void beginTurn(Player player) {
@@ -212,7 +212,7 @@ public class Match {
 	 * @param playerNumber
 	 * @return
 	 */
-	public Player getPlayerReadOnly(int playerNumber) {
+	public Player getPlayer(int playerNumber) {
 		switch (playerNumber) {
 		case 1:
 			return player1;
@@ -223,7 +223,7 @@ public class Match {
 		}
 	}
 
-	public Player getActivePlayerInfo() {
+	public Player getActivePlayer() {
 		return activePlayer;
 	}
 

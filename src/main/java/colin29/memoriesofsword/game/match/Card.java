@@ -20,17 +20,21 @@ public class Card implements CardInfo {
 	private int atk;
 	private int def;
 
+	private Player owner;
+
 	public enum Type { // Card includes all the fields. Unused fields for a type (such as 'atk' for a spell) will simply be left default.
 		FOLLOWER, AMULET, SPELL
 	}
 
 	public final Type type;
 
-	public Card(String name, int cost, int atk, int def) {
+	public Card(String name, int cost, int atk, int def, Player owner) {
 		this.name = name;
 		this.cost = cost;
 		this.atk = atk;
 		this.def = def;
+
+		this.owner = owner;
 
 		type = Type.FOLLOWER;
 	}
@@ -57,6 +61,10 @@ public class Card implements CardInfo {
 	@Override
 	public int getDef() {
 		return def;
+	}
+
+	public Player getOwner() {
+		return owner;
 	}
 
 }
