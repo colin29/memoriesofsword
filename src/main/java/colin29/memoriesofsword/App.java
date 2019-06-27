@@ -34,6 +34,7 @@ public class App extends Game implements AppWithResources {
 	private static Skin skin;
 
 	public static final String ASSETS_PATH = "assets/";
+	public final MyFonts fonts = new MyFonts();
 	AssetManager assets;
 
 	public static Skin getSkin() {
@@ -42,6 +43,9 @@ public class App extends Game implements AppWithResources {
 
 	@Override
 	public void create() {
+
+		fonts.init();
+
 		VisUI.load();
 		skin = VisUI.getSkin();
 
@@ -98,6 +102,10 @@ public class App extends Game implements AppWithResources {
 	@Override
 	public AssetManager getAssets() {
 		return assets;
+	}
+
+	public MyFonts getFonts() {
+		return fonts;
 	}
 
 }

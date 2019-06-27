@@ -13,17 +13,24 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Container;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Value;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop;
+import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload;
+import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 
 import colin29.memoriesofsword.App;
+import colin29.memoriesofsword.MyFonts;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.util.RenderUtil;
 import colin29.memoriesofsword.util.template.AppWithResources;
@@ -40,6 +47,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	private Match match;
 
 	final Skin skin = App.getSkin();
+	final MyFonts fonts;
 
 	InputMultiplexer multiplexer = new InputMultiplexer();
 
@@ -56,9 +64,15 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		}
 	}
 
-	public MatchScreen(AppWithResources game, CardRepository cardRepo) {
-		super(game);
+	AppWithResources app;
+
+	DragAndDrop dragAndDrop = new DragAndDrop();
+
+	public MatchScreen(AppWithResources app, CardRepository cardRepo) {
+		super(app);
 		match = new Match(cardRepo);
+		this.app = app;
+		fonts = app.getFonts();
 
 		match.useTestDecks();
 		match.beginMatch();
@@ -311,8 +325,32 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		handPanel.clear();
 		List<CardInfo> p1CardsInHand = match.getPlayerReadOnly(playerNumber).getHand();
 		for (CardInfo card : p1CardsInHand) {
-			handPanel.add(constructHandCardGraphic(card)).size(cardGraphicWidth, cardGraphicHeight);
+			HandCardGraphic cardGraphic = constructHandCardGraphic(card);
+
+			handPanel.add(cardGraphic).width(cardGraphicWidth);
+
+			cardGraphic.setTouchable(Touchable.enabled);
+
+			dragAndDrop.addSource(new Source(cardGraphic) {
+
+				@Override
+				public Payload dragStart(InputEvent event, float x, float y, int pointer) {
+					Payload payload = new Payload();
+
+					logger.debug("drag started!");
+					payload.setObject("Some payload!");
+
+					// it's a seperate temporary graphic based on the same card
+					Container<HandCardGraphic> dragGraphic = new Container<HandCardGraphic>(constructHandCardGraphic(card)).width(cardGraphicWidth);
+
+					payload.setDragActor(dragGraphic);
+					payload.setInvalidDragActor(dragGraphic);
+					payload.setValidDragActor(dragGraphic);
+					return payload;
+				}
+			});
 		}
+		handPanel.pack();
 	}
 
 	private void updateAllEndTurnButtonDisabledStatus() {
@@ -326,47 +364,68 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		elements.endTurnButton.setDisabled(playerNumber != match.getActivePlayerNumber());
 	}
 
-	private Table constructHandCardGraphic(CardInfo card) {
+	private HandCardGraphic constructHandCardGraphic(CardInfo card) {
 
-		// Should have a label that shows the card name
+		HandCardGraphic cardGraphic = new HandCardGraphic(card);
+		Table cardHeader = new Table();
+		Table cardBody = new Table();
 
-		Table cardGraphic = new Table();
+		LabelStyle smallStyle = new LabelStyle(skin.get(LabelStyle.class));
+		smallStyle.font = fonts.smallFont();
+		LabelStyle mediumStyle = new LabelStyle(skin.get(LabelStyle.class));
+		mediumStyle.font = fonts.mediumFont();
+		LabelStyle largishStyle = new LabelStyle(skin.get(LabelStyle.class));
+		largishStyle.font = fonts.largishFont();
 
 		// Set the background card art
 		Texture img = assets.get("img/image01.jpg", Texture.class);
 		TextureRegionDrawable imgDrawable = new TextureRegionDrawable(new TextureRegion(img));
-		cardGraphic.setBackground(imgDrawable);
+		cardBody.setBackground(imgDrawable);
 
 		// make the cost symbol, etc.
 
-		Label costText = new Label(String.valueOf(card.getCost()), skin);
-		costText.setAlignment(Align.center);
-		Label aOneDigitLabel = new Label("0", skin); // example label for sizing purposes
+		Label costText = new Label(String.valueOf(card.getCost()), largishStyle);
+		costText.setAlignment(Align.top);
 
-		Container<Label> costPanel = new Container<Label>(costText);
-
-		int costPanelPadding = 4; // make the cost icon slightly bigger, but it might have to expand anyways if it's a two digit cost
-		costPanel.size(Math.max(aOneDigitLabel.getWidth() + costPanelPadding, costPanel.getActor().getWidth()),
-				aOneDigitLabel.getHeight() + costPanelPadding);
+		Table costPanel = new Table();
+		costPanel.add(costText);
+		// int costPanelHorizontalPadding = 0; // make the cost icon slightly bigger, but it might have to expand anyways if it's a two digit cost
+		// costPanel.add(costText).size(Math.max(aOneDigitLabel.getWidth() + costPanelHorizontalPadding, costText.getWidth()),
+		// aOneDigitLabel.getHeight());
+		// // costPanel.add(costText).height(Math.max(aOneDigitLabel.getWidth() + costPanelPadding, costText.getWidth()));
 		costPanel.setBackground(RenderUtil.getSolidBG(Color.FOREST));
 
 		Color DARK_BLUE = RenderUtil.rgb(51, 51, 204);
 		Color DARK_RED = RenderUtil.rgb(128, 0, 0);
 
-		Label atkText = new Label(String.valueOf(card.getAtk()), skin);
+		Label atkText = new Label(String.valueOf(card.getAtk()), mediumStyle);
 		RenderUtil.setLabelBackgroundColor(atkText, DARK_BLUE);
-		Label defText = new Label(String.valueOf(card.getDef()), skin);
+		Label defText = new Label(String.valueOf(card.getDef()), mediumStyle);
 		RenderUtil.setLabelBackgroundColor(defText, DARK_RED);
 
-		cardGraphic.top().left();
+		Label nameText = new Label(card.getName(), smallStyle);
+		nameText.setEllipsis(true);
+		nameText.setEllipsis("..");
+
+		RenderUtil.setLabelBackgroundColor(nameText, Color.GRAY);
+
+		cardBody.top().left();
 
 		Table cardStatsColumn = new Table();
 		cardStatsColumn.defaults().left();
-		cardStatsColumn.add(costPanel).row();
 		cardStatsColumn.add(atkText).row();
 		cardStatsColumn.add(defText).row();
 
-		cardGraphic.add(cardStatsColumn);
+		cardBody.add(cardHeader).expandX().fillX().row();
+		cardBody.add(cardStatsColumn).left();
+
+		cardHeader.defaults().top();
+
+		final int costPanelWidth = 15;
+		cardHeader.add(costPanel).width(costPanelWidth).fill();
+		cardHeader.add(nameText).width(cardGraphicWidth - costPanelWidth);
+
+		cardGraphic.add(cardBody).height(cardGraphicHeight);
 
 		return cardGraphic;
 	}

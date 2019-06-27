@@ -4,6 +4,8 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
+import colin29.memoriesofsword.MyFonts;
+
 /**
  * Just a filtered interface for use by screens, who only need to access an GDX app for the resources it holds
  *
@@ -14,4 +16,6 @@ public interface AppWithResources {
 	public ShapeRenderer getShapeRenderer();
 
 	public AssetManager getAssets();
+
+	public MyFonts getFonts();
 }
