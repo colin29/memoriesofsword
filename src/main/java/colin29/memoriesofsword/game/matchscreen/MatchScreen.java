@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
@@ -311,6 +312,10 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		}
 	}
 
+	final Color DARK_BLUE = RenderUtil.rgb(51, 51, 204);
+	final Color DARK_RED = RenderUtil.rgb(128, 0, 0);
+	final Color FOREST = Color.FOREST;
+
 	private Table createPermanentGraphic(final Permanent permanent) {
 
 		// Should have a label that shows the card name
@@ -338,9 +343,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 			Label atkText = new Label(String.valueOf(follower.getAtk()), style);
 			Label defText = new Label(String.valueOf(follower.getDef()), style);
-
-			Color DARK_BLUE = RenderUtil.rgb(51, 51, 204);
-			Color DARK_RED = RenderUtil.rgb(128, 0, 0);
 
 			if (!follower.isMaxDef()) {
 				defText.setStyle(woundedTextStyle);
@@ -370,13 +372,84 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				logger.debug("{} was clicked", graphic.getPermanent().getName());
-				super.clicked(event, x, y);
+				createAndDisplayInfoPanel(graphic);
 			}
 		});
 	}
 
 	private void createAndDisplayInfoPanel(PermanentGraphic graphic) {
 
+		if (infoPanel != null) {
+			removeInfoPanel();
+		}
+
+		int infoPanelWidth = 300;
+
+		Table rootTemp = new Table();
+		rootTemp.setFillParent(true);
+		stage.addActor(rootTemp);
+
+		Table info = new Table();
+		info.setBackground(RenderUtil.getSolidBG(Color.DARK_GRAY));
+
+		Card card = graphic.getPermanent().getParentCard();
+		LabelStyle largishStyle = new LabelStyle(fonts.largishFont(), Color.WHITE);
+		Label nameText = new Label(card.getName(), largishStyle);
+
+		Table statsRow = new Table();
+		statsRow.defaults().uniform().fill().spaceRight(10);
+		statsRow.left();
+
+		int statLabelWidth = 15;
+
+		Label costText = createColoredLabel(String.valueOf(card.getCost()), largishStyle, FOREST, Align.center);
+		Label atkText = createColoredLabel(String.valueOf(card.getAtk()), largishStyle, DARK_BLUE, Align.center);
+		Label defText = createColoredLabel(String.valueOf(card.getDef()), largishStyle, DARK_RED, Align.center);
+
+		statsRow.defaults().width(statLabelWidth);
+
+		statsRow.add(costText);
+		statsRow.add(atkText);
+		statsRow.add(defText).row();
+
+		info.defaults().space(5);
+		info.pad(10).left();
+		info.defaults().left();
+
+		info.add(nameText).row();
+		info.add(statsRow).row();
+
+		Label cardText = createColoredLabel(card.getText(), largishStyle, Color.BLACK, Align.left);
+		info.add(cardText).expandX().fillX();
+
+		Table effectsPanel = new Table(); // technically only for applied effects
+		effectsPanel.setBackground(RenderUtil.getSolidBG(Color.DARK_GRAY));
+
+		Label sampleEffectText = createColoredLabel("Applied effects show up here", largishStyle, Color.BLACK, Align.left);
+
+		effectsPanel.pad(10).left();
+		effectsPanel.defaults().space(5).expandX().fillX();
+		effectsPanel.add(sampleEffectText).row();
+
+		rootTemp.top().left().pad(10);
+		rootTemp.defaults().space(10).left().uniformX().fillX();
+		rootTemp.add(info).top().width(infoPanelWidth).left().row();
+		rootTemp.add(effectsPanel);
+
+		this.infoPanel = rootTemp; // keep reference so we can remove later
+
+	}
+
+	private void removeInfoPanel() {
+		infoPanel.remove();
+		infoPanel = null;
+	}
+
+	private Label createColoredLabel(String text, LabelStyle style, Color bgColor, int align) {
+		Label l = new Label(text, style);
+		RenderUtil.setLabelBackgroundColor(l, bgColor);
+		l.setAlignment(align);
+		return l;
 	}
 
 	private void regenerateHandDisplay(int playerNumber) {
@@ -566,7 +639,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		outlineRenderer.renderOutlines();
 
-		root.setDebug(Gdx.input.isKeyPressed(Keys.SPACE), true);
+		stage.setDebugAll(Gdx.input.isKeyPressed(Keys.SPACE));
+		// stage.setDeb
 
 	}
 
@@ -602,6 +676,10 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+		if (button == Input.Buttons.LEFT) {
+			if (infoPanel != null)
+				removeInfoPanel();
+		}
 		return false;
 	}
 

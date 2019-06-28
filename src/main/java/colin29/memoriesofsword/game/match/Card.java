@@ -84,4 +84,8 @@ public class Card implements CardInfo {
 		return type;
 	}
 
+	public String getText() {
+		return text;
+	}
+
 }
