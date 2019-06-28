@@ -6,6 +6,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import colin29.memoriesofsword.GameException;
+import colin29.memoriesofsword.game.match.Card.Type;
+
 /**
  * A player in the context of a match. Atm is mostly a data class for Match: contains all the match state information that can be divided off to a
  * player
@@ -77,24 +80,30 @@ public class Player {
 
 		// Actually play the card
 
-		// TODO: remove the card from players hand
-
-		if (card.type == Card.Type.FOLLOWER) {
+		if (card.type == Type.FOLLOWER || card.type == Type.AMULET) {
 			if (!ignoreCost) {
 				playPoints -= card.getCost();
 				simple.notifyPlayPointsModified(playerNumber);
 			}
 			hand.remove(card);
 
-			Follower follower = new Follower(card);
-			field.add(follower);
+			Permanent permanent;
+
+			if (card.type == Type.FOLLOWER) {
+				permanent = new Follower(card);
+			} else if (card.type == Type.AMULET) {
+				permanent = new Amulet(card);
+			} else {
+				throw new GameException("Spell Type not supported yet. But this shouldn't happen anyways");
+			}
+			field.add(permanent);
 			notifyForPlayToFieldAction();
 
 			logger.debug("Card '{}' was played " + (ignoreCost ? "(ignoring cost)" : ""), card.getName());
 
 			return true;
 		} else {
-			logger.debug("Not yet supported: playing cards other than followers");
+			logger.debug("Not yet supported: playing spells");
 			return false;
 		}
 	}

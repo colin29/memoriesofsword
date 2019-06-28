@@ -28,7 +28,7 @@ public class CardRepository {
 	public void addCard(CardListing cardListing) {
 		try {
 			cardsById.addCard(cardListing);
-		} catch (DuplicateIDException e) {
+		} catch (DuplicateCardListingIDException e) {
 			logger.warn("Tried to add card with duplicate id, add was ignored.");
 		}
 	}
@@ -71,7 +71,7 @@ public class CardRepository {
 				if (internalCardsById.get(id) == cardListing) {
 					logger.warn("Tried to add card listing to card repo which was already included");
 				}
-				throw new DuplicateIDException();
+				throw new DuplicateCardListingIDException();
 			}
 
 			internalCardsById.put(id, cardListing);

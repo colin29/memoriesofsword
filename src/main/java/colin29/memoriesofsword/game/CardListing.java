@@ -17,6 +17,8 @@ public class CardListing {
 	private int atk;
 	private int def;
 
+	private String text = "default card text";
+
 	final private Card.Type type;
 
 	/**
@@ -75,6 +77,14 @@ public class CardListing {
 	 */
 	private static int generateNextTempId() {
 		return curTempId++;
+	}
+
+	public String getText() {
+		return text;
+	}
+
+	public void setText(String text) {
+		this.text = text;
 	}
 
 }

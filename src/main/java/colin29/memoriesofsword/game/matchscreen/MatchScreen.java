@@ -24,6 +24,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Value;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source;
@@ -80,6 +81,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	DragAndDrop dragAndDrop = new DragAndDrop();
 
 	OutlineRenderer outlineRenderer;
+
+	Table infoPanel; // shows detailed information about a clicked permanent
 
 	public MatchScreen(AppWithResources app, CardRepository cardRepo) {
 		super(app);
@@ -351,7 +354,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			permanentGraphic.add(atkText).size(atkText.getWidth() + 7, atkText.getHeight() + 1);
 			permanentGraphic.add(defText).size(defText.getWidth() + 7, defText.getHeight() + 1);
 		}
-
+		permanentGraphic.setTouchable(Touchable.enabled);
+		makeClickShowInfoPanel(permanentGraphic);
 		return permanentGraphic;
 	}
 
@@ -359,6 +363,20 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		Texture img = assets.get("img/image01.jpg", Texture.class);
 		TextureRegionDrawable imgDrawable = new TextureRegionDrawable(new TextureRegion(img));
 		permanentGraphic.setBackground(imgDrawable);
+	}
+
+	private void makeClickShowInfoPanel(PermanentGraphic graphic) {
+		graphic.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				logger.debug("{} was clicked", graphic.getPermanent().getName());
+				super.clicked(event, x, y);
+			}
+		});
+	}
+
+	private void createAndDisplayInfoPanel(PermanentGraphic graphic) {
+
 	}
 
 	private void regenerateHandDisplay(int playerNumber) {

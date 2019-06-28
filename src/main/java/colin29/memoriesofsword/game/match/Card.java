@@ -20,6 +20,8 @@ public class Card implements CardInfo {
 	private int atk;
 	private int def;
 
+	private String text;
+
 	private final Match match;
 
 	private Player owner;
@@ -30,11 +32,13 @@ public class Card implements CardInfo {
 
 	public final Type type;
 
-	public Card(String name, Card.Type type, int cost, int atk, int def, Player owner, Match match) {
+	public Card(String name, Card.Type type, int cost, int atk, int def, String text, Player owner, Match match) {
 		this.name = name;
 		this.cost = cost;
 		this.atk = atk;
 		this.def = def;
+
+		this.text = text;
 
 		this.owner = owner;
 		this.match = match;
@@ -75,6 +79,7 @@ public class Card implements CardInfo {
 		return this.match;
 	}
 
+	@Override
 	public Type getType() {
 		return type;
 	}
