@@ -12,6 +12,7 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -338,8 +339,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		if (permanent instanceof Follower) {
 			final Follower follower = (Follower) permanent;
 
-			LabelStyle style = new LabelStyle(fonts.permanentStatsBorderedText(), Color.WHITE);
-			LabelStyle woundedTextStyle = new LabelStyle(fonts.damagedFollowerDefText(), Color.WHITE);
+			LabelStyle style = createLabelStyle(fonts.permanentStatsBorderedText());
+			LabelStyle woundedTextStyle = createLabelStyle(fonts.damagedFollowerDefText());
 
 			Label atkText = new Label(String.valueOf(follower.getAtk()), style);
 			Label defText = new Label(String.valueOf(follower.getDef()), style);
@@ -393,7 +394,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		info.setBackground(RenderUtil.getSolidBG(Color.DARK_GRAY));
 
 		Card card = graphic.getPermanent().getParentCard();
-		LabelStyle largishStyle = new LabelStyle(fonts.largishFont(), Color.WHITE);
+		LabelStyle largishStyle = createLabelStyle(fonts.largishFont());
 		Label nameText = new Label(card.getName(), largishStyle);
 
 		Table statsRow = new Table();
@@ -445,6 +446,13 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		infoPanel = null;
 	}
 
+	/**
+	 * Creates a label style, retaining the original font color
+	 */
+	private LabelStyle createLabelStyle(BitmapFont font) {
+		return new LabelStyle(font, font.getColor());
+	}
+
 	private Label createColoredLabel(String text, LabelStyle style, Color bgColor, int align) {
 		Label l = new Label(text, style);
 		RenderUtil.setLabelBackgroundColor(l, bgColor);
@@ -476,12 +484,9 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		Table cardHeader = new Table();
 		Table cardBody = new Table();
 
-		LabelStyle smallStyle = new LabelStyle(skin.get(LabelStyle.class));
-		smallStyle.font = fonts.smallFont();
-		LabelStyle mediumStyle = new LabelStyle(skin.get(LabelStyle.class));
-		mediumStyle.font = fonts.mediumFont();
-		LabelStyle largishStyle = new LabelStyle(skin.get(LabelStyle.class));
-		largishStyle.font = fonts.largishFont();
+		LabelStyle smallStyle = createLabelStyle(fonts.smallFont());
+		LabelStyle mediumStyle = createLabelStyle(fonts.mediumFont());
+		LabelStyle largishStyle = createLabelStyle(fonts.smallFont());
 
 		// Set the background card art
 		Texture img = assets.get("img/image01.jpg", Texture.class);
