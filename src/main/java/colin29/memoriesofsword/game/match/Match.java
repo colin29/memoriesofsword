@@ -1,6 +1,7 @@
 package colin29.memoriesofsword.game.match;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,11 @@ import colin29.memoriesofsword.game.CardListing;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.Deck;
 import colin29.memoriesofsword.game.User;
+import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollower;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect.Type;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedListOfActions;
+import colin29.memoriesofsword.game.match.cardeffect.TargetedListOfActions;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 /**
@@ -44,16 +50,16 @@ public class Match {
 	 * If users are not provided, a match will construct two players unassociated with any user
 	 */
 	public Match(CardRepository cardRepo) {
-		player1 = new Player(simple, 1);
-		player2 = new Player(simple, 2);
+		player1 = new Player(this, simple, 1);
+		player2 = new Player(this, simple, 2);
 
 		this.cardRepo = cardRepo;
 	}
 
 	public Match(User user1, Deck deck1, User user2, Deck deck2, CardRepository cardRepo) {
 		// TODO: incorporate actual user info
-		player1 = new Player(simple, 1);
-		player2 = new Player(simple, 2);
+		player1 = new Player(this, simple, 1);
+		player2 = new Player(this, simple, 2);
 		this.cardRepo = cardRepo;
 	}
 
@@ -157,6 +163,87 @@ public class Match {
 
 	}
 
+	public void executeFollowerEffect(Follower thisFollower, FollowerEffect effect) {
+		Player player = thisFollower.getOwner();
+		Match match = player.getMatch();
+		Player enemyPlayer = match.getOtherPlayer(player);
+
+		for (TargetedListOfActions partUnknownType : effect.getParts()) {
+			if (partUnknownType instanceof FollowerTargetedListOfActions) {
+				FollowerTargetedListOfActions part = (FollowerTargetedListOfActions) partUnknownType;
+				List<Follower> targets;
+
+				switch (part.targeting) {
+				case ALLIED_FOLLOWERS:
+					targets = player.getAllFollowers();
+					break;
+				case ENEMY_FOLLOWERS:
+					targets = enemyPlayer.getAllFollowers();
+					break;
+				case OTHER_ALLIED_FOLLOWERS:
+					throw new UnsupportedOperationException();
+				case OTHER_ENEMY_FOLLOWERS:
+					throw new UnsupportedOperationException();
+				case SELF:
+					targets = new ArrayList<Follower>();
+					targets.add(thisFollower);
+				case THE_ENEMY_FOLLOWER:
+					throw new UnsupportedOperationException();
+				default:
+					throw new AssertionError("unhandled case");
+				}
+
+				// execute all the actions on all the targets
+				logger.debug("Found {} targets.", targets.size());
+
+				for (Follower target : targets) {
+					for (ActionOnFollower action : part.getListOfActions()) {
+						match.executeActionOnFollower(action, target);
+					}
+				}
+			}
+		}
+	}
+
+	public void executeActionOnFollower(ActionOnFollower action, Follower follower) {
+
+		if (!follower.isOnOwnersBattlefield()) {
+			logger.debug("Target follower was not on owner's battlefield, so effect fizzled");
+			return;
+		}
+
+		switch (action.actionType) {
+		case DO_DAMAGE:
+			follower.dealDamage(action.amount);
+			break;
+		case HEAL_DEFENSE:
+			follower.heal(action.amount);
+			break;
+		case BUFF:
+			follower.buffAtk(action.atkBuff);
+			follower.buffDef(action.defBuff);
+			break;
+		case GIVE_APPLIED_EFFECT:
+			logger.info("Executing giving applied effect to a follower isn't supported yet.");
+			break;
+		default:
+			break;
+		}
+
+	}
+
+	void executeFanfareEffects(Follower follower) {
+		for (FollowerEffect effect : follower.getEffects()) {
+			if (effect.type == Type.FANFARE) {
+				executeFollowerEffect(follower, effect);
+			}
+		}
+	}
+
+	private void executeLastWordEffects(Follower follower) {
+		// TODO: stub
+	}
+
 	/**
 	 * Handles the removal of a follower and moving the parent card to the graveyard
 	 * 
@@ -174,10 +261,6 @@ public class Match {
 
 		simple.notifyFieldModified(owner.playerNumber);
 		simple.notifyGraveyardModified(owner.playerNumber);
-	}
-
-	private void executeLastWordEffects(Follower follower) {
-		// TODO: stub
 	}
 
 	/**
@@ -235,10 +318,6 @@ public class Match {
 		simple.addSimpleStateListener(listener);
 	}
 
-	public String getPlayer1Name() {
-		return player1.name;
-	}
-
 	/**
 	 * Throw exceptions if player number is outside of normal bounds
 	 * 
@@ -253,6 +332,20 @@ public class Match {
 			return player2;
 		default:
 			throw new InvalidArgumentException("Player number (" + playerNumber + ") is not valid");
+		}
+	}
+
+	public Player getOtherPlayer(int playerNumber) {
+		return getOtherPlayer(getPlayer(playerNumber));
+	}
+
+	public Player getOtherPlayer(Player player) {
+		if (player == player1) {
+			return player2;
+		} else if (player == player2) {
+			return player1;
+		} else {
+			throw new InvalidArgumentException("Player given not player1 or player2");
 		}
 	}
 

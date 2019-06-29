@@ -1,10 +1,16 @@
 package colin29.memoriesofsword.game.match;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
+
 /**
- * An follower instance that exists on the battlefield
+ * An follower instance that exists on the battlefield <br>
+ * <br>
  * 
  * @author Colin Ta
  *
@@ -23,11 +29,27 @@ public class Follower extends Permanent implements FollowerInfo {
 	 */
 	private int maxDef;
 
+	/**
+	 * These effects were added to this follower from the parent card at cast time
+	 */
+	private final ArrayList<FollowerEffect> origEffects = new ArrayList<FollowerEffect>();
+	/**
+	 * Effects added later
+	 */
+	private final ArrayList<FollowerEffect> appliedEffects = new ArrayList<FollowerEffect>();
+
+	/**
+	 * On creation, the follower effects on the parent card are copied and added to the new follower
+	 * 
+	 * @param parentCard
+	 */
 	Follower(Card parentCard) {
 		super(parentCard);
 		this.atk = parentCard.getAtk();
 		this.maxDef = parentCard.getDef();
 		def = maxDef;
+
+		copyEffectsFromParentCard();
 	}
 
 	/**
@@ -106,6 +128,51 @@ public class Follower extends Permanent implements FollowerInfo {
 
 	public boolean isMaxDef() {
 		return def == maxDef;
+	}
+
+	public void buffAtk(int amount) {
+		if (amount < 0) {
+			logger.warn("Buff atk doesn't permit negative numbers");
+			return;
+		}
+		this.atk += amount;
+		match.simple.notifyCardStatsModified();
+	}
+
+	public void buffDef(int amount) {
+		if (amount < 0) {
+			logger.warn("Buff def doesn't permit negative numbers");
+			return;
+		}
+		this.def += amount;
+		this.maxDef += def;
+		match.simple.notifyCardStatsModified();
+	}
+
+	public Player getOwner() {
+		return parentCard.getOwner();
+	}
+
+	private void copyEffectsFromParentCard() {
+		for (FollowerEffect effect : parentCard.getFollowerEffects()) {
+			origEffects.add(new FollowerEffect(effect));
+		}
+	}
+
+	// Returns a list of all effects on this follower (in order)
+	public List<FollowerEffect> getEffects() {
+		List<FollowerEffect> effects = new ArrayList<FollowerEffect>();
+		effects.addAll(origEffects);
+		effects.addAll(appliedEffects);
+		return effects;
+	}
+
+	public void addAppliedEffect(FollowerEffect effect) {
+		appliedEffects.add(effect);
+	}
+
+	public void removeEffect(FollowerEffect effect) {
+		// stub: TODO
 	}
 
 }

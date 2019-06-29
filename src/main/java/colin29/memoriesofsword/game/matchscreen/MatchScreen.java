@@ -195,7 +195,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		Color DARK_GRAY = RenderUtil.rgb(40, 40, 40);
 		Color DARK_RED = RenderUtil.rgb(128, 0, 0);
 
-		Label nameText = new Label(match.getPlayer1Name(), skin);
+		Label nameText = new Label(match.getPlayer(playerNumber).getName(), skin);
 		RenderUtil.setLabelBackgroundColor(nameText, DARK_GRAY);
 
 		Label hpText = new Label("initial hp text", skin);

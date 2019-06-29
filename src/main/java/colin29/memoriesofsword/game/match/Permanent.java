@@ -23,7 +23,7 @@ public abstract class Permanent {
 	 * 
 	 * There are basically nothing that will change a parentCard when it is on the field.
 	 */
-	private final Card parentCard;
+	protected final Card parentCard;
 
 	protected final Match match;
 

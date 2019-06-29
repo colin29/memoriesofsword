@@ -1,11 +1,20 @@
 package colin29.memoriesofsword.game.match;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
+
 /**
  * A Card in the context of a match.
  * 
  * A Card is what you would find in player's hand, deck or graveyard. A card on the field is represented instead by a {@link Permanent}.
  * 
  * Multiple copies of a card in a deck are represented by multiple card objects (originally holding the same information).
+ * 
+ * Not using inheritance for different card types because it's simple enough and this project has tons of card-type related inheritance already
+ * already
  * 
  * @author Colin Ta
  *
@@ -25,6 +34,11 @@ public class Card implements CardInfo {
 	private final Match match;
 
 	private Player owner;
+
+	/**
+	 * For follower cards. When the card is played, these effects are copied and given to the new follower.
+	 */
+	private final List<FollowerEffect> followerEffects = new ArrayList<FollowerEffect>();
 
 	public enum Type { // Card includes all the fields. Unused fields for a type (such as 'atk' for a spell) will simply be left default.
 		FOLLOWER, AMULET, SPELL
@@ -86,6 +100,14 @@ public class Card implements CardInfo {
 
 	public String getText() {
 		return text;
+	}
+
+	public void addFollowerEffect(FollowerEffect effect) {
+		followerEffects.add(effect);
+	}
+
+	public List<FollowerEffect> getFollowerEffects() {
+		return Collections.unmodifiableList(followerEffects);
 	}
 
 }

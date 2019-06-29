@@ -34,9 +34,13 @@ public class Player {
 
 	SimpleMatchStateNotifier simple;
 
-	Player(SimpleMatchStateNotifier simple, int playerNumber) {
+	final Match match;
+
+	Player(Match match, SimpleMatchStateNotifier simple, int playerNumber) {
 		this.simple = simple;
 		this.playerNumber = playerNumber;
+
+		this.match = match;
 	}
 
 	/**
@@ -65,6 +69,10 @@ public class Player {
 		return playCard(card, true);
 	}
 
+	/**
+	 * 
+	 * @return whether the card was successfully played
+	 */
 	private boolean playCard(Card card, boolean ignoreCost) {
 		logger.debug("Player " + playerNumber + " tries to play card '{}'", card.getName());
 
@@ -76,7 +84,6 @@ public class Player {
 			logger.debug("Card cost ({}) more than current pp ({}), could not not play card.", card.getCost(), playPoints);
 			return false;
 		}
-		// TODO: check that there is room on the field, if not throw an exception
 
 		// Actually play the card
 
@@ -91,6 +98,9 @@ public class Player {
 
 			if (card.type == Type.FOLLOWER) {
 				permanent = new Follower(card);
+
+				// trigger the follower's fanfare effects
+
 			} else if (card.type == Type.AMULET) {
 				permanent = new Amulet(card);
 			} else {
@@ -100,6 +110,10 @@ public class Player {
 			notifyForPlayToFieldAction();
 
 			logger.debug("Card '{}' was played " + (ignoreCost ? "(ignoring cost)" : ""), card.getName());
+
+			if (card.type == Type.FOLLOWER) {
+				match.executeFanfareEffects((Follower) permanent);
+			}
 
 			return true;
 		} else {
@@ -168,6 +182,24 @@ public class Player {
 
 	public List<Permanent> getFieldInfo() {
 		return new ArrayList<Permanent>(field);
+	}
+
+	public int getPlayerNumber() {
+		return playerNumber;
+	}
+
+	public List<Follower> getAllFollowers() {
+		List<Follower> followers = new ArrayList<Follower>();
+		for (Permanent p : field) {
+			if (p instanceof Follower) {
+				followers.add((Follower) p);
+			}
+		}
+		return followers;
+	}
+
+	public Match getMatch() {
+		return match;
 	}
 
 }

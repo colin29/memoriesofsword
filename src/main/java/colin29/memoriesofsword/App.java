@@ -18,7 +18,7 @@ import com.kotcrab.vis.ui.VisUI;
 
 import colin29.memoriesofsword.game.CardListing;
 import colin29.memoriesofsword.game.CardRepository;
-import colin29.memoriesofsword.game.SandBoxMatchDriver;
+import colin29.memoriesofsword.game.match.SandBoxMatchDriver;
 import colin29.memoriesofsword.util.PrefixingAssetManager;
 import colin29.memoriesofsword.util.template.AppWithResources;
 
