@@ -3,8 +3,12 @@ package colin29.memoriesofsword.game.match.cardeffect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class TargetedListOfActions {
+/**
+ * Also called a "part" of an effect
+ *
+ */
+public abstract class TargetedAction {
 	protected Logger logger = LoggerFactory.getLogger(this.getClass());
 
-	public abstract TargetedListOfActions cloneObject();
+	public abstract TargetedAction cloneObject();
 }

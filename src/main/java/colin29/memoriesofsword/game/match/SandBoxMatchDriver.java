@@ -9,8 +9,8 @@ import colin29.memoriesofsword.App;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollower;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
-import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedListOfActions;
-import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedListOfActions.FollowerFollowerTargeting;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedAction;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedAction.FollowerFollowerTargeting;
 import colin29.memoriesofsword.game.matchscreen.MatchScreen;
 
 /**
@@ -69,12 +69,12 @@ public class SandBoxMatchDriver {
 	private void addTestEffectToCard(Card card) {
 		FollowerEffect myEffect = new FollowerEffect(FollowerEffect.Type.FANFARE);
 
-		FollowerTargetedListOfActions damageEnemyFollowers = new FollowerTargetedListOfActions(FollowerFollowerTargeting.ENEMY_FOLLOWERS);
+		FollowerTargetedAction damageEnemyFollowers = new FollowerTargetedAction(FollowerFollowerTargeting.ENEMY_FOLLOWERS);
 		myEffect.addPart(damageEnemyFollowers);
 
 		ActionOnFollower doDamage = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
-		doDamage.amount = 1;
-		damageEnemyFollowers.addAction(doDamage);
+		doDamage.amount = 2;
+		damageEnemyFollowers.setAction(doDamage);
 
 		card.addFollowerEffect(myEffect);
 	}

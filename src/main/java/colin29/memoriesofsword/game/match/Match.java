@@ -14,8 +14,8 @@ import colin29.memoriesofsword.game.User;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollower;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect.Type;
-import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedListOfActions;
-import colin29.memoriesofsword.game.match.cardeffect.TargetedListOfActions;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedAction;
+import colin29.memoriesofsword.game.match.cardeffect.TargetedAction;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 /**
@@ -168,9 +168,9 @@ public class Match {
 		Match match = player.getMatch();
 		Player enemyPlayer = match.getOtherPlayer(player);
 
-		for (TargetedListOfActions partUnknownType : effect.getParts()) {
-			if (partUnknownType instanceof FollowerTargetedListOfActions) {
-				FollowerTargetedListOfActions part = (FollowerTargetedListOfActions) partUnknownType;
+		for (TargetedAction partUnknownType : effect.getParts()) {
+			if (partUnknownType instanceof FollowerTargetedAction) {
+				FollowerTargetedAction part = (FollowerTargetedAction) partUnknownType;
 				List<Follower> targets;
 
 				switch (part.targeting) {
@@ -197,9 +197,7 @@ public class Match {
 				logger.debug("Found {} targets.", targets.size());
 
 				for (Follower target : targets) {
-					for (ActionOnFollower action : part.getListOfActions()) {
-						match.executeActionOnFollower(action, target);
-					}
+					match.executeActionOnFollower(part.getAction(), target);
 				}
 			}
 		}

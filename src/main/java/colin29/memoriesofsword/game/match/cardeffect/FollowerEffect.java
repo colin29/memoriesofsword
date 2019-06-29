@@ -22,7 +22,7 @@ public class FollowerEffect {
 
 	public Type type;
 
-	private List<TargetedListOfActions> listOfTargetedEffects = new ArrayList<TargetedListOfActions>();
+	private List<TargetedAction> listOfTargetedEffects = new ArrayList<TargetedAction>();
 
 	public FollowerEffect(Type type) {
 		this.type = type;
@@ -33,18 +33,18 @@ public class FollowerEffect {
 	 */
 	public FollowerEffect(FollowerEffect src) {
 		this.type = src.type;
-		listOfTargetedEffects = new ArrayList<TargetedListOfActions>();
-		for (TargetedListOfActions part : src.listOfTargetedEffects) {
+		listOfTargetedEffects = new ArrayList<TargetedAction>();
+		for (TargetedAction part : src.listOfTargetedEffects) {
 			listOfTargetedEffects.add(part.cloneObject());
 		}
 
 	}
 
-	public List<TargetedListOfActions> getParts() {
+	public List<TargetedAction> getParts() {
 		return listOfTargetedEffects;
 	}
 
-	public void addPart(TargetedListOfActions effect) {
+	public void addPart(TargetedAction effect) {
 		if (effect == null) {
 			logger.warn("Tried to add null targeted Effect.");
 			return;

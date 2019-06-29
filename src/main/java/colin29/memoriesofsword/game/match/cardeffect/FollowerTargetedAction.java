@@ -1,8 +1,6 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 /**
  * Represents an action that includes what targets to hit. This class only deals with follower targets
@@ -12,7 +10,7 @@ import java.util.List;
  * @author Colin Ta
  *
  */
-public class FollowerTargetedListOfActions extends TargetedListOfActions {
+public class FollowerTargetedAction extends TargetedAction {
 
 	// OTHER_ENEMY_FOLLOWERS and THE_ENEMY_FOLLOWER require the parent to be something that identifies an enemy follower, ie. clash or follower strike
 
@@ -26,30 +24,31 @@ public class FollowerTargetedListOfActions extends TargetedListOfActions {
 
 	public FollowerFollowerTargeting targeting;
 
-	private List<ActionOnFollower> listOfActions = new ArrayList<ActionOnFollower>();
+	private ActionOnFollower action = null;
 
-	public FollowerTargetedListOfActions(FollowerFollowerTargeting targeting) {
+	public FollowerTargetedAction(FollowerFollowerTargeting targeting) {
 		this.targeting = targeting;
 	}
 
-	public FollowerTargetedListOfActions(FollowerTargetedListOfActions src) {
-		this.targeting = src.targeting;
-		for (ActionOnFollower action : src.listOfActions) {
-			listOfActions.add(new ActionOnFollower(action));
-		}
+	public FollowerTargetedAction(FollowerTargetedAction src) {
+		targeting = src.targeting;
+		action = new ActionOnFollower(src.action);
 	}
 
-	public void addAction(ActionOnFollower action) {
-		listOfActions.add(action);
+	public void setAction(ActionOnFollower action) {
+		if (action == null) {
+			throw new InvalidArgumentException("action can't be null");
+		}
+		this.action = action;
 	}
 
 	@Override
-	public TargetedListOfActions cloneObject() {
-		return new FollowerTargetedListOfActions(this);
+	public TargetedAction cloneObject() {
+		return new FollowerTargetedAction(this);
 	}
 
-	public List<ActionOnFollower> getListOfActions() {
-		return Collections.unmodifiableList(listOfActions);
+	public ActionOnFollower getAction() {
+		return action;
 	}
 
 }
