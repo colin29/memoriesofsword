@@ -190,7 +190,7 @@ public class Match {
 					throw new UnsupportedOperationException();
 				case OTHER_ENEMY_FOLLOWERS:
 					throw new UnsupportedOperationException();
-				case SELF:
+				case THIS_FOLLOWER:
 					targets = new ArrayList<Follower>();
 					targets.add(thisFollower);
 				case THE_ENEMY_FOLLOWER:

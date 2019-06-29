@@ -15,18 +15,18 @@ public class FollowerTargetedAction extends TargetedAction {
 	// OTHER_ENEMY_FOLLOWERS and THE_ENEMY_FOLLOWER require the parent to be something that identifies an enemy follower, ie. clash or follower strike
 
 	/**
-	 * The first follower means that the source is a follower (which adds additional options like SELF, OTHER_ALLIED_FOLLOWERS) <br>
-	 * The second follower is the same as class name, means that the target(s) are followers
+	 * THIS_FOLLOWER is only valid if the source (which holds the effect) is a follower. <br>
+	 * This will be checked when match tries to execute the ability.
 	 */
-	public enum FollowerFollowerTargeting {
-		SELF, ALLIED_FOLLOWERS, OTHER_ALLIED_FOLLOWERS, ENEMY_FOLLOWERS, OTHER_ENEMY_FOLLOWERS, THE_ENEMY_FOLLOWER
+	public enum FollowerTargeting {
+		THIS_FOLLOWER, ALLIED_FOLLOWERS, OTHER_ALLIED_FOLLOWERS, ENEMY_FOLLOWERS, OTHER_ENEMY_FOLLOWERS, THE_ENEMY_FOLLOWER
 	}
 
-	public FollowerFollowerTargeting targeting;
+	public FollowerTargeting targeting;
 
 	private ActionOnFollower action = null;
 
-	public FollowerTargetedAction(FollowerFollowerTargeting targeting) {
+	public FollowerTargetedAction(FollowerTargeting targeting) {
 		this.targeting = targeting;
 	}
 
