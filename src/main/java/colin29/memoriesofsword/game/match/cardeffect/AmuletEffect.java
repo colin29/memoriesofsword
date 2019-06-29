@@ -6,32 +6,16 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * An effect that is held by a Follower on the field, or by a Follower-type Card
- * 
- * @author Colin Ta
- *
- */
-public class FollowerEffect {
+public class AmuletEffect {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
-	/**
-	 * 
-	 * Stat Changes: effect is an applied effect that modifies atk/def.
-	 * 
-	 * Triggered Abilities: Includes fanfare, clash, as well as custom triggered effects like on other follower EtB
-	 * 
-	 * Properties: Things that don't do anything, but rather are checked. "Bane, Ward, Rush, Storm" as well as: "Can't attack, Can attack twice, can't
-	 * attack the enemy leader, etc."
-	 *
-	 */
 	public enum Type {
-		STAT_CHANGE, PROPERTY, TRIGGERED_EFFECT;
+		PROPERTY, TRIGGERED_EFFECT;
 	}
 
 	public enum TriggerType {
-		FANFARE, CLASH, STRIKE, FOLLOWER_STRIKE, LEADER_STRIKE, LAST_WORD
+		FANFARE, LAST_WORD, ETB_ALLIED_FOLLOWER
 	}
 
 	public enum PropertyEffectType { // none atm
@@ -40,7 +24,7 @@ public class FollowerEffect {
 	public final Type type;
 
 	// For triggered effects only
-	public TriggerType triggerType;
+	public TriggerType triggeredEffectType;
 	private List<TargetedAction> triggeredActions = new ArrayList<TargetedAction>();
 
 	public PropertyEffectType propertyEffectType;
@@ -48,24 +32,21 @@ public class FollowerEffect {
 	/**
 	 * Creates a Triggered effect
 	 */
-	public FollowerEffect(TriggerType triggeredEffectType) {
+	public AmuletEffect(TriggerType triggeredEffectType) {
 		type = Type.TRIGGERED_EFFECT;
-		this.triggerType = triggeredEffectType;
+		this.triggeredEffectType = triggeredEffectType;
 	}
 
-	public FollowerEffect(Type type) {
-		if (type == Type.STAT_CHANGE) {
-			throw new UnsupportedOperationException("Stat change effects not supported (they are unrecorded)");
-		}
+	public AmuletEffect(Type type) {
 		this.type = type;
 	}
 
 	/**
 	 * Copy constructor
 	 */
-	public FollowerEffect(FollowerEffect src) {
+	public AmuletEffect(AmuletEffect src) {
 		this.type = src.type;
-		this.triggerType = src.triggerType;
+		this.triggeredEffectType = src.triggeredEffectType;
 		triggeredActions = new ArrayList<TargetedAction>();
 		for (TargetedAction part : src.triggeredActions) {
 			triggeredActions.add(part.cloneObject());
@@ -84,5 +65,4 @@ public class FollowerEffect {
 		}
 		triggeredActions.add(effect);
 	}
-
 }

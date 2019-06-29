@@ -130,6 +130,18 @@ public class Follower extends Permanent implements FollowerInfo {
 		return def == maxDef;
 	}
 
+	public boolean isWounded() {
+		return !isMaxDef();
+	}
+
+	public boolean isAtkGreaterThanOrig() {
+		return atk > parentCard.getAtk();
+	}
+
+	public boolean isDefGreaterThanOrig() {
+		return def > parentCard.getDef();
+	}
+
 	public void buffAtk(int amount) {
 		if (amount < 0) {
 			logger.warn("Buff atk doesn't permit negative numbers");
@@ -145,7 +157,7 @@ public class Follower extends Permanent implements FollowerInfo {
 			return;
 		}
 		this.def += amount;
-		this.maxDef += def;
+		this.maxDef += amount;
 		match.simple.notifyCardStatsModified();
 	}
 

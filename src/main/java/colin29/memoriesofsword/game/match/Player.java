@@ -98,9 +98,6 @@ public class Player {
 
 			if (card.type == Type.FOLLOWER) {
 				permanent = new Follower(card);
-
-				// trigger the follower's fanfare effects
-
 			} else if (card.type == Type.AMULET) {
 				permanent = new Amulet(card);
 			} else {
@@ -111,8 +108,12 @@ public class Player {
 
 			logger.debug("Card '{}' was played " + (ignoreCost ? "(ignoring cost)" : ""), card.getName());
 
+			// Execute fanfare effects
+
 			if (card.type == Type.FOLLOWER) {
 				match.executeFanfareEffects((Follower) permanent);
+			} else if (card.type == Type.AMULET) {
+				match.executeFanfareEffects((Amulet) permanent);
 			}
 
 			return true;

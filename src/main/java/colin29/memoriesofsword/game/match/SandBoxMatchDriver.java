@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import colin29.memoriesofsword.App;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollower;
+import colin29.memoriesofsword.game.match.cardeffect.AmuletEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedAction;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedAction.FollowerTargeting;
@@ -57,17 +58,19 @@ public class SandBoxMatchDriver {
 		List<Card> hand = player1.hand.getCards();
 
 		Card c1 = hand.get(0);
-		Card c2 = hand.get(2);
+		Card c2 = hand.get(1);
+		Card c3 = hand.get(2);
 
 		addTestEffectToCard(c1);
-		addTestEffectToCard(c2);
+		addFanfareBuffEffectToAmulet(c2);
+		addTestEffectToCard(c3);
 		//
 		// player1.playCardWithoutPayingCost(c1);
 		// player1.playCardWithoutPayingCost(c2);
 	}
 
 	private void addTestEffectToCard(Card card) {
-		FollowerEffect myEffect = new FollowerEffect(FollowerEffect.TriggeredEffectType.FANFARE);
+		FollowerEffect myEffect = new FollowerEffect(FollowerEffect.TriggerType.FANFARE);
 
 		FollowerTargetedAction damageEnemyFollowers = new FollowerTargetedAction(FollowerTargeting.ENEMY_FOLLOWERS);
 		myEffect.addTriggeredAction(damageEnemyFollowers);
@@ -77,6 +80,20 @@ public class SandBoxMatchDriver {
 		damageEnemyFollowers.setAction(doDamage);
 
 		card.addFollowerEffect(myEffect);
+	}
+
+	private void addFanfareBuffEffectToAmulet(Card card) {
+		AmuletEffect myEffect = new AmuletEffect(AmuletEffect.TriggerType.FANFARE);
+
+		FollowerTargetedAction damageEnemyFollowers = new FollowerTargetedAction(FollowerTargeting.ALLIED_FOLLOWERS);
+		myEffect.addTriggeredAction(damageEnemyFollowers);
+
+		ActionOnFollower buff = new ActionOnFollower(ActionOnFollower.ActionType.BUFF);
+		buff.atkBuff = 2;
+		buff.defBuff = 1;
+		damageEnemyFollowers.setAction(buff);
+
+		card.addAmuletEffect(myEffect);
 	}
 
 }

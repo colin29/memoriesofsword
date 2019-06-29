@@ -12,10 +12,10 @@ import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.Deck;
 import colin29.memoriesofsword.game.User;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollower;
+import colin29.memoriesofsword.game.match.cardeffect.AmuletEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
-import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect.TriggeredEffectType;
-import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect.Type;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedAction;
+import colin29.memoriesofsword.game.match.cardeffect.InvalidTargetingTypeException;
 import colin29.memoriesofsword.game.match.cardeffect.TargetedAction;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
@@ -166,47 +166,71 @@ public class Match {
 
 	public void executeFollowerEffect(Follower thisFollower, FollowerEffect effect) {
 
-		if (effect.type != Type.TRIGGERED_EFFECT) {
+		if (effect.type != FollowerEffect.Type.TRIGGERED_EFFECT) {
 			logger.warn("Only triggered effects can be executed. Ignoring");
+			return;
 		}
-
-		Player player = thisFollower.getOwner();
-		Match match = player.getMatch();
-		Player enemyPlayer = match.getOtherPlayer(player);
 
 		for (TargetedAction partUnknownType : effect.getTriggeredActions()) {
-			if (partUnknownType instanceof FollowerTargetedAction) {
-				FollowerTargetedAction part = (FollowerTargetedAction) partUnknownType;
-				List<Follower> targets;
+			executeTargetedAction(partUnknownType, thisFollower);
+		}
 
-				switch (part.targeting) {
-				case ALLIED_FOLLOWERS:
-					targets = player.getAllFollowers();
-					break;
-				case ENEMY_FOLLOWERS:
-					targets = enemyPlayer.getAllFollowers();
-					break;
-				case OTHER_ALLIED_FOLLOWERS:
-					throw new UnsupportedOperationException();
-				case OTHER_ENEMY_FOLLOWERS:
-					throw new UnsupportedOperationException();
-				case THIS_FOLLOWER:
-					targets = new ArrayList<Follower>();
-					targets.add(thisFollower);
-				case THE_ENEMY_FOLLOWER:
-					throw new UnsupportedOperationException();
-				default:
-					throw new AssertionError("unhandled case");
+	}
+
+	public void executeAmuletEffect(Amulet thisFollower, AmuletEffect effect) {
+
+		if (effect.type != AmuletEffect.Type.TRIGGERED_EFFECT) {
+			logger.warn("Only triggered effects can be executed. Ignoring");
+			return;
+		}
+
+		for (TargetedAction targetedAction : effect.getTriggeredActions()) {
+			executeTargetedAction(targetedAction, thisFollower);
+		}
+
+	}
+
+	public void executeTargetedAction(TargetedAction targetedAction, Permanent source) {
+		if (targetedAction instanceof FollowerTargetedAction) {
+
+			Player player = source.getParentCard().getOwner();
+			Player enemyPlayer = getOtherPlayer(player);
+
+			FollowerTargetedAction followerTargeted = (FollowerTargetedAction) targetedAction;
+			List<Follower> targets;
+
+			switch (followerTargeted.targeting) {
+			case ALLIED_FOLLOWERS:
+				targets = player.getAllFollowers();
+				break;
+			case ENEMY_FOLLOWERS:
+				targets = enemyPlayer.getAllFollowers();
+				break;
+			case OTHER_ALLIED_FOLLOWERS:
+				throw new UnsupportedOperationException();
+			case OTHER_ENEMY_FOLLOWERS:
+				throw new UnsupportedOperationException();
+			case THIS_FOLLOWER:
+				targets = new ArrayList<Follower>();
+				if (source instanceof Follower) {
+					targets.add((Follower) source);
+				} else {
+					throw new InvalidTargetingTypeException("Source must be a Follower to use THIS_FOLLOWER");
 				}
+				break;
+			case THE_ENEMY_FOLLOWER:
+				throw new UnsupportedOperationException();
+			default:
+				throw new AssertionError("unhandled case");
+			}
 
-				// execute all the actions on all the targets
-				logger.debug("Found {} targets.", targets.size());
+			logger.debug("Found {} targets.", targets.size());
 
-				for (Follower target : targets) {
-					match.executeActionOnFollower(part.getAction(), target);
-				}
+			for (Follower target : targets) {
+				executeActionOnFollower(followerTargeted.getAction(), target);
 			}
 		}
+
 	}
 
 	public void executeActionOnFollower(ActionOnFollower action, Follower follower) {
@@ -238,8 +262,16 @@ public class Match {
 
 	void executeFanfareEffects(Follower follower) {
 		for (FollowerEffect effect : follower.getEffects()) {
-			if (effect.triggeredEffectType == TriggeredEffectType.FANFARE) {
+			if (effect.triggerType == FollowerEffect.TriggerType.FANFARE) {
 				executeFollowerEffect(follower, effect);
+			}
+		}
+	}
+
+	void executeFanfareEffects(Amulet amulet) {
+		for (AmuletEffect effect : amulet.getEffects()) {
+			if (effect.triggeredEffectType == AmuletEffect.TriggerType.FANFARE) {
+				executeAmuletEffect(amulet, effect);
 			}
 		}
 	}

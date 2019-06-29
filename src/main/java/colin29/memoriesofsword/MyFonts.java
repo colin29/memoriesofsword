@@ -23,6 +23,7 @@ public class MyFonts {
 
 	BitmapFont largeThickFont;
 	BitmapFont borderedLargeRedThickFont;
+	BitmapFont borderedLargeGreenThickFont;
 	BitmapFont thinBorderedLargeWhiteThickFont;
 
 	private final String MS_GOTHIC_path = "fonts/MS_Gothic.ttf";
@@ -52,9 +53,12 @@ public class MyFonts {
 		largeThickFont = generateFont(ALTE_HAAS_path, Color.WHITE, 25);
 
 		Color MODERATE_RED = RenderUtil.rgb(240, 0, 0);
+		Color MODERATE_GREEN = RenderUtil.rgb(115, 230, 0);
 
 		thinBorderedLargeWhiteThickFont = generateFontWithBorder(ALTE_HAAS_path, Color.WHITE, 25, Color.BLACK, 0.6f);
 		borderedLargeRedThickFont = generateFontWithBorder(ALTE_HAAS_path, MODERATE_RED, 25, Color.WHITE, 0.9f);
+		borderedLargeGreenThickFont = generateFontWithBorder(ALTE_HAAS_path, MODERATE_GREEN, 25, Color.BLACK, 0.9f);
+
 	}
 
 	/**
@@ -116,6 +120,10 @@ public class MyFonts {
 
 	public BitmapFont damagedFollowerDefText() {
 		return borderedLargeRedThickFont;
+	}
+
+	public BitmapFont buffedFollowerDefText() {
+		return borderedLargeGreenThickFont;
 	}
 
 }

@@ -341,12 +341,19 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 			LabelStyle style = createLabelStyle(fonts.permanentStatsBorderedText());
 			LabelStyle woundedTextStyle = createLabelStyle(fonts.damagedFollowerDefText());
+			LabelStyle buffedTextStyle = createLabelStyle(fonts.buffedFollowerDefText());
 
 			Label atkText = new Label(String.valueOf(follower.getAtk()), style);
 			Label defText = new Label(String.valueOf(follower.getDef()), style);
 
-			if (!follower.isMaxDef()) {
+			if (follower.isAtkGreaterThanOrig()) {
+				atkText.setStyle(buffedTextStyle);
+			}
+
+			if (follower.isWounded()) {
 				defText.setStyle(woundedTextStyle);
+			} else if (follower.isDefGreaterThanOrig()) {
+				defText.setStyle(buffedTextStyle);
 			}
 
 			RenderUtil.setLabelBackgroundColor(atkText, DARK_BLUE);
