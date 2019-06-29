@@ -15,7 +15,7 @@ import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
  * @author Colin Ta
  *
  */
-public class Follower extends Permanent implements FollowerInfo {
+public class Follower extends Permanent<FollowerEffect> implements FollowerInfo {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -28,15 +28,6 @@ public class Follower extends Permanent implements FollowerInfo {
 	 * Can be modified, is independent of the defense stat of the originating card.
 	 */
 	private int maxDef;
-
-	/**
-	 * These effects were added to this follower from the parent card at cast time
-	 */
-	private final ArrayList<FollowerEffect> origEffects = new ArrayList<FollowerEffect>();
-	/**
-	 * Effects added later
-	 */
-	private final ArrayList<FollowerEffect> appliedEffects = new ArrayList<FollowerEffect>();
 
 	/**
 	 * On creation, the follower effects on the parent card are copied and added to the new follower
@@ -181,24 +172,6 @@ public class Follower extends Permanent implements FollowerInfo {
 
 	public void addAppliedEffect(FollowerEffect effect) {
 		appliedEffects.add(effect);
-	}
-
-	@Override
-	public String generateOrigEffectsText() {
-
-		StringBuilder s = new StringBuilder();
-
-		boolean first = true;
-
-		for (FollowerEffect effect : origEffects) {
-			if (first) {
-				first = false;
-			} else {
-				s.append("\n");
-			}
-			s.append(effect.toString());
-		}
-		return s.toString();
 	}
 
 }

@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
  * @author Colin Ta
  *
  */
-public class FollowerEffect {
+public class FollowerEffect extends Effect {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -119,5 +119,4 @@ public class FollowerEffect {
 			return type.name() + " string rep not supported yet";
 		}
 	}
-
 }

@@ -5,16 +5,7 @@ import java.util.List;
 
 import colin29.memoriesofsword.game.match.cardeffect.AmuletEffect;
 
-public class Amulet extends Permanent {
-
-	/**
-	 * These effects were added to this follower from the parent card at cast time
-	 */
-	private final ArrayList<AmuletEffect> origEffects = new ArrayList<AmuletEffect>();
-	/**
-	 * Effects added later
-	 */
-	private final ArrayList<AmuletEffect> appliedEffects = new ArrayList<AmuletEffect>();
+public class Amulet extends Permanent<AmuletEffect> {
 
 	Amulet(Card parentCard) {
 		super(parentCard);
@@ -38,11 +29,6 @@ public class Amulet extends Permanent {
 
 	public void addAppliedEffect(AmuletEffect effect) {
 		appliedEffects.add(effect);
-	}
-
-	@Override
-	public String generateOrigEffectsText() {
-		return "amulet effect string-rep not supported yet";
 	}
 
 }

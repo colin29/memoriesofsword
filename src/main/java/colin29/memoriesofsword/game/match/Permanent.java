@@ -1,5 +1,9 @@
 package colin29.memoriesofsword.game.match;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import colin29.memoriesofsword.game.match.cardeffect.Effect;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 /**
@@ -13,10 +17,13 @@ import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
  * 
  * All permanents take up a slot on their owner's field. <br>
  * 
+ * The parameterized type just represents the corresponding effect type. There is not a tight coupling between the two, just permanent who stores
+ * effects
+ * 
  * @author Colin Ta
  *
  */
-public abstract class Permanent {
+public abstract class Permanent<T extends Effect> {
 
 	/**
 	 * A permanent on the field has a 1-1 association with a parentCard. Two permanents cannot be associated with the same card.
@@ -26,6 +33,15 @@ public abstract class Permanent {
 	protected final Card parentCard;
 
 	protected final Match match;
+
+	/**
+	 * These effects were added to this follower from the parent card at cast time
+	 */
+	protected final List<T> origEffects = new ArrayList<T>();
+	/**
+	 * Effects added later
+	 */
+	protected final List<T> appliedEffects = new ArrayList<T>();
 
 	Permanent(Card parentCard) {
 		if (parentCard == null) {
@@ -54,6 +70,20 @@ public abstract class Permanent {
 		return parentCard.getName();
 	}
 
-	public abstract String generateOrigEffectsText();
+	public String generateOrigEffectsText() {
+		StringBuilder s = new StringBuilder();
+
+		boolean first = true;
+
+		for (Effect effect : origEffects) {
+			if (first) {
+				first = false;
+			} else {
+				s.append("\n");
+			}
+			s.append(effect.toString());
+		}
+		return s.toString();
+	};
 
 }

@@ -6,7 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AmuletEffect {
+public class AmuletEffect extends Effect {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -15,7 +15,21 @@ public class AmuletEffect {
 	}
 
 	public enum TriggerType {
-		FANFARE, LAST_WORD, ETB_ALLIED_FOLLOWER
+		FANFARE, LAST_WORD, ETB_ALLIED_FOLLOWER;
+
+		public String getGameText() {
+			switch (this) {
+			case FANFARE:
+				return "Fanfare";
+			case LAST_WORD:
+				return "Last words";
+			case ETB_ALLIED_FOLLOWER:
+				return "When an allied follower enters the battlefield";
+			default:
+				return "{No stringrep for this amulet trigger-type}";
+
+			}
+		}
 	}
 
 	public enum PropertyEffectType { // none atm
@@ -64,5 +78,20 @@ public class AmuletEffect {
 			return;
 		}
 		triggeredActions.add(effect);
+	}
+
+	@Override
+	public String toString() {
+		switch (type) {
+		case TRIGGERED_EFFECT:
+			StringBuilder s = new StringBuilder();
+			s.append(triggeredEffectType.getGameText() + ": ");
+			for (TargetedAction targetedAction : triggeredActions) {
+				s.append(targetedAction.toString() + ". ");
+			}
+			return s.toString();
+		default:
+			return type.name() + " string rep not supported yet";
+		}
 	}
 }

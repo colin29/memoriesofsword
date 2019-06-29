@@ -392,7 +392,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		}
 
 		int infoPanelWidth = 300;
-		final Permanent permanent = graphic.getPermanent();
+		final Permanent<?> permanent = graphic.getPermanent();
 
 		Table rootTemp = new Table();
 		rootTemp.setFillParent(true);
