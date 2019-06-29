@@ -67,10 +67,10 @@ public class SandBoxMatchDriver {
 	}
 
 	private void addTestEffectToCard(Card card) {
-		FollowerEffect myEffect = new FollowerEffect(FollowerEffect.Type.FANFARE);
+		FollowerEffect myEffect = new FollowerEffect(FollowerEffect.TriggeredEffectType.FANFARE);
 
 		FollowerTargetedAction damageEnemyFollowers = new FollowerTargetedAction(FollowerFollowerTargeting.ENEMY_FOLLOWERS);
-		myEffect.addPart(damageEnemyFollowers);
+		myEffect.addTriggeredAction(damageEnemyFollowers);
 
 		ActionOnFollower doDamage = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
 		doDamage.amount = 2;

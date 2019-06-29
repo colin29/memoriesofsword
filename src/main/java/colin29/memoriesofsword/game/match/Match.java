@@ -13,6 +13,7 @@ import colin29.memoriesofsword.game.Deck;
 import colin29.memoriesofsword.game.User;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollower;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect.TriggeredEffectType;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect.Type;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedAction;
 import colin29.memoriesofsword.game.match.cardeffect.TargetedAction;
@@ -164,11 +165,16 @@ public class Match {
 	}
 
 	public void executeFollowerEffect(Follower thisFollower, FollowerEffect effect) {
+
+		if (effect.type != Type.TRIGGERED_EFFECT) {
+			logger.warn("Only triggered effects can be executed. Ignoring");
+		}
+
 		Player player = thisFollower.getOwner();
 		Match match = player.getMatch();
 		Player enemyPlayer = match.getOtherPlayer(player);
 
-		for (TargetedAction partUnknownType : effect.getParts()) {
+		for (TargetedAction partUnknownType : effect.getTriggeredActions()) {
 			if (partUnknownType instanceof FollowerTargetedAction) {
 				FollowerTargetedAction part = (FollowerTargetedAction) partUnknownType;
 				List<Follower> targets;
@@ -232,7 +238,7 @@ public class Match {
 
 	void executeFanfareEffects(Follower follower) {
 		for (FollowerEffect effect : follower.getEffects()) {
-			if (effect.type == Type.FANFARE) {
+			if (effect.triggeredEffectType == TriggeredEffectType.FANFARE) {
 				executeFollowerEffect(follower, effect);
 			}
 		}
