@@ -40,4 +40,9 @@ public class Amulet extends Permanent {
 		appliedEffects.add(effect);
 	}
 
+	@Override
+	public String generateOrigEffectsText() {
+		return "amulet effect string-rep not supported yet";
+	}
+
 }

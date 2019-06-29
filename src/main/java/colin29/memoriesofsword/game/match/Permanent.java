@@ -54,4 +54,6 @@ public abstract class Permanent {
 		return parentCard.getName();
 	}
 
+	public abstract String generateOrigEffectsText();
+
 }

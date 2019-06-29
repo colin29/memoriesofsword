@@ -183,8 +183,22 @@ public class Follower extends Permanent implements FollowerInfo {
 		appliedEffects.add(effect);
 	}
 
-	public void removeEffect(FollowerEffect effect) {
-		// stub: TODO
+	@Override
+	public String generateOrigEffectsText() {
+
+		StringBuilder s = new StringBuilder();
+
+		boolean first = true;
+
+		for (FollowerEffect effect : origEffects) {
+			if (first) {
+				first = false;
+			} else {
+				s.append("\n");
+			}
+			s.append(effect.toString());
+		}
+		return s.toString();
 	}
 
 }

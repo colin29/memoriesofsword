@@ -31,7 +31,27 @@ public class FollowerEffect {
 	}
 
 	public enum TriggerType {
-		FANFARE, CLASH, STRIKE, FOLLOWER_STRIKE, LEADER_STRIKE, LAST_WORD
+		FANFARE, CLASH, STRIKE, FOLLOWER_STRIKE, LEADER_STRIKE, LAST_WORD;
+
+		public String getGameText() {
+			switch (this) {
+			case FANFARE:
+				return "Fanfare";
+			case CLASH:
+				return "Clash";
+			case STRIKE:
+				return "Strike";
+			case FOLLOWER_STRIKE:
+				return "Follower Strike";
+			case LEADER_STRIKE:
+				return "Leader Strike";
+			case LAST_WORD:
+				return "Last Words";
+			default:
+				return "{no string-rep for this trigger-type}";
+
+			}
+		}
 	}
 
 	public enum PropertyEffectType { // none atm
@@ -83,6 +103,21 @@ public class FollowerEffect {
 			return;
 		}
 		triggeredActions.add(effect);
+	}
+
+	@Override
+	public String toString() {
+		switch (type) {
+		case TRIGGERED_EFFECT:
+			StringBuilder s = new StringBuilder();
+			s.append(triggerType.getGameText() + ": ");
+			for (TargetedAction targetedAction : triggeredActions) {
+				s.append(targetedAction.toString() + ". ");
+			}
+			return s.toString();
+		default:
+			return type.name() + " string rep not supported yet";
+		}
 	}
 
 }

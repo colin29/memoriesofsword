@@ -392,6 +392,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		}
 
 		int infoPanelWidth = 300;
+		final Permanent permanent = graphic.getPermanent();
 
 		Table rootTemp = new Table();
 		rootTemp.setFillParent(true);
@@ -411,14 +412,22 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		int statLabelWidth = 15;
 
 		Label costText = createColoredLabel(String.valueOf(card.getCost()), largishStyle, FOREST, Align.center);
-		Label atkText = createColoredLabel(String.valueOf(card.getAtk()), largishStyle, DARK_BLUE, Align.center);
-		Label defText = createColoredLabel(String.valueOf(card.getDef()), largishStyle, DARK_RED, Align.center);
+
+		// generateOrigEffectsText()
 
 		statsRow.defaults().width(statLabelWidth);
 
 		statsRow.add(costText);
-		statsRow.add(atkText);
-		statsRow.add(defText).row();
+
+		if (permanent instanceof Follower) {
+			Label atkText = createColoredLabel(String.valueOf(card.getAtk()), largishStyle, DARK_BLUE, Align.center);
+			Label defText = createColoredLabel(String.valueOf(card.getDef()), largishStyle, DARK_RED, Align.center);
+
+			statsRow.add(atkText);
+			statsRow.add(defText);
+		}
+
+		statsRow.row();
 
 		info.defaults().space(5);
 		info.pad(10).left();
@@ -427,13 +436,14 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		info.add(nameText).row();
 		info.add(statsRow).row();
 
-		Label cardText = createColoredLabel(card.getText(), largishStyle, Color.BLACK, Align.left);
+		Label cardText = createColoredLabel(permanent.generateOrigEffectsText(), largishStyle, Color.BLACK, Align.left);
+		cardText.setWrap(true);
 		info.add(cardText).expandX().fillX();
 
 		Table effectsPanel = new Table(); // technically only for applied effects
 		effectsPanel.setBackground(RenderUtil.getSolidBG(Color.DARK_GRAY));
 
-		Label sampleEffectText = createColoredLabel("Applied effects show up here", largishStyle, Color.BLACK, Align.left);
+		Label sampleEffectText = createColoredLabel("{Applied effects show up here}", largishStyle, Color.BLACK, Align.left);
 
 		effectsPanel.pad(10).left();
 		effectsPanel.defaults().space(5).expandX().fillX();
