@@ -105,8 +105,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		constructUI();
 		match.addSimpleStateListener(this);
 
-		multiplexer.addProcessor(stage);
 		multiplexer.addProcessor(this);
+		multiplexer.addProcessor(stage);
 	}
 
 	private int sidePanelWidth = 150;

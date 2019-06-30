@@ -1,6 +1,6 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
-public class PlayerTargetedAction extends TargetedAction {
+public class EffectOnPlayer extends Effect {
 
 	public enum Targeting {
 		OWN_LEADER, ENEMY_LEADER;
@@ -21,18 +21,18 @@ public class PlayerTargetedAction extends TargetedAction {
 
 	ActionOnPlayer action = null;
 
-	public PlayerTargetedAction(Targeting targeting) {
+	public EffectOnPlayer(Targeting targeting) {
 		this.targeting = targeting;
 	}
 
-	public PlayerTargetedAction(PlayerTargetedAction src) {
+	public EffectOnPlayer(EffectOnPlayer src) {
 		targeting = src.targeting;
 		action = new ActionOnPlayer(src.action);
 	}
 
 	@Override
-	public TargetedAction cloneObject() {
-		return new PlayerTargetedAction(this);
+	public Effect cloneObject() {
+		return new EffectOnPlayer(this);
 	}
 
 	@Override

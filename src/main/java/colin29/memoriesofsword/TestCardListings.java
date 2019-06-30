@@ -3,10 +3,10 @@ package colin29.memoriesofsword;
 import colin29.memoriesofsword.game.CardListing;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollower;
-import colin29.memoriesofsword.game.match.cardeffect.AmuletEffect;
-import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
-import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedAction;
-import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedAction.FollowerTargeting;
+import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
+import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
+import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower.FollowerTargeting;
 
 /**
  * Static class that creates the test card listings
@@ -28,11 +28,11 @@ public class TestCardListings {
 		cardRepo.addCard(c1, c2, c3, c4);
 	}
 
-	private static FollowerEffect createAoeDamageFollowerEffect() {
-		FollowerEffect myEffect = new FollowerEffect(FollowerEffect.TriggerType.FANFARE);
+	private static FollowerCardEffect createAoeDamageFollowerEffect() {
+		FollowerCardEffect myEffect = new FollowerCardEffect(FollowerCardEffect.TriggerType.FANFARE);
 
-		FollowerTargetedAction targetedEffect = new FollowerTargetedAction(FollowerTargeting.ENEMY_FOLLOWERS);
-		myEffect.addTriggeredAction(targetedEffect);
+		EffectOnFollower targetedEffect = new EffectOnFollower(FollowerTargeting.ENEMY_FOLLOWERS);
+		myEffect.addTriggeredEffect(targetedEffect);
 
 		ActionOnFollower doDamage = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
 		doDamage.amount = 2;
@@ -41,11 +41,11 @@ public class TestCardListings {
 		return myEffect;
 	}
 
-	private static AmuletEffect createHornOfUnicaEffect() {
-		AmuletEffect myEffect = new AmuletEffect(AmuletEffect.TriggerType.FANFARE);
+	private static AmuletCardEffect createHornOfUnicaEffect() {
+		AmuletCardEffect myEffect = new AmuletCardEffect(AmuletCardEffect.TriggerType.FANFARE);
 
-		FollowerTargetedAction targetedAction = new FollowerTargetedAction(FollowerTargeting.ALLIED_FOLLOWERS);
-		myEffect.addTriggeredAction(targetedAction);
+		EffectOnFollower targetedAction = new EffectOnFollower(FollowerTargeting.ALLIED_FOLLOWERS);
+		myEffect.addTriggeredEffect(targetedAction);
 
 		ActionOnFollower buff = new ActionOnFollower(ActionOnFollower.ActionType.BUFF);
 		buff.atkBuff = 2;

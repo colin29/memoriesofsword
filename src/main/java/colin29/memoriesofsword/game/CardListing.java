@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import colin29.memoriesofsword.game.match.Card;
 import colin29.memoriesofsword.game.match.Card.Type;
-import colin29.memoriesofsword.game.match.cardeffect.AmuletEffect;
-import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
+import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.SpellEffect;
 
 /**
@@ -40,8 +40,8 @@ public class CardListing {
 
 	private String name;
 
-	private final List<FollowerEffect> followerEffects = new ArrayList<FollowerEffect>();
-	private final List<AmuletEffect> amuletEffects = new ArrayList<AmuletEffect>();
+	private final List<FollowerCardEffect> followerEffects = new ArrayList<FollowerCardEffect>();
+	private final List<AmuletCardEffect> amuletEffects = new ArrayList<AmuletCardEffect>();
 	private final List<SpellEffect> spellEffects = new ArrayList<SpellEffect>();
 
 	CardListing(String name, int cost, int atk, int def, int id, Card.Type type) {
@@ -103,7 +103,7 @@ public class CardListing {
 		this.text = text;
 	}
 
-	public void addEffect(FollowerEffect effect) {
+	public void addEffect(FollowerCardEffect effect) {
 		if (effect == null) {
 			logger.warn("Can't add a null effect. Ignored.");
 			return;
@@ -115,7 +115,7 @@ public class CardListing {
 		followerEffects.add(effect);
 	}
 
-	public void addEffect(AmuletEffect effect) {
+	public void addEffect(AmuletCardEffect effect) {
 		if (effect == null) {
 			logger.warn("Can't add a null effect. Ignored.");
 			return;
@@ -139,11 +139,11 @@ public class CardListing {
 		spellEffects.add(effect);
 	}
 
-	public List<FollowerEffect> getFollowerEffects() {
+	public List<FollowerCardEffect> getFollowerEffects() {
 		return Collections.unmodifiableList(followerEffects);
 	}
 
-	public List<AmuletEffect> getAmuletEffects() {
+	public List<AmuletCardEffect> getAmuletEffects() {
 		return Collections.unmodifiableList(amuletEffects);
 	}
 

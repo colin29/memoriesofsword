@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
  * @author Colin Ta
  *
  */
-public class FollowerEffect extends Effect {
+public class FollowerCardEffect extends CardEffect {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -61,19 +61,19 @@ public class FollowerEffect extends Effect {
 
 	// For triggered effects only
 	public TriggerType triggerType;
-	private List<TargetedAction> triggeredActions = new ArrayList<TargetedAction>();
+	private List<Effect> triggeredEffects = new ArrayList<Effect>();
 
 	public PropertyEffectType propertyEffectType;
 
 	/**
 	 * Creates a Triggered effect
 	 */
-	public FollowerEffect(TriggerType triggeredEffectType) {
+	public FollowerCardEffect(TriggerType triggeredEffectType) {
 		type = Type.TRIGGERED_EFFECT;
 		this.triggerType = triggeredEffectType;
 	}
 
-	public FollowerEffect(Type type) {
+	public FollowerCardEffect(Type type) {
 		if (type == Type.STAT_CHANGE) {
 			throw new UnsupportedOperationException("Stat change effects not supported (they are unrecorded)");
 		}
@@ -83,26 +83,26 @@ public class FollowerEffect extends Effect {
 	/**
 	 * Copy constructor
 	 */
-	public FollowerEffect(FollowerEffect src) {
+	public FollowerCardEffect(FollowerCardEffect src) {
 		this.type = src.type;
 		this.triggerType = src.triggerType;
-		triggeredActions = new ArrayList<TargetedAction>();
-		for (TargetedAction part : src.triggeredActions) {
-			triggeredActions.add(part.cloneObject());
+		triggeredEffects = new ArrayList<Effect>();
+		for (Effect part : src.triggeredEffects) {
+			triggeredEffects.add(part.cloneObject());
 		}
 
 	}
 
-	public List<TargetedAction> getTriggeredActions() {
-		return triggeredActions;
+	public List<Effect> getEffects() {
+		return triggeredEffects;
 	}
 
-	public void addTriggeredAction(TargetedAction effect) {
+	public void addTriggeredEffect(Effect effect) {
 		if (effect == null) {
 			logger.warn("Tried to add null targeted Effect.");
 			return;
 		}
-		triggeredActions.add(effect);
+		triggeredEffects.add(effect);
 	}
 
 	@Override
@@ -111,7 +111,7 @@ public class FollowerEffect extends Effect {
 		case TRIGGERED_EFFECT:
 			StringBuilder s = new StringBuilder();
 			s.append(triggerType.getGameText() + ": ");
-			for (TargetedAction targetedAction : triggeredActions) {
+			for (Effect targetedAction : triggeredEffects) {
 				s.append(targetedAction.toString() + ". ");
 			}
 			return s.toString();

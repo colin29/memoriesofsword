@@ -8,9 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import colin29.memoriesofsword.game.CardListing;
-import colin29.memoriesofsword.game.match.cardeffect.AmuletEffect;
-import colin29.memoriesofsword.game.match.cardeffect.Effect;
-import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
+import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
+import colin29.memoriesofsword.game.match.cardeffect.CardEffect;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.SpellEffect;
 
 /**
@@ -47,12 +47,12 @@ public class Card implements CardInfo {
 	/**
 	 * For follower cards. When the card is played, these effects are copied and given to the new follower.
 	 */
-	private final List<FollowerEffect> followerEffects = new ArrayList<FollowerEffect>();
+	private final List<FollowerCardEffect> followerEffects = new ArrayList<FollowerCardEffect>();
 
 	/**
 	 * Same as the previous field, but for amulets
 	 */
-	private final List<AmuletEffect> amuletEffects = new ArrayList<AmuletEffect>();
+	private final List<AmuletCardEffect> amuletEffects = new ArrayList<AmuletCardEffect>();
 
 	/**
 	 * For Spell cards. When a spell is played, the effects are executed.
@@ -121,7 +121,7 @@ public class Card implements CardInfo {
 		return text;
 	}
 
-	public void addFollowerEffect(FollowerEffect effect) {
+	public void addFollowerEffect(FollowerCardEffect effect) {
 		if (type != Type.FOLLOWER) {
 			logger.warn("Tried to add Follower effect but card is not Follower type, ignoring. (effect would never be used anyways");
 			return;
@@ -129,7 +129,7 @@ public class Card implements CardInfo {
 		followerEffects.add(effect);
 	}
 
-	public void addAmuletEffect(AmuletEffect effect) {
+	public void addAmuletEffect(AmuletCardEffect effect) {
 		if (type != Type.AMULET) {
 			logger.warn("Tried to add Amulet effect but card is not Amulet type, ignoring. (effect would never be used anyways");
 			return;
@@ -137,11 +137,11 @@ public class Card implements CardInfo {
 		amuletEffects.add(effect);
 	}
 
-	public List<FollowerEffect> getFollowerEffects() {
+	public List<FollowerCardEffect> getFollowerEffects() {
 		return Collections.unmodifiableList(followerEffects);
 	}
 
-	public List<AmuletEffect> getAmuletEffects() {
+	public List<AmuletCardEffect> getAmuletEffects() {
 		return Collections.unmodifiableList(amuletEffects);
 	}
 
@@ -167,12 +167,12 @@ public class Card implements CardInfo {
 	 * @param effects
 	 * @return
 	 */
-	public static String generateTextForListOfEffects(List<? extends Effect> effects) {
+	public static String generateTextForListOfEffects(List<? extends CardEffect> effects) {
 		StringBuilder s = new StringBuilder();
 
 		boolean first = true;
 
-		for (Effect effect : effects) {
+		for (CardEffect effect : effects) {
 			if (first) {
 				first = false;
 			} else {
@@ -184,11 +184,11 @@ public class Card implements CardInfo {
 	}
 
 	private void copyEffectsFromCardListing(CardListing listing) {
-		for (FollowerEffect effect : listing.getFollowerEffects()) {
-			followerEffects.add(new FollowerEffect(effect));
+		for (FollowerCardEffect effect : listing.getFollowerEffects()) {
+			followerEffects.add(new FollowerCardEffect(effect));
 		}
-		for (AmuletEffect effect : listing.getAmuletEffects()) {
-			amuletEffects.add(new AmuletEffect(effect));
+		for (AmuletCardEffect effect : listing.getAmuletEffects()) {
+			amuletEffects.add(new AmuletCardEffect(effect));
 		}
 		for (SpellEffect effect : listing.getSpellEffects()) {
 			spellEffects.add(new SpellEffect(effect));

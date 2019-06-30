@@ -1,7 +1,7 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
 /**
- * An action (as part of an effect) against a player
+ * An action just specifies a thing to do. It doesn't include what to target (which is an Effect).
  * 
  * @author Colin Ta
  *

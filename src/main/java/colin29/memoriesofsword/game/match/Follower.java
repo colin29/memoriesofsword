@@ -6,7 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 
 /**
  * An follower instance that exists on the battlefield <br>
@@ -15,7 +15,7 @@ import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
  * @author Colin Ta
  *
  */
-public class Follower extends Permanent<FollowerEffect> implements FollowerInfo {
+public class Follower extends Permanent<FollowerCardEffect> implements FollowerInfo {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -157,20 +157,20 @@ public class Follower extends Permanent<FollowerEffect> implements FollowerInfo 
 	}
 
 	private void copyEffectsFromParentCard() {
-		for (FollowerEffect effect : parentCard.getFollowerEffects()) {
-			origEffects.add(new FollowerEffect(effect));
+		for (FollowerCardEffect effect : parentCard.getFollowerEffects()) {
+			origEffects.add(new FollowerCardEffect(effect));
 		}
 	}
 
 	// Returns a list of all effects on this follower (in order)
-	public List<FollowerEffect> getEffects() {
-		List<FollowerEffect> effects = new ArrayList<FollowerEffect>();
+	public List<FollowerCardEffect> getEffects() {
+		List<FollowerCardEffect> effects = new ArrayList<FollowerCardEffect>();
 		effects.addAll(origEffects);
 		effects.addAll(appliedEffects);
 		return effects;
 	}
 
-	public void addAppliedEffect(FollowerEffect effect) {
+	public void addAppliedEffect(FollowerCardEffect effect) {
 		appliedEffects.add(effect);
 	}
 

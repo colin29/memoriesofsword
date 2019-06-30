@@ -12,11 +12,11 @@ import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.Deck;
 import colin29.memoriesofsword.game.User;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollower;
-import colin29.memoriesofsword.game.match.cardeffect.AmuletEffect;
-import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
-import colin29.memoriesofsword.game.match.cardeffect.FollowerTargetedAction;
+import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
+import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
 import colin29.memoriesofsword.game.match.cardeffect.InvalidTargetingTypeException;
-import colin29.memoriesofsword.game.match.cardeffect.TargetedAction;
+import colin29.memoriesofsword.game.match.cardeffect.Effect;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 /**
@@ -164,39 +164,39 @@ public class Match {
 
 	}
 
-	public void executeFollowerEffect(Follower thisFollower, FollowerEffect effect) {
+	public void executeFollowerEffect(Follower thisFollower, FollowerCardEffect effect) {
 
-		if (effect.type != FollowerEffect.Type.TRIGGERED_EFFECT) {
+		if (effect.type != FollowerCardEffect.Type.TRIGGERED_EFFECT) {
 			logger.warn("Only triggered effects can be executed. Ignoring");
 			return;
 		}
 
-		for (TargetedAction partUnknownType : effect.getTriggeredActions()) {
+		for (Effect partUnknownType : effect.getEffects()) {
 			executeTargetedAction(partUnknownType, thisFollower);
 		}
 
 	}
 
-	public void executeAmuletEffect(Amulet thisFollower, AmuletEffect effect) {
+	public void executeAmuletEffect(Amulet thisFollower, AmuletCardEffect effect) {
 
-		if (effect.type != AmuletEffect.Type.TRIGGERED_EFFECT) {
+		if (effect.type != AmuletCardEffect.Type.TRIGGERED_EFFECT) {
 			logger.warn("Only triggered effects can be executed. Ignoring");
 			return;
 		}
 
-		for (TargetedAction targetedAction : effect.getTriggeredActions()) {
+		for (Effect targetedAction : effect.getTriggeredEffects()) {
 			executeTargetedAction(targetedAction, thisFollower);
 		}
 
 	}
 
-	public void executeTargetedAction(TargetedAction targetedAction, Permanent source) {
-		if (targetedAction instanceof FollowerTargetedAction) {
+	public void executeTargetedAction(Effect targetedAction, Permanent source) {
+		if (targetedAction instanceof EffectOnFollower) {
 
 			Player player = source.getParentCard().getOwner();
 			Player enemyPlayer = getOtherPlayer(player);
 
-			FollowerTargetedAction followerTargeted = (FollowerTargetedAction) targetedAction;
+			EffectOnFollower followerTargeted = (EffectOnFollower) targetedAction;
 			List<Follower> targets;
 
 			switch (followerTargeted.targeting) {
@@ -261,16 +261,16 @@ public class Match {
 	}
 
 	void executeFanfareEffects(Follower follower) {
-		for (FollowerEffect effect : follower.getEffects()) {
-			if (effect.triggerType == FollowerEffect.TriggerType.FANFARE) {
+		for (FollowerCardEffect effect : follower.getEffects()) {
+			if (effect.triggerType == FollowerCardEffect.TriggerType.FANFARE) {
 				executeFollowerEffect(follower, effect);
 			}
 		}
 	}
 
 	void executeFanfareEffects(Amulet amulet) {
-		for (AmuletEffect effect : amulet.getEffects()) {
-			if (effect.triggeredEffectType == AmuletEffect.TriggerType.FANFARE) {
+		for (AmuletCardEffect effect : amulet.getEffects()) {
+			if (effect.triggeredEffectType == AmuletCardEffect.TriggerType.FANFARE) {
 				executeAmuletEffect(amulet, effect);
 			}
 		}

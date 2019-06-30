@@ -6,7 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AmuletEffect extends Effect {
+public class AmuletCardEffect extends CardEffect {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -39,40 +39,40 @@ public class AmuletEffect extends Effect {
 
 	// For triggered effects only
 	public TriggerType triggeredEffectType;
-	private List<TargetedAction> triggeredActions = new ArrayList<TargetedAction>();
+	private List<Effect> triggeredActions = new ArrayList<Effect>();
 
 	public PropertyEffectType propertyEffectType;
 
 	/**
 	 * Creates a Triggered effect
 	 */
-	public AmuletEffect(TriggerType triggeredEffectType) {
+	public AmuletCardEffect(TriggerType triggeredEffectType) {
 		type = Type.TRIGGERED_EFFECT;
 		this.triggeredEffectType = triggeredEffectType;
 	}
 
-	public AmuletEffect(Type type) {
+	public AmuletCardEffect(Type type) {
 		this.type = type;
 	}
 
 	/**
 	 * Copy constructor
 	 */
-	public AmuletEffect(AmuletEffect src) {
+	public AmuletCardEffect(AmuletCardEffect src) {
 		this.type = src.type;
 		this.triggeredEffectType = src.triggeredEffectType;
-		triggeredActions = new ArrayList<TargetedAction>();
-		for (TargetedAction part : src.triggeredActions) {
+		triggeredActions = new ArrayList<Effect>();
+		for (Effect part : src.triggeredActions) {
 			triggeredActions.add(part.cloneObject());
 		}
 
 	}
 
-	public List<TargetedAction> getTriggeredActions() {
+	public List<Effect> getTriggeredEffects() {
 		return triggeredActions;
 	}
 
-	public void addTriggeredAction(TargetedAction effect) {
+	public void addTriggeredEffect(Effect effect) {
 		if (effect == null) {
 			logger.warn("Tried to add null targeted Effect.");
 			return;
@@ -86,7 +86,7 @@ public class AmuletEffect extends Effect {
 		case TRIGGERED_EFFECT:
 			StringBuilder s = new StringBuilder();
 			s.append(triggeredEffectType.getGameText() + ": ");
-			for (TargetedAction targetedAction : triggeredActions) {
+			for (Effect targetedAction : triggeredActions) {
 				s.append(targetedAction.toString() + ". ");
 			}
 			return s.toString();

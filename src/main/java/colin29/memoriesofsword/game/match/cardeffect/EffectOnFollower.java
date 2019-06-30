@@ -12,7 +12,7 @@ import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
  * @author Colin Ta
  *
  */
-public class FollowerTargetedAction extends TargetedAction {
+public class EffectOnFollower extends Effect {
 
 	// OTHER_ENEMY_FOLLOWERS and THE_ENEMY_FOLLOWER require the parent to be something that identifies an enemy follower, ie. clash or follower strike
 
@@ -48,11 +48,11 @@ public class FollowerTargetedAction extends TargetedAction {
 
 	private ActionOnFollower action = null;
 
-	public FollowerTargetedAction(FollowerTargeting targeting) {
+	public EffectOnFollower(FollowerTargeting targeting) {
 		this.targeting = targeting;
 	}
 
-	public FollowerTargetedAction(FollowerTargetedAction src) {
+	public EffectOnFollower(EffectOnFollower src) {
 		targeting = src.targeting;
 		action = new ActionOnFollower(src.action);
 	}
@@ -65,8 +65,8 @@ public class FollowerTargetedAction extends TargetedAction {
 	}
 
 	@Override
-	public TargetedAction cloneObject() {
-		return new FollowerTargetedAction(this);
+	public Effect cloneObject() {
+		return new EffectOnFollower(this);
 	}
 
 	public ActionOnFollower getAction() {

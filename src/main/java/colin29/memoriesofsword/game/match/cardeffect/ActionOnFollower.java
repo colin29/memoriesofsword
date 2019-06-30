@@ -3,9 +3,7 @@ package colin29.memoriesofsword.game.match.cardeffect;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 /**
- * Indicates an action that can be done to a follower
- * 
- * Includes fields from all types, only the applicable ones are used
+ * An action just specifies a thing to do. It doesn't include what to target (which is an Effect).
  * 
  * @author Colin Ta
  *
@@ -18,7 +16,7 @@ public class ActionOnFollower {
 	public int amount; // used by heal_defense, do_damage
 	public int atkBuff; // used by buff
 	public int defBuff;
-	public FollowerEffect appliedEffect; // used by give_applied_effect, which just uses this field
+	public FollowerCardEffect appliedEffect; // used by give_applied_effect, which just uses this field
 
 	public ActionType actionType;
 

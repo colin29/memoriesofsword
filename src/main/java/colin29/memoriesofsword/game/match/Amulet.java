@@ -3,9 +3,9 @@ package colin29.memoriesofsword.game.match;
 import java.util.ArrayList;
 import java.util.List;
 
-import colin29.memoriesofsword.game.match.cardeffect.AmuletEffect;
+import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
 
-public class Amulet extends Permanent<AmuletEffect> {
+public class Amulet extends Permanent<AmuletCardEffect> {
 
 	Amulet(Card parentCard) {
 		super(parentCard);
@@ -14,20 +14,20 @@ public class Amulet extends Permanent<AmuletEffect> {
 	}
 
 	private void copyEffectsFromParentCard() {
-		for (AmuletEffect effect : parentCard.getAmuletEffects()) {
-			origEffects.add(new AmuletEffect(effect));
+		for (AmuletCardEffect effect : parentCard.getAmuletEffects()) {
+			origEffects.add(new AmuletCardEffect(effect));
 		}
 	}
 
 	// Returns a list of all effects on this follower (in order)
-	public List<AmuletEffect> getEffects() {
-		List<AmuletEffect> effects = new ArrayList<AmuletEffect>();
+	public List<AmuletCardEffect> getEffects() {
+		List<AmuletCardEffect> effects = new ArrayList<AmuletCardEffect>();
 		effects.addAll(origEffects);
 		effects.addAll(appliedEffects);
 		return effects;
 	}
 
-	public void addAppliedEffect(AmuletEffect effect) {
+	public void addAppliedEffect(AmuletCardEffect effect) {
 		appliedEffects.add(effect);
 	}
 
