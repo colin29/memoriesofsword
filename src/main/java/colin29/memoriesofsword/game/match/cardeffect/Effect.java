@@ -12,6 +12,11 @@ import org.slf4j.LoggerFactory;
 public abstract class Effect {
 	protected Logger logger = LoggerFactory.getLogger(this.getClass());
 
+	private EffectSource source;
+
+	/*
+	 * Produces the a copy, with the same underlying type as the original object
+	 */
 	public abstract Effect cloneObject();
 
 	protected final static String noStringRepText = "{No string representation implemented for this action type}";
@@ -21,5 +26,22 @@ public abstract class Effect {
 	 */
 	@Override
 	public abstract String toString();
+
+	public EffectSource getSource() {
+		return source;
+	}
+
+	/**
+	 * This setter must be called before adding the effect to the effect queue (and executing it)
+	 * 
+	 * @param source
+	 * @param owner
+	 */
+	public void setSource(EffectSource source) {
+		if (source == null) {
+			logger.warn("Can't set source to null");
+		}
+		this.source = source;
+	}
 
 }

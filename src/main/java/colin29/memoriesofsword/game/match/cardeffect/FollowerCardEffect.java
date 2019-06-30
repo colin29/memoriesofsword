@@ -93,7 +93,7 @@ public class FollowerCardEffect extends CardEffect {
 
 	}
 
-	public List<Effect> getEffects() {
+	public List<Effect> getTriggeredEffects() {
 		return triggeredEffects;
 	}
 

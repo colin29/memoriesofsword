@@ -8,13 +8,14 @@ import org.slf4j.LoggerFactory;
 
 import colin29.memoriesofsword.GameException;
 import colin29.memoriesofsword.game.match.Card.Type;
+import colin29.memoriesofsword.game.match.cardeffect.EffectSource;
 
 /**
  * A player in the context of a match. Atm is mostly a data class for Match: contains all the match state information that can be divided off to a
  * player
  *
  */
-public class Player {
+public class Player implements EffectSource {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -111,9 +112,9 @@ public class Player {
 			// Execute fanfare effects
 
 			if (card.type == Type.FOLLOWER) {
-				match.executeFanfareEffects((Follower) permanent);
+				match.activateFanfareEffects((Follower) permanent);
 			} else if (card.type == Type.AMULET) {
-				match.executeFanfareEffects((Amulet) permanent);
+				match.activateFanfareEffects((Amulet) permanent);
 			}
 
 			return true;
