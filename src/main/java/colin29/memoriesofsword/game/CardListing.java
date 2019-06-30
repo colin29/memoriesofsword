@@ -1,7 +1,17 @@
 package colin29.memoriesofsword.game;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import colin29.memoriesofsword.game.match.Card;
 import colin29.memoriesofsword.game.match.Card.Type;
+import colin29.memoriesofsword.game.match.cardeffect.AmuletEffect;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
+import colin29.memoriesofsword.game.match.cardeffect.SpellEffect;
 
 /**
  * A Card outside the context of a match. Unlike a cards within a match, a card listing is generally not modified.
@@ -12,6 +22,8 @@ import colin29.memoriesofsword.game.match.Card.Type;
  *
  */
 public class CardListing {
+
+	Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	private int cost;
 	private int atk;
@@ -28,6 +40,10 @@ public class CardListing {
 
 	private String name;
 
+	private final List<FollowerEffect> followerEffects = new ArrayList<FollowerEffect>();
+	private final List<AmuletEffect> amuletEffects = new ArrayList<AmuletEffect>();
+	private final List<SpellEffect> spellEffects = new ArrayList<SpellEffect>();
+
 	CardListing(String name, int cost, int atk, int def, int id, Card.Type type) {
 		this.name = name;
 		this.cost = cost;
@@ -38,11 +54,11 @@ public class CardListing {
 		this.type = type;
 	}
 
-	public static CardListing makeTempFollowerCardListing(String name, int cost, int atk, int def) {
+	public static CardListing makeFollowerTempCardListing(String name, int cost, int atk, int def) {
 		return new CardListing(name, cost, atk, def, generateNextTempId(), Type.FOLLOWER);
 	}
 
-	public static CardListing makeTempAmuletCardListing(String name, int cost) {
+	public static CardListing makeAmuletTempCardListing(String name, int cost) {
 		return new CardListing(name, cost, 0, 0, generateNextTempId(), Type.AMULET);
 	}
 
@@ -85,6 +101,54 @@ public class CardListing {
 
 	public void setText(String text) {
 		this.text = text;
+	}
+
+	public void addEffect(FollowerEffect effect) {
+		if (effect == null) {
+			logger.warn("Can't add a null effect. Ignored.");
+			return;
+		}
+		if (type != Type.FOLLOWER) {
+			logger.warn("Tried to add a Follower effect to a {} listing. Ignored.", type.name());
+			return;
+		}
+		followerEffects.add(effect);
+	}
+
+	public void addEffect(AmuletEffect effect) {
+		if (effect == null) {
+			logger.warn("Can't add a null effect. Ignored.");
+			return;
+		}
+		if (type != Type.AMULET) {
+			logger.warn("Tried to add an Amulet effect to a {} listing. Ignored.", type.name());
+			return;
+		}
+		amuletEffects.add(effect);
+	}
+
+	public void addEffect(SpellEffect effect) {
+		if (effect == null) {
+			logger.warn("Can't add a null effect. Ignored.");
+			return;
+		}
+		if (type != Type.SPELL) {
+			logger.warn("Tried to add Spell effect to a {} listing. Ignored.", type.name());
+			return;
+		}
+		spellEffects.add(effect);
+	}
+
+	public List<FollowerEffect> getFollowerEffects() {
+		return Collections.unmodifiableList(followerEffects);
+	}
+
+	public List<AmuletEffect> getAmuletEffects() {
+		return Collections.unmodifiableList(amuletEffects);
+	}
+
+	public List<SpellEffect> getSpellEffects() {
+		return Collections.unmodifiableList(spellEffects);
 	}
 
 }

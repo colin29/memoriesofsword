@@ -7,9 +7,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import colin29.memoriesofsword.game.CardListing;
 import colin29.memoriesofsword.game.match.cardeffect.AmuletEffect;
 import colin29.memoriesofsword.game.match.cardeffect.Effect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
+import colin29.memoriesofsword.game.match.cardeffect.SpellEffect;
 
 /**
  * A Card in the context of a match.
@@ -52,24 +54,29 @@ public class Card implements CardInfo {
 	 */
 	private final List<AmuletEffect> amuletEffects = new ArrayList<AmuletEffect>();
 
+	/**
+	 * For Spell cards. When a spell is played, the effects are executed.
+	 */
+	private final List<SpellEffect> spellEffects = new ArrayList<SpellEffect>();
+
 	public enum Type { // Card includes all the fields. Unused fields for a type (such as 'atk' for a spell) will simply be left default.
 		FOLLOWER, AMULET, SPELL
 	}
 
 	public final Type type;
 
-	public Card(String name, Card.Type type, int cost, int atk, int def, String text, Player owner, Match match) {
-		this.name = name;
-		this.cost = cost;
-		this.atk = atk;
-		this.def = def;
+	public Card(CardListing listing, Player owner, Match match) {
+		name = listing.getName();
+		cost = listing.getCost();
+		atk = listing.getAtk();
+		def = listing.getDef();
 
-		this.text = text;
+		type = listing.getType();
 
 		this.owner = owner;
 		this.match = match;
 
-		this.type = type;
+		copyEffectsFromCardListing(listing);
 	}
 
 	/**
@@ -174,6 +181,18 @@ public class Card implements CardInfo {
 			s.append(effect.toString());
 		}
 		return s.toString();
+	}
+
+	private void copyEffectsFromCardListing(CardListing listing) {
+		for (FollowerEffect effect : listing.getFollowerEffects()) {
+			followerEffects.add(new FollowerEffect(effect));
+		}
+		for (AmuletEffect effect : listing.getAmuletEffects()) {
+			amuletEffects.add(new AmuletEffect(effect));
+		}
+		for (SpellEffect effect : listing.getSpellEffects()) {
+			spellEffects.add(new SpellEffect(effect));
+		}
 	}
 
 }

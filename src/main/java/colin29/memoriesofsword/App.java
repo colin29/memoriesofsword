@@ -16,7 +16,6 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.kotcrab.vis.ui.VisUI;
 
-import colin29.memoriesofsword.game.CardListing;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.match.SandBoxMatchDriver;
 import colin29.memoriesofsword.util.PrefixingAssetManager;
@@ -56,7 +55,7 @@ public class App extends Game implements AppWithResources {
 		this.batch = new SpriteBatch();
 		this.shapeRenderer = new ShapeRenderer();
 
-		populateCardRepositoryWithTestCards();
+		TestCardListings.addTestCardsToRepo(cardRepo);
 
 		SandBoxMatchDriver sandboxDriver = new SandBoxMatchDriver(this, cardRepo);
 		// this.setScreen(new MatchScreen(this, cardRepo));
@@ -79,17 +78,6 @@ public class App extends Game implements AppWithResources {
 			assets.load("img/" + image.getName(), Texture.class, param);
 		}
 		logger.debug("Loaded " + images.length + " images");
-	}
-
-	private void populateCardRepositoryWithTestCards() {
-
-		CardListing c1 = CardListing.makeTempFollowerCardListing("Healing Angel", 3, 2, 3);
-		CardListing c2 = CardListing.makeTempFollowerCardListing("Shield Dude", 4, 1, 7);
-		CardListing c3 = CardListing.makeTempFollowerCardListing("Goblin", 1, 1, 2);
-
-		CardListing c4 = CardListing.makeTempAmuletCardListing("Horn of Unica", 3);
-
-		cardRepo.addCard(c1, c2, c3, c4);
 	}
 
 	@Override

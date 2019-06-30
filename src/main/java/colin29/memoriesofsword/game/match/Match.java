@@ -135,7 +135,7 @@ public class Match {
 	}
 
 	private Card createCard(CardListing listing, Player owner) {
-		return new Card(listing.getName(), listing.getType(), listing.getCost(), listing.getAtk(), listing.getDef(), listing.getText(), owner, this);
+		return new Card(listing, owner, this);
 	}
 
 	public void beginTurn(Player player) {
