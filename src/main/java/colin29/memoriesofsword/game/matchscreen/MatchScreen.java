@@ -385,23 +385,62 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		});
 	}
 
-	private void createAndDisplayInfoPanel(PermanentGraphic graphic) {
+	private void makeClickShowInfoPanel(HandCardGraphic graphic) {
+		graphic.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				logger.debug("{} was clicked", graphic.getParentCard().getName());
+				createAndDisplayInfoPanel(graphic);
+			}
+		});
+	}
 
+	private void createAndDisplayInfoPanel(PermanentGraphic graphic) {
 		if (infoPanel != null) {
 			removeInfoPanel();
 		}
+		this.infoPanel = createInfoPanel(graphic.getPermanent());
+	}
+
+	private void createAndDisplayInfoPanel(HandCardGraphic graphic) {
+		if (infoPanel != null) {
+			removeInfoPanel();
+		}
+		this.infoPanel = createInfoPanel(graphic.getParentCard());
+	}
+
+	private Table createInfoPanel(Permanent<?> permanent) {
+		InfoTable infoTable = createInfoTableSkeleton(permanent.getParentCard());
+		infoTable.elements.origEffectsText.setText(permanent.generateOrigEffectsText());
+		return infoTable;
+	}
+
+	private Table createInfoPanel(CardInfo card) {
+		InfoTable infoTable = createInfoTableSkeleton(card);
+		infoTable.elements.origEffectsText.setText(card.generateOrigEffectsText());
+		return infoTable;
+	}
+
+	/**
+	 * Creates the shape of the info table and fills in all the areas in common (Selected target can be Card or Permanent)
+	 * 
+	 * @param card:
+	 *            If the selected target is a card, that card. If the selected targeted is a permanent, its parent card.
+	 * 
+	 * @return References to table elements so that callers can fill in the rest
+	 */
+	public InfoTable createInfoTableSkeleton(final CardInfo card) {
 
 		int infoPanelWidth = 300;
-		final Permanent<?> permanent = graphic.getPermanent();
 
-		Table rootTemp = new Table();
+		InfoTable rootTemp = new InfoTable();
+
 		rootTemp.setFillParent(true);
 		stage.addActor(rootTemp);
 
 		Table info = new Table();
 		info.setBackground(RenderUtil.getSolidBG(Color.DARK_GRAY));
 
-		Card card = graphic.getPermanent().getParentCard();
 		LabelStyle largishStyle = createLabelStyle(fonts.largishFont());
 		Label nameText = new Label(card.getName(), largishStyle);
 
@@ -419,7 +458,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		statsRow.add(costText);
 
-		if (permanent instanceof Follower) {
+		if (card.getType() == Type.FOLLOWER) {
 			Label atkText = createColoredLabel(String.valueOf(card.getAtk()), largishStyle, DARK_BLUE, Align.center);
 			Label defText = createColoredLabel(String.valueOf(card.getDef()), largishStyle, DARK_RED, Align.center);
 
@@ -436,7 +475,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		info.add(nameText).row();
 		info.add(statsRow).row();
 
-		Label cardText = createColoredLabel(permanent.generateOrigEffectsText(), largishStyle, Color.BLACK, Align.left);
+		Label cardText = createColoredLabel("", largishStyle, Color.BLACK, Align.left);
+
 		cardText.setWrap(true);
 		info.add(cardText).expandX().fillX();
 
@@ -454,8 +494,19 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		rootTemp.add(info).top().width(infoPanelWidth).left().row();
 		rootTemp.add(effectsPanel);
 
-		this.infoPanel = rootTemp; // keep reference so we can remove later
+		rootTemp.elements.origEffectsText = cardText;
+		rootTemp.elements.appliedEffectsPanel = effectsPanel;
 
+		return rootTemp;
+	}
+
+	private class InfoTable extends Table {
+		public final InfoTableElements elements = new InfoTableElements();
+	}
+
+	private class InfoTableElements {
+		Label origEffectsText;
+		Table appliedEffectsPanel;
 	}
 
 	private void removeInfoPanel() {
@@ -555,6 +606,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		cardGraphic.add(cardBody).height(cardGraphicHeight);
 
+		makeClickShowInfoPanel(cardGraphic);
 		return cardGraphic;
 	}
 

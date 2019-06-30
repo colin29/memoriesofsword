@@ -71,19 +71,7 @@ public abstract class Permanent<T extends Effect> {
 	}
 
 	public String generateOrigEffectsText() {
-		StringBuilder s = new StringBuilder();
-
-		boolean first = true;
-
-		for (Effect effect : origEffects) {
-			if (first) {
-				first = false;
-			} else {
-				s.append("\n");
-			}
-			s.append(effect.toString());
-		}
-		return s.toString();
+		return Card.generateTextForListOfEffects(origEffects);
 	};
 
 }

@@ -14,4 +14,6 @@ public interface CardInfo {
 
 	Card.Type getType();
 
+	String generateOrigEffectsText();
+
 }

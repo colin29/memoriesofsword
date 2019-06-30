@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import colin29.memoriesofsword.game.match.cardeffect.AmuletEffect;
+import colin29.memoriesofsword.game.match.cardeffect.Effect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerEffect;
 
 /**
@@ -135,6 +136,44 @@ public class Card implements CardInfo {
 
 	public List<AmuletEffect> getAmuletEffects() {
 		return Collections.unmodifiableList(amuletEffects);
+	}
+
+	@Override
+	public String generateOrigEffectsText() {
+		switch (type) {
+		case FOLLOWER:
+			return generateTextForListOfEffects(this.followerEffects);
+		case AMULET:
+			return generateTextForListOfEffects(this.amuletEffects);
+		case SPELL:
+			return "No string-rep for Spell-type cards yet.";
+		default:
+			throw new AssertionError("Unknown card type!");
+
+		}
+
+	}
+
+	/**
+	 * One point of control formatting
+	 * 
+	 * @param effects
+	 * @return
+	 */
+	public static String generateTextForListOfEffects(List<? extends Effect> effects) {
+		StringBuilder s = new StringBuilder();
+
+		boolean first = true;
+
+		for (Effect effect : effects) {
+			if (first) {
+				first = false;
+			} else {
+				s.append("\n");
+			}
+			s.append(effect.toString());
+		}
+		return s.toString();
 	}
 
 }
