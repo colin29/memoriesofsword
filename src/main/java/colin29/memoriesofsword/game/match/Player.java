@@ -15,7 +15,7 @@ import colin29.memoriesofsword.game.match.cardeffect.EffectSource;
  * player
  *
  */
-public class Player implements EffectSource {
+public class Player implements EffectSource, Attackable {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -209,6 +209,13 @@ public class Player implements EffectSource {
 		return "p" + playerNumber;
 	}
 
+	/**
+	 * Returns something like "Player 2" for player 2
+	 */
+	public String getPlayerNum() {
+		return "Player " + playerNumber;
+	}
+
 	public int getHp() {
 		return hp;
 	}
@@ -237,8 +244,8 @@ public class Player implements EffectSource {
 		return graveyard.getCardInfos();
 	}
 
-	public List<Permanent> getFieldInfo() {
-		return new ArrayList<Permanent>(field);
+	public List<Permanent<?>> getFieldInfo() {
+		return new ArrayList<Permanent<?>>(field);
 	}
 
 	public int getPlayerNumber() {

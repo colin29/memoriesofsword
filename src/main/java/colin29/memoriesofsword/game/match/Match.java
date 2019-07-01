@@ -425,7 +425,7 @@ public class Match {
 		removeFromField(follower);
 		owner.graveyard.addCardToTop(card);
 
-		logger.debug("{} '{}' died and was removed from the battlefield.", follower.getOwner().getPNum(), follower.getName());
+		logger.debug("{} '{}' died and was removed from the battlefield.", follower.getLeader().getPNum(), follower.getName());
 
 		simple.notifyFieldModified(owner.playerNumber);
 		simple.notifyGraveyardModified(owner.playerNumber);
@@ -445,11 +445,16 @@ public class Match {
 	}
 
 	public void nextTurn() {
+		onEndOfTurn();
 		if (activePlayer == player1) {
 			beginTurn(player2);
 		} else {
 			beginTurn(player1);
 		}
+	}
+
+	private void onEndOfTurn() {
+		activePlayer.getAllFollowers().forEach((follower) -> follower.removeSummoningSickness());
 	}
 
 	/**
@@ -523,6 +528,14 @@ public class Match {
 
 	public int getActivePlayerNumber() {
 		return isItPlayersTurn(player1) ? 1 : 2;
+	}
+
+	public Player getInactivePlayer() {
+		return getOtherPlayer(activePlayer);
+	}
+
+	public int getNonActivePlayerNumber() {
+		return getInactivePlayer().playerNumber;
 	}
 
 	public int getTurnNumber() {

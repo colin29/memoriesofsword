@@ -43,7 +43,7 @@ public class AmuletCardEffect extends CardEffect {
 	public TriggerType triggerType;
 	private List<Effect> triggeredEffects = new ArrayList<Effect>();
 
-	public PropertyEffectType propertyEffectType;
+	public PropertyEffectType propertyType;
 
 	/**
 	 * Creates a Triggered effect
@@ -63,6 +63,7 @@ public class AmuletCardEffect extends CardEffect {
 	public AmuletCardEffect(AmuletCardEffect src) {
 		this.type = src.type;
 		this.triggerType = src.triggerType;
+		this.propertyType = src.propertyType;
 		triggeredEffects = new ArrayList<Effect>();
 		for (Effect part : src.triggeredEffects) {
 			triggeredEffects.add(part.cloneObject());

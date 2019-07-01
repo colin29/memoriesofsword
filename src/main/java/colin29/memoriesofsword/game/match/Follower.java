@@ -1,9 +1,13 @@
 package colin29.memoriesofsword.game.match;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.PropertyType;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.Type;
 
 /**
  * An follower instance that exists on the battlefield <br>
@@ -12,7 +16,7 @@ import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
  * @author Colin Ta
  *
  */
-public class Follower extends Permanent<FollowerCardEffect> implements FollowerInfo {
+public class Follower extends Permanent<FollowerCardEffect> implements FollowerInfo, Attackable {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -157,23 +161,85 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 
 	}
 
-	void attackFollower(Follower other) {
-		if (getOwner() == other.getOwner()) {
+	public void attack(Player target) {
+		if (getLeader() == target) {
+			logger.warn("Follower can't attack own Leader. Ignoring");
+			return;
+		}
+
+		logger.debug(getLeader().getPNum() + " '{}' attacks " + target.getPlayerNum(), getName());
+
+		// TODO: Activate strike (generic) triggers
+
+		target.dealDamage(atk);
+		match.simple.notifyUnitAttacked();
+	}
+
+	public void attack(Follower other) {
+		if (getLeader() == other.getLeader()) {
 			logger.warn("Follower can't attack allied follower. Ignoring");
 			return;
 		}
 
-		logger.debug(getOwner().getPNum() + " '{}' attacks " + other.getOwner().getPNum() + " '{}'", this.getName(),
+		logger.debug(getLeader().getPNum() + " '{}' attacks " + getEnemyLeader().getPNum() + " '{}'", this.getName(),
 				other.getName());
 
 		// TODO: Activate clash effects and Follower strike triggers
 
 		// Do damage to each other simultaneously
 		match.effectQueue.freeze();
+		attackCount += 1;
 		this.dealDamage(other.atk); // We want the active follower's last word triggers to happen first, so we have it take damage first
 		other.dealDamage(atk);
 		match.effectQueue.unfreeze();
 		match.processEffectQueue();
+
+		match.simple.notifyUnitAttacked();
+	}
+
+	private boolean summoningSickness = true;
+	private int attackCount = 0;
+
+	int getMaxAttacksPerTurn() {
+		return 1;
+	}
+
+	/**
+	 * Call at the start end of turns
+	 */
+	void removeSummoningSickness() {
+		summoningSickness = false;
+	}
+
+	boolean hasRush() {
+		return hasProperty(PropertyType.RUSH);
+	}
+
+	boolean hasStorm() {
+		return hasProperty(PropertyType.STORM);
+	}
+
+	boolean hasProperty(PropertyType propertyType) {
+		List<FollowerCardEffect> effects = getCardEffects();
+		boolean propertyFound = false;
+		for (FollowerCardEffect effect : effects) {
+			if (effect.type == Type.PROPERTY && effect.propertyType == propertyType) {
+				propertyFound = true;
+			}
+		}
+		return propertyFound;
+	}
+
+	public boolean canAttackFollowers() {
+		return hasAttacksRemaining() && (!summoningSickness || (hasRush() || hasStorm()));
+	}
+
+	public boolean canAttackPlayers() {
+		return hasAttacksRemaining() && (!summoningSickness || hasStorm());
+	}
+
+	private boolean hasAttacksRemaining() {
+		return attackCount < getMaxAttacksPerTurn();
 	}
 
 	private void copyEffectsFromParentCard() {

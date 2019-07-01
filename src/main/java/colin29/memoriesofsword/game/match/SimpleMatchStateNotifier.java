@@ -17,51 +17,46 @@ class SimpleMatchStateNotifier {
 	}
 
 	public void notifyCardStatsModified() {
-		for (SimpleMatchStateListener simpleListener : simpleListeners) {
-			simpleListener.cardOrPermanentStatsModified();
-		}
+		simpleListeners.forEach((listener) -> listener.cardOrPermanentStatsModified());
+	}
+
+	/**
+	 * See {@link SimpleMatchStateListener#cardOrPermanentEffectsModified}
+	 */
+	public void notifyCardEffectsModified() {
+		simpleListeners.forEach((listener) -> listener.cardOrPermanentEffectsModified());
+	}
+
+	public void notifyUnitAttacked() {
+		simpleListeners.forEach((listener) -> listener.unitAttacked());
 	}
 
 	public void notifyFieldModified(int playerNumber) {
-		for (SimpleMatchStateListener simpleListener : simpleListeners) {
-			simpleListener.fieldModified(playerNumber);
-		}
+		simpleListeners.forEach((listener) -> listener.fieldModified(playerNumber));
 	}
 
 	public void notifyHandModified(int playerNumber) {
-		for (SimpleMatchStateListener simpleListener : simpleListeners) {
-			simpleListener.handModified(playerNumber);
-		}
+		simpleListeners.forEach((listener) -> listener.handModified(playerNumber));
 	}
 
 	public void notifyDeckModified(int playerNumber) {
-		for (SimpleMatchStateListener simpleListener : simpleListeners) {
-			simpleListener.deckModified(playerNumber);
-		}
+		simpleListeners.forEach((listener) -> listener.deckModified(playerNumber));
 	}
 
 	public void notifyGraveyardModified(int playerNumber) {
-		for (SimpleMatchStateListener simpleListener : simpleListeners) {
-			simpleListener.graveyardModified(playerNumber);
-		}
+		simpleListeners.forEach((listener) -> listener.graveyardModified(playerNumber));
 	}
 
 	public void notifyPlayerHPModified(int playerNumber) {
-		for (SimpleMatchStateListener simpleListener : simpleListeners) {
-			simpleListener.playerHPModified(playerNumber);
-		}
+		simpleListeners.forEach((listener) -> listener.playerHPModified(playerNumber));
 	}
 
 	public void notifyPlayPointsModified(int playerNumber) {
-		for (SimpleMatchStateListener simpleListener : simpleListeners) {
-			simpleListener.playPointsModified(playerNumber);
-		}
+		simpleListeners.forEach((listener) -> listener.playPointsModified(playerNumber));
 	}
 
 	public void notifyTurnedChanged() {
-		for (SimpleMatchStateListener simpleListener : simpleListeners) {
-			simpleListener.turnChanged();
-		}
+		simpleListeners.forEach((listener) -> listener.turnChanged());
 	}
 
 }

@@ -11,6 +11,7 @@ import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower.FollowerTa
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer.Targeting;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.PropertyType;
 
 /**
  * Static class that creates the test card listings
@@ -25,6 +26,8 @@ public class TestCardListings {
 		c1.addEffect(createForestStrikerEffect());
 
 		CardListing c2 = CardListing.makeFollowerTempCardListing("Shield Dude", 4, 1, 7);
+		c2.addEffect(createShieldDudeEffect());
+
 		CardListing c3 = CardListing.makeFollowerTempCardListing("Goblin", 1, 1, 2);
 		c3.addEffect(createAoeDamageFollowerEffect());
 
@@ -106,6 +109,11 @@ public class TestCardListings {
 		// e3CausesInfiniteLoop.setAction(selfBuff);
 		// effect.addTriggeredEffect(e3CausesInfiniteLoop);
 
+		return effect;
+	}
+
+	private static FollowerCardEffect createShieldDudeEffect() {
+		FollowerCardEffect effect = new FollowerCardEffect(PropertyType.RUSH);
 		return effect;
 	}
 

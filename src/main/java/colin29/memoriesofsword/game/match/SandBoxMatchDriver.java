@@ -29,8 +29,6 @@ public class SandBoxMatchDriver {
 		match.nextTurn();
 		match.nextTurn();
 		match.nextTurn();
-		match.nextTurn();
-		match.nextTurn();
 
 		Player player2 = match.getPlayer(2);
 		player2.playCardWithoutPayingCost((Card) player2.getHand().get(0));
@@ -48,6 +46,10 @@ public class SandBoxMatchDriver {
 		Follower f2 = (Follower) player2.getFieldInfo().get(0);
 
 		// f1.attackFollower(f2);
+		f1.attack(f1.getEnemyLeader());
+
+		match.nextTurn();
+		match.nextTurn();
 	}
 
 }

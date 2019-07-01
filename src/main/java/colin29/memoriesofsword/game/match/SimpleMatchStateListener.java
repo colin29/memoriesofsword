@@ -16,6 +16,16 @@ public interface SimpleMatchStateListener {
 	 */
 	public void cardOrPermanentStatsModified();
 
+	/**
+	 * Called when a card or permanent receives or loses effects.
+	 * 
+	 * Note: Isn't called when new effects are copied over from card to new permanent (not needed)
+	 * 
+	 */
+	public void cardOrPermanentEffectsModified();
+
+	public void unitAttacked();
+
 	public void fieldModified(int player);
 
 	public void handModified(int player);
@@ -26,8 +36,15 @@ public interface SimpleMatchStateListener {
 
 	public void playerHPModified(int player);
 
-	public void playPointsModified(int player); // includes pp and max pp;
+	/**
+	 * Is called when a player's play points or max play points are modified
+	 * 
+	 */
+	public void playPointsModified(int player);
 
-	public void turnChanged(); // means a turn has ended and a new one is starting
+	/**
+	 * Is called after the new turn has started
+	 */
+	public void turnChanged();
 
 }

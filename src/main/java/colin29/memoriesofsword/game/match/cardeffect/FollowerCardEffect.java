@@ -60,7 +60,20 @@ public class FollowerCardEffect extends CardEffect {
 		}
 	}
 
-	public enum PropertyEffectType { // none atm
+	public enum PropertyType {
+		RUSH, STORM;
+
+		public String getGameText() {
+			switch (this) {
+			case RUSH:
+				return "Rush";
+			case STORM:
+				return "Storm";
+			default:
+				return "{no string-rep for this property-type}";
+			}
+
+		}
 	}
 
 	public final Type type;
@@ -69,14 +82,19 @@ public class FollowerCardEffect extends CardEffect {
 	public TriggerType triggerType;
 	private List<Effect> triggeredEffects = new ArrayList<Effect>();
 
-	public PropertyEffectType propertyEffectType;
+	public PropertyType propertyType;
 
 	/**
 	 * Creates a Triggered effect
 	 */
-	public FollowerCardEffect(TriggerType triggeredEffectType) {
+	public FollowerCardEffect(TriggerType triggerType) {
 		type = Type.TRIGGERED_EFFECT;
-		this.triggerType = triggeredEffectType;
+		this.triggerType = triggerType;
+	}
+
+	public FollowerCardEffect(PropertyType propertyType) {
+		type = Type.PROPERTY;
+		this.propertyType = propertyType;
 	}
 
 	public FollowerCardEffect(Type type) {
@@ -92,6 +110,7 @@ public class FollowerCardEffect extends CardEffect {
 	public FollowerCardEffect(FollowerCardEffect src) {
 		this.type = src.type;
 		this.triggerType = src.triggerType;
+		this.propertyType = src.propertyType;
 		triggeredEffects = new ArrayList<Effect>();
 		for (Effect part : src.triggeredEffects) {
 			triggeredEffects.add(part.cloneObject());
@@ -134,6 +153,8 @@ public class FollowerCardEffect extends CardEffect {
 				}
 			}
 			return s.toString();
+		case PROPERTY:
+			return propertyType.getGameText();
 		default:
 			return type.name() + " string rep not supported yet";
 		}

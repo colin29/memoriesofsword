@@ -14,6 +14,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
@@ -81,10 +84,17 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	AppWithResources app;
 
 	DragAndDrop dragAndDrop = new DragAndDrop();
+	DragAndDrop dadAttacking = new DragAndDrop();
 
 	OutlineRenderer outlineRenderer;
 
 	Table infoPanel; // shows detailed information about a clicked permanent
+
+	/**
+	 * Represents the line to draw between follower and cursor, when the user is dragging to attack
+	 */
+	final Segment attackingLine = new Segment();
+	boolean attackingLineVisible = true;
 
 	public MatchScreen(AppWithResources app, CardRepository cardRepo) {
 		super(app);
@@ -304,20 +314,26 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	}
 
 	private void regenerateFieldDisplay(int playerNumber) {
-		List<Permanent> entitiesOnField = match.getPlayer(playerNumber).getFieldInfo();
+		List<Permanent<?>> entitiesOnField = match.getPlayer(playerNumber).getFieldInfo();
+
+		PlayerPartitionUIElements elements = getUIElements(playerNumber);
+		elements.listOfFieldGraphics.clear();
 
 		Table fieldPanel = getUIElements(playerNumber).fieldPanel;
 		fieldPanel.clear();
-		for (Permanent entity : entitiesOnField) {
-			fieldPanel.add(createPermanentGraphic(entity)).size(permanentGraphicWidth, permanentGraphicHeight);
+		for (Permanent<?> entity : entitiesOnField) {
+			PermanentGraphic p = createPermanentGraphic(entity);
+			fieldPanel.add(p).size(permanentGraphicWidth, permanentGraphicHeight);
+			elements.listOfFieldGraphics.add(p);
 		}
+		makeValidUnitsAttackDraggable();
 	}
 
 	final Color DARK_BLUE = RenderUtil.rgb(51, 51, 204);
 	final Color DARK_RED = RenderUtil.rgb(128, 0, 0);
 	final Color FOREST = Color.FOREST;
 
-	private Table createPermanentGraphic(final Permanent permanent) {
+	private PermanentGraphic createPermanentGraphic(final Permanent permanent) {
 
 		// Should have a label that shows the card name
 
@@ -698,6 +714,79 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		}
 	}
 
+	private void makeValidUnitsAttackDraggable() {
+
+		dadAttacking.clear();
+
+		PlayerPartitionUIElements elements = getUIElements(match.getActivePlayerNumber());
+		PlayerPartitionUIElements elementsNonActive = getUIElements(match.getNonActivePlayerNumber());
+
+		for (PermanentGraphic p : elementsNonActive.listOfFieldGraphics) {
+			outlineRenderer.stopDrawingMyOutline(p);
+		}
+
+		for (PermanentGraphic p : elements.listOfFieldGraphics) {
+			if (p.getPermanent() instanceof Follower) {
+				Follower follower = (Follower) p.getPermanent();
+
+				if (follower.canAttackPlayers() || follower.canAttackFollowers()) {
+					makeAttackDraggable(p);
+				}
+
+				// Set outline around followers that can attack
+				if (follower.canAttackPlayers()) {
+					outlineRenderer.startDrawingMyOutline(p, Color.GREEN);
+				} else if (follower.canAttackFollowers()) {
+					outlineRenderer.startDrawingMyOutline(p, Color.YELLOW);
+				} else {
+					outlineRenderer.stopDrawingMyOutline(p);
+				}
+			}
+		}
+
+		addEnemyFollowersAsDragTargets();
+
+	}
+
+	private void makeAttackDraggable(PermanentGraphic permGraphic) { // cards are cast by dragging to the field
+		dadAttacking.addSource(new Source(permGraphic) {
+			@Override
+			public Payload dragStart(InputEvent event, float x, float y, int pointer) {
+				attackingLine.start.set(permGraphic.localToStageCoordinates(new Vector2(permGraphic.getWidth() / 2, permGraphic.getHeight() / 2)));
+				attackingLineVisible = true;
+				return new Payload();
+			}
+
+			@Override
+			public void dragStop(InputEvent event, float x, float y, int pointer, Payload payload, Target target) {
+				attackingLineVisible = false;
+			}
+
+		});
+	}
+
+	private void addEnemyFollowersAsDragTargets() {
+		PlayerPartitionUIElements elements = getUIElements(match.getNonActivePlayerNumber());
+
+		for (PermanentGraphic p : elements.listOfFieldGraphics) {
+			if (p.getPermanent() instanceof Follower) {
+				Follower defender = (Follower) p.getPermanent();
+				dadAttacking.addTarget(new Target(p) {
+					@Override
+					public boolean drag(Source source, Payload payload, float x, float y, int pointer) {
+						return true;
+					}
+
+					@Override
+					public void drop(Source source, Payload payload, float x, float y, int pointer) {
+						Follower attacker = (Follower) ((PermanentGraphic) source.getActor()).getPermanent();
+						attacker.attack(defender);
+					}
+				});
+			}
+		}
+	}
+
 	private PlayerPartitionUIElements getUIElements(int playerNumber) {
 		if (playerNumber > 0 && playerNumber <= NUM_PLAYERS) {
 			return playerUIElements[playerNumber - 1];
@@ -713,9 +802,19 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		outlineRenderer.renderOutlines();
 
-		stage.setDebugAll(Gdx.input.isKeyPressed(Keys.SPACE));
-		// stage.setDeb
+		renderAttackingLineIfVisible();
 
+		stage.setDebugAll(Gdx.input.isKeyPressed(Keys.SPACE));
+
+	}
+
+	public void renderAttackingLineIfVisible() {
+		shapeRenderer.begin(ShapeType.Line);
+		shapeRenderer.setColor(Color.WHITE);
+		if (attackingLineVisible) {
+			shapeRenderer.line(attackingLine.start, attackingLine.end);
+		}
+		shapeRenderer.end();
 	}
 
 	@Override
@@ -764,6 +863,11 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
+		if (pointer == Input.Buttons.LEFT) {
+			logger.debug("left mouse dragging");
+			Vector3 cursor = camera.unproject(new Vector3(screenX, screenY, 0));
+			attackingLine.end.set(cursor.x, cursor.y);
+		}
 		return false;
 	}
 
@@ -791,8 +895,19 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	}
 
 	@Override
+	public void cardOrPermanentEffectsModified() {
+		makeValidUnitsAttackDraggable();
+	}
+
+	@Override
+	public void unitAttacked() {
+		makeValidUnitsAttackDraggable();
+	}
+
+	@Override
 	public void fieldModified(int playerNumber) {
 		regenerateFieldDisplay(playerNumber);
+		makeValidUnitsAttackDraggable();
 	}
 
 	@Override
@@ -829,6 +944,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	public void turnChanged() {
 		updateAllEndTurnButtonDisabledStatus();
 		makeValidHandCardsDraggable();
+		makeValidUnitsAttackDraggable();
 	}
 
 	public Match getMatch() {
@@ -861,9 +977,15 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		public PlayerPartitionUIElements(OutlineRenderer outlineRenderer, int playerNumber) {
 			listOfHandGraphics = new OutlineSmartArrayList<HandCardGraphic>(outlineRenderer);
+			listOfFieldGraphics = new OutlineSmartArrayList<PermanentGraphic>(outlineRenderer);
 			this.playerNumber = playerNumber;
 		}
 
+	}
+
+	static class Segment {
+		final Vector2 start = new Vector2();
+		final Vector2 end = new Vector2();
 	}
 
 }
