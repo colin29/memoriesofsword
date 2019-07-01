@@ -85,9 +85,20 @@ public abstract class Permanent<T extends CardEffect> implements EffectSource {
 		return effects;
 	}
 
+	public Player getOwner() {
+		return parentCard.getOwner();
+	}
+
 	@Override
 	public String getSourceName() {
-		return getName();
+		return getPNumName();
+	}
+
+	/**
+	 * Get the permanent's name, prepended with the player number: "p2"
+	 */
+	public String getPNumName() {
+		return getOwner().getPNum() + " " + getName();
 	}
 
 }

@@ -41,11 +41,13 @@ public class SandBoxMatchDriver {
 		player1.playCardWithoutPayingCost((Card) player1.getHand().get(0));
 		player1.playCardWithoutPayingCost((Card) player1.getHand().get(0));
 
-		Follower f1 = (Follower) player1.getFieldInfo().get(0);
-		Follower f2 = (Follower) player1.getFieldInfo().get(1);
-
 		player1.playCardWithoutPayingCost(player1.hand.getCards().get(1));
 		// player1.playCardWithoutPayingCost(c2);
+
+		Follower f1 = (Follower) player1.getFieldInfo().get(0);
+		Follower f2 = (Follower) player2.getFieldInfo().get(0);
+
+		// f1.attackFollower(f2);
 	}
 
 }

@@ -202,6 +202,13 @@ public class Player implements EffectSource {
 		return "Player " + playerNumber;
 	}
 
+	/**
+	 * Returns something like "p2" for player 2
+	 */
+	public String getPNum() {
+		return "p" + playerNumber;
+	}
+
 	public int getHp() {
 		return hp;
 	}

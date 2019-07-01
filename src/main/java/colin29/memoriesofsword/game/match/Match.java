@@ -49,7 +49,7 @@ public class Match {
 	 */
 	private Player activePlayer;
 
-	private EffectQueue effectQueue = new EffectQueue();
+	final EffectQueue effectQueue = new EffectQueue();
 
 	final SimpleMatchStateNotifier simple = new SimpleMatchStateNotifier();
 
@@ -265,12 +265,15 @@ public class Match {
 		processEffectQueue();
 	}
 
-	private void processEffectQueue() {
+	void processEffectQueue() {
+
+		if (effectQueue.isFrozen()) {
+			logger.debug("Effect Queue frozen -- skipping");
+			return;
+		}
 
 		while (!effectQueue.isEmpty()) {
-
 			logger.debug("Processing Effect Queue");
-
 			List<Effect> effects = effectQueue.removeAll();
 
 			for (Effect effect : effects) {
@@ -422,7 +425,7 @@ public class Match {
 		removeFromField(follower);
 		owner.graveyard.addCardToTop(card);
 
-		logger.debug("Follower '{}' died and was removed from the battlefield.", follower.getName());
+		logger.debug("{} '{}' died and was removed from the battlefield.", follower.getOwner().getPNum(), follower.getName());
 
 		simple.notifyFieldModified(owner.playerNumber);
 		simple.notifyGraveyardModified(owner.playerNumber);

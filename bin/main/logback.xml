@@ -20,7 +20,7 @@
 	<!-- Particular classes which we want less info from -->
 	<logger
 		name="colin29.memoriesofsword.game.match.Follower"
-		level="INFO"></logger>
+		level="DEBUG"></logger>
 
 
 

@@ -24,6 +24,8 @@ public class EffectQueue {
 	 */
 	private int effectsAddedCount = 0;
 
+	private boolean frozen;
+
 	/**
 	 * Remember effects' source must be set before adding them
 	 * 
@@ -73,6 +75,22 @@ public class EffectQueue {
 
 	private void resetInfiniteLoopCounter() {
 		effectsAddedCount = 0;
+	}
+
+	/**
+	 * Useful when you want to atomically peform several actions before their triggered effects resolve. <br>
+	 * However, freeQueue actually doesn't enforce anything, it's up to the callers to check for it
+	 */
+	public void freeze() {
+		frozen = true;
+	}
+
+	public void unfreeze() {
+		frozen = false;
+	}
+
+	public boolean isFrozen() {
+		return frozen;
 	}
 
 	public int size() {

@@ -77,7 +77,7 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 
 		def -= damage;
 
-		logger.debug("Dealt {} damage to {}", damage, this.getName());
+		logger.debug("Dealt {} damage to {}", damage, getPNumName());
 		match.simple.notifyCardStatsModified();
 		if (def <= 0) {
 			match.handleDeath(this);
@@ -157,8 +157,23 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 
 	}
 
-	public Player getOwner() {
-		return parentCard.getOwner();
+	void attackFollower(Follower other) {
+		if (getOwner() == other.getOwner()) {
+			logger.warn("Follower can't attack allied follower. Ignoring");
+			return;
+		}
+
+		logger.debug(getOwner().getPNum() + " '{}' attacks " + other.getOwner().getPNum() + " '{}'", this.getName(),
+				other.getName());
+
+		// TODO: Activate clash effects and Follower strike triggers
+
+		// Do damage to each other simultaneously
+		match.effectQueue.freeze();
+		this.dealDamage(other.atk); // We want the active follower's last word triggers to happen first, so we have it take damage first
+		other.dealDamage(atk);
+		match.effectQueue.unfreeze();
+		match.processEffectQueue();
 	}
 
 	private void copyEffectsFromParentCard() {
