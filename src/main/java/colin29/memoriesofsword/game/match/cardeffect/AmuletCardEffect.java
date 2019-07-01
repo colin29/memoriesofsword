@@ -6,6 +6,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import colin29.memoriesofsword.util.StringUtil;
+
 public class AmuletCardEffect extends CardEffect {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -85,9 +87,22 @@ public class AmuletCardEffect extends CardEffect {
 		switch (type) {
 		case TRIGGERED_EFFECT:
 			StringBuilder s = new StringBuilder();
-			s.append(triggerType.getGameText() + ": ");
-			for (Effect targetedAction : triggeredEffects) {
-				s.append(targetedAction.toString() + ". ");
+			if (triggerType == TriggerType.ETB_ALLIED_FOLLOWER) {
+				s.append(triggerType.getGameText() + ", ");
+				boolean first = true;
+				for (Effect targetedAction : triggeredEffects) {
+					if (first) {
+						s.append(StringUtil.decapitalize(targetedAction.toString()) + ". ");
+						first = false;
+					} else {
+						s.append(targetedAction.toString() + ". ");
+					}
+				}
+			} else {
+				s.append(triggerType.getGameText() + ": ");
+				for (Effect targetedAction : triggeredEffects) {
+					s.append(targetedAction.toString() + ". ");
+				}
 			}
 			return s.toString();
 		default:

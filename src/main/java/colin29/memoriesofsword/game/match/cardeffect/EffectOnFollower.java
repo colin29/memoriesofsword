@@ -21,9 +21,14 @@ public class EffectOnFollower extends Effect {
 	 * THIS_FOLLOWER AND OTHER_ALLIES is only valid if the source (which holds the effect) is a follower. <br>
 	 * This will be checked when match tries to execute the ability.
 	 * 
+	 * Inherent Targeting: <br>
+	 * ETB_FOLLOWER is used for etb card effects <br>
+	 * 
+	 * THE_ENEMY_FOLLOWER is used for clash and follower-strike
+	 * 
 	 */
 	public enum FollowerTargeting {
-		THIS_FOLLOWER, ALLIED_FOLLOWERS, OTHER_ALLIED_FOLLOWERS, ENEMY_FOLLOWERS, THE_FOLLOWER, THE_ENEMY_FOLLOWER, OTHER_ENEMY_FOLLOWERS;
+		THIS_FOLLOWER, ALLIED_FOLLOWERS, OTHER_ALLIED_FOLLOWERS, ENEMY_FOLLOWERS, ETB_FOLLOWER, THE_ENEMY_FOLLOWER, OTHER_ENEMY_FOLLOWERS;
 
 		public String getGameText() {
 			switch (this) {
@@ -39,13 +44,19 @@ public class EffectOnFollower extends Effect {
 				return "the enemy follower";
 			case OTHER_ENEMY_FOLLOWERS:
 				return "all other enemy followers";
+			case ETB_FOLLOWER:
+				return "it";
 			default:
 				return "{unknown follower-targeting}";
+
 			}
 		}
 	}
 
-	public Follower THAT_FOLLOWER; // Used by targetings that inherently provide a target (e.g. ETB_ALLIED_FOLLOWER)
+	/**
+	 * Used by targetings that inherently provide a follower target (e.g. ETB_ALLIED_FOLLOWER, CLASH)
+	 */
+	public Follower THAT_FOLLOWER;
 
 	public FollowerTargeting targeting;
 

@@ -6,6 +6,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import colin29.memoriesofsword.util.StringUtil;
+
 /**
  * An effect that is held by a Follower on the field, or by a Follower-type Card
  * 
@@ -47,6 +49,8 @@ public class FollowerCardEffect extends CardEffect {
 				return "Leader Strike";
 			case LAST_WORD:
 				return "Last Words";
+			case ETB_ALLIED_FOLLOWER:
+				return "Whenever an allied follower enters the battlefield";
 			default:
 				return "{no string-rep for this trigger-type}";
 
@@ -110,9 +114,22 @@ public class FollowerCardEffect extends CardEffect {
 		switch (type) {
 		case TRIGGERED_EFFECT:
 			StringBuilder s = new StringBuilder();
-			s.append(triggerType.getGameText() + ": ");
-			for (Effect targetedAction : triggeredEffects) {
-				s.append(targetedAction.toString() + ". ");
+			if (triggerType == TriggerType.ETB_ALLIED_FOLLOWER) {
+				s.append(triggerType.getGameText() + ", ");
+				boolean first = true;
+				for (Effect targetedAction : triggeredEffects) {
+					if (first) {
+						s.append(StringUtil.decapitalize(targetedAction.toString()) + ". ");
+						first = false;
+					} else {
+						s.append(targetedAction.toString() + ". ");
+					}
+				}
+			} else {
+				s.append(triggerType.getGameText() + ": ");
+				for (Effect targetedAction : triggeredEffects) {
+					s.append(targetedAction.toString() + ". ");
+				}
 			}
 			return s.toString();
 		default:

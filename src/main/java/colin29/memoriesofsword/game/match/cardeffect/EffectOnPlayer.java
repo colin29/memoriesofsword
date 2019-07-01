@@ -1,5 +1,8 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
+import colin29.memoriesofsword.util.StringUtil;
+import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
+
 public class EffectOnPlayer extends Effect {
 
 	public enum Targeting {
@@ -35,6 +38,17 @@ public class EffectOnPlayer extends Effect {
 		return new EffectOnPlayer(this);
 	}
 
+	public void setAction(ActionOnPlayer action) {
+		if (action == null) {
+			throw new InvalidArgumentException("action can't be null");
+		}
+		this.action = action;
+	}
+
+	public ActionOnPlayer getAction() {
+		return action;
+	}
+
 	@Override
 	public String toString() {
 		if (action == null) {
@@ -50,7 +64,7 @@ public class EffectOnPlayer extends Effect {
 			String xCards = action.amount == 1 ? "a card" : action.amount + " cards";
 			switch (targeting) {
 			case ENEMY_LEADER:
-				return String.format("%s draws %s", capitalize(targeting.getGameText()), xCards);
+				return String.format("%s draws %s", StringUtil.capitalize(targeting.getGameText()), xCards);
 			case OWN_LEADER:
 				return "Draw " + action.amount + " cards";
 			default:
@@ -60,13 +74,6 @@ public class EffectOnPlayer extends Effect {
 			return noStringRepText;
 		}
 
-	}
-
-	/**
-	 * Converts the first character of a string to uppercase
-	 */
-	public static String capitalize(String str) {
-		return str.substring(0, 1).toUpperCase() + str.substring(1);
 	}
 
 }

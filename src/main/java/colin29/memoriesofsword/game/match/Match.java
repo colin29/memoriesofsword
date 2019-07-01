@@ -316,7 +316,7 @@ public class Match {
 				break;
 			case THE_ENEMY_FOLLOWER:
 				throw new UnsupportedOperationException();
-			case THE_FOLLOWER:
+			case ETB_FOLLOWER:
 				targets = new ArrayList<Follower>();
 				targets.add(effectOnFollower.THAT_FOLLOWER);
 				break;
