@@ -100,6 +100,12 @@ public class TestCardListings {
 		effect.addTriggeredEffect(e1);
 		effect.addTriggeredEffect(e2);
 
+		// EffectOnFollower e3CausesInfiniteLoop = new EffectOnFollower(FollowerTargeting.THIS_FOLLOWER);
+		// ActionOnFollower selfBuff = new ActionOnFollower(ActionOnFollower.ActionType.BUFF);
+		// selfBuff.atkBuff = 1;
+		// e3CausesInfiniteLoop.setAction(selfBuff);
+		// effect.addTriggeredEffect(e3CausesInfiniteLoop);
+
 		return effect;
 	}
 

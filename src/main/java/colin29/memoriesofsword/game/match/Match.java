@@ -276,6 +276,7 @@ public class Match {
 			for (Effect effect : effects) {
 				executeEffect(effect);
 			}
+			effectQueue.finishedExecutingEffects();
 		}
 
 	}

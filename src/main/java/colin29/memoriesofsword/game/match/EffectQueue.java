@@ -15,12 +15,14 @@ public class EffectQueue {
 
 	private Queue<Effect> effects = new LinkedList<Effect>();
 
-	private boolean overflowFlag = false;
-
-	/*
-	 * If size exceeds 100, queue assumes that an infinite loop is occuring and empties the array
+	/**
+	 * If more than this number of effects added before completed() is called, then it considers it an infinite loop
 	 */
-	private static final int QUEUE_OVERFLOW_THRESHOLD = 100;
+	private static final int DETECT_INFINITE_LOOP_THRESHOLD = 100;
+	/**
+	 * Tracks the total number of effects added during this chain
+	 */
+	private int effectsAddedCount = 0;
 
 	/**
 	 * Remember effects' source must be set before adding them
@@ -28,13 +30,11 @@ public class EffectQueue {
 	 * @param effect
 	 */
 	public void add(Effect effect) {
-		if (overflowFlag) {
-			return;
-		}
+		effectsAddedCount += 1;
 
-		if (effects.size() >= QUEUE_OVERFLOW_THRESHOLD) {
-			overflowFlag = true;
+		if (effectsAddedCount > DETECT_INFINITE_LOOP_THRESHOLD) {
 			effects.clear();
+			logger.info("Infinite loop detected, queue emptied and add ignored");
 			return;
 		}
 
@@ -59,15 +59,23 @@ public class EffectQueue {
 		return effects.isEmpty();
 	}
 
-	public boolean isOverflowDetected() {
-		return overflowFlag;
-	}
-
 	/**
-	 * Use this to restart normal operation after an overflow
+	 * Use this to mark that all the effects have been executed.
+	 * 
+	 * If this queue is empty, then the queue will know everything is done. This is useful because if the cycle of adds never finishes, it will
+	 * consider it an infinite loop
 	 */
-	public void reset() {
-		overflowFlag = false;
+	public void finishedExecutingEffects() {
+		if (effects.isEmpty()) {
+			resetInfiniteLoopCounter();
+		}
 	}
 
+	private void resetInfiniteLoopCounter() {
+		effectsAddedCount = 0;
+	}
+
+	public int size() {
+		return effects.size();
+	}
 }
