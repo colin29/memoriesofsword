@@ -33,7 +33,7 @@ public class FollowerCardEffect extends CardEffect {
 	}
 
 	public enum TriggerType {
-		FANFARE, CLASH, STRIKE, FOLLOWER_STRIKE, LEADER_STRIKE, LAST_WORD, ETB_ALLIED_FOLLOWER;
+		FANFARE, CLASH, STRIKE, FOLLOWER_STRIKE, LEADER_STRIKE, LAST_WORD, ETB_ALLIED_FOLLOWER, THIS_FOLLOWER_BUFFED;
 
 		public String getGameText() {
 			switch (this) {
@@ -51,6 +51,8 @@ public class FollowerCardEffect extends CardEffect {
 				return "Last Words";
 			case ETB_ALLIED_FOLLOWER:
 				return "Whenever an allied follower enters the battlefield";
+			case THIS_FOLLOWER_BUFFED:
+				return "Whenever this follower's stats are increased";
 			default:
 				return "{no string-rep for this trigger-type}";
 

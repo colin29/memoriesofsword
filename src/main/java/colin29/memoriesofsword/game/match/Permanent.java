@@ -85,4 +85,9 @@ public abstract class Permanent<T extends CardEffect> implements EffectSource {
 		return effects;
 	}
 
+	@Override
+	public String getSourceName() {
+		return getName();
+	}
+
 }

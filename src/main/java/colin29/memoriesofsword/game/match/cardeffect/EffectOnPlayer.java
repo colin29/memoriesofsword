@@ -20,7 +20,7 @@ public class EffectOnPlayer extends Effect {
 		}
 	}
 
-	Targeting targeting;
+	public Targeting targeting;
 
 	ActionOnPlayer action = null;
 

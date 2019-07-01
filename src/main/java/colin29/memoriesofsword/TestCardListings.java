@@ -21,7 +21,9 @@ import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 public class TestCardListings {
 
 	public static void addTestCardsToRepo(CardRepository cardRepo) {
-		CardListing c1 = CardListing.makeFollowerTempCardListing("Healing Angel", 3, 2, 3);
+		CardListing c1 = CardListing.makeFollowerTempCardListing("Forest Striker", 3, 2, 3);
+		c1.addEffect(createForestStrikerEffect());
+
 		CardListing c2 = CardListing.makeFollowerTempCardListing("Shield Dude", 4, 1, 7);
 		CardListing c3 = CardListing.makeFollowerTempCardListing("Goblin", 1, 1, 2);
 		c3.addEffect(createAoeDamageFollowerEffect());
@@ -36,12 +38,12 @@ public class TestCardListings {
 	private static FollowerCardEffect createAoeDamageFollowerEffect() {
 		FollowerCardEffect effect = new FollowerCardEffect(FollowerCardEffect.TriggerType.FANFARE);
 
-		EffectOnFollower targetedEffect = new EffectOnFollower(FollowerTargeting.ENEMY_FOLLOWERS);
-		effect.addTriggeredEffect(targetedEffect);
+		EffectOnFollower e = new EffectOnFollower(FollowerTargeting.ENEMY_FOLLOWERS);
+		effect.addTriggeredEffect(e);
 
 		ActionOnFollower doDamage = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
 		doDamage.amount = 2;
-		targetedEffect.setAction(doDamage);
+		e.setAction(doDamage);
 
 		return effect;
 	}
@@ -71,13 +73,32 @@ public class TestCardListings {
 	private static AmuletCardEffect createHornOfUnicaAlliedETBEffect() {
 		AmuletCardEffect effect = new AmuletCardEffect(AmuletCardEffect.TriggerType.ETB_ALLIED_FOLLOWER);
 
-		EffectOnFollower targetedAction = new EffectOnFollower(FollowerTargeting.ETB_FOLLOWER);
-		effect.addTriggeredEffect(targetedAction);
+		EffectOnFollower e = new EffectOnFollower(FollowerTargeting.ETB_FOLLOWER);
+		effect.addTriggeredEffect(e);
 
 		ActionOnFollower buff = new ActionOnFollower(ActionOnFollower.ActionType.BUFF);
 		buff.atkBuff = 0;
 		buff.defBuff = 1;
-		targetedAction.setAction(buff);
+		e.setAction(buff);
+
+		return effect;
+	}
+
+	private static FollowerCardEffect createForestStrikerEffect() {
+		FollowerCardEffect effect = new FollowerCardEffect(FollowerCardEffect.TriggerType.THIS_FOLLOWER_BUFFED);
+
+		EffectOnPlayer e1 = new EffectOnPlayer(Targeting.ENEMY_LEADER);
+		ActionOnPlayer dmg = new ActionOnPlayer(ActionOnPlayer.ActionType.DO_DAMAGE);
+		dmg.amount = 2;
+		e1.setAction(dmg);
+
+		EffectOnFollower e2 = new EffectOnFollower(FollowerTargeting.THIS_FOLLOWER);
+		ActionOnFollower selfDmg = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
+		selfDmg.amount = 1;
+		e2.setAction(selfDmg);
+
+		effect.addTriggeredEffect(e1);
+		effect.addTriggeredEffect(e2);
 
 		return effect;
 	}

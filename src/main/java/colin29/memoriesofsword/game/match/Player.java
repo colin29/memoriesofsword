@@ -116,7 +116,7 @@ public class Player implements EffectSource {
 				match.activateFanfareEffects((Amulet) permanent);
 			}
 
-			match.checkForETBEffects(permanent);
+			match.checkForFollowerETBEffects(permanent);
 
 			return true;
 		} else {
@@ -137,6 +137,48 @@ public class Player implements EffectSource {
 		notifyForDrawAction();
 	}
 
+	/**
+	 * Deals damage to the player, applying any modification effects on the follower.
+	 * 
+	 * @return The actual amount of damage dealt (can be overkill).
+	 */
+	public int dealDamage(int damage) {
+
+		if (damage < 0) {
+			logger.warn("Tried to damage for a negative amount {}. Ignoring.", damage);
+			return 0;
+		}
+
+		hp -= damage;
+		logger.debug("Dealt {} damage to Player {}", damage, playerNumber);
+		match.simple.notifyPlayerHPModified(playerNumber);
+		return damage;
+	}
+
+	/**
+	 * 
+	 * @param healAmount
+	 * @return The amount actually healed (doesn't count overheal)
+	 */
+	public int heal(int healAmount) {
+
+		if (healAmount < 0) {
+			logger.warn("Tried to heal for a negative amount {}. Ignoring.", healAmount);
+			return 0;
+		}
+
+		int oldHp = hp;
+		hp = Math.min(hp + healAmount, maxHp);
+
+		int amountHealed = hp - oldHp;
+		logger.debug("Healed {} damage on Player {}", amountHealed, playerNumber);
+
+		if (amountHealed != 0) {
+			match.simple.notifyPlayerHPModified(playerNumber);
+		}
+		return amountHealed;
+	}
+
 	private void notifyForDrawAction() {
 		simple.notifyHandModified(playerNumber);
 		simple.notifyDeckModified(playerNumber);
@@ -153,6 +195,11 @@ public class Player implements EffectSource {
 
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public String getSourceName() {
+		return "Player " + playerNumber;
 	}
 
 	public int getHp() {

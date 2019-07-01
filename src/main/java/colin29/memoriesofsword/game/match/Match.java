@@ -12,9 +12,11 @@ import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.Deck;
 import colin29.memoriesofsword.game.User;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollower;
+import colin29.memoriesofsword.game.match.cardeffect.ActionOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.Effect;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
+import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectSource;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.TriggerType;
@@ -168,38 +170,48 @@ public class Match {
 
 	}
 
-	void activateFanfareEffects(Follower follower) {
-		for (FollowerCardEffect cardEffect : follower.getCardEffects()) {
+	void activateFanfareEffects(Follower newPermanent) {
+		for (FollowerCardEffect cardEffect : newPermanent.getCardEffects()) {
 			if (cardEffect.triggerType == FollowerCardEffect.TriggerType.FANFARE) {
 				for (Effect effect : cardEffect.getTriggeredEffects()) {
-					Effect copy = effect.cloneObject();
-					copy.setSource(follower);
-					effectQueue.add(copy);
+					addToEffectQueue(effect, newPermanent);
 				}
 			}
 		}
 		processEffectQueue();
 	}
 
-	void activateFanfareEffects(Amulet amulet) {
-		for (AmuletCardEffect cardEffect : amulet.getCardEffects()) {
+	void activateFanfareEffects(Amulet newPermanent) {
+		for (AmuletCardEffect cardEffect : newPermanent.getCardEffects()) {
 			if (cardEffect.triggerType == AmuletCardEffect.TriggerType.FANFARE) {
 				for (Effect effect : cardEffect.getTriggeredEffects()) {
-					Effect copy = effect.cloneObject();
-					copy.setSource(amulet);
-					effectQueue.add(copy);
+					addToEffectQueue(effect, newPermanent);
 				}
 			}
 		}
 		processEffectQueue();
 	}
 
-	public void checkForETBEffects(Permanent<?> permanent) {
+	void checkForThisFollowerBuffedEffects(Follower follower) {
+		for (FollowerCardEffect cardEffect : follower.getCardEffects()) {
+			if (cardEffect.triggerType == FollowerCardEffect.TriggerType.THIS_FOLLOWER_BUFFED) {
+				for (Effect effect : cardEffect.getTriggeredEffects()) {
+					addToEffectQueue(effect, follower);
+				}
+			}
+		}
+		processEffectQueue();
+	}
+
+	private void addToEffectQueue(Effect effect, EffectSource source) {
+		Effect copy = effect.cloneObject();
+		copy.setSource(source);
+		effectQueue.add(copy);
+	}
+
+	public void checkForFollowerETBEffects(Permanent<?> permanent) {
 		if (permanent instanceof Follower) {
 			checkForAlliedETBEffects((Follower) permanent);
-		} else if (permanent instanceof Amulet) {
-			logger.debug("No Amulet_ETB trigger type yet");
-			return;
 		}
 	}
 
@@ -208,11 +220,10 @@ public class Match {
 	 */
 	private void checkForAlliedETBEffects(Follower newFollower) {
 		for (Permanent<?> permanent : activePlayer.field) {
-
-			List<Effect> triggeredEffects;
-
 			if (permanent instanceof Follower) {
 				Follower source = (Follower) permanent;
+				if (source == newFollower)
+					continue;
 				for (FollowerCardEffect c : source.getCardEffects()) {
 					if (c.triggerType == TriggerType.ETB_ALLIED_FOLLOWER) {
 						activateAllEffects(c.getTriggeredEffects(), source, newFollower);
@@ -258,7 +269,7 @@ public class Match {
 
 		while (!effectQueue.isEmpty()) {
 
-			logger.debug("Processing effect Queue");
+			logger.debug("Processing Effect Queue");
 
 			List<Effect> effects = effectQueue.removeAll();
 
@@ -271,7 +282,7 @@ public class Match {
 
 	private void executeEffect(Effect effect) {
 
-		logger.debug("Executing effect: " + effect.toString());
+		logger.debug("Executing effect: " + effect.toString() + " (from " + effect.getSource().getSourceName() + ")");
 
 		if (effect.getSource() == null) {
 			throw new MissingEffectSourceException();
@@ -324,16 +335,55 @@ public class Match {
 				throw new AssertionError("unhandled effect type");
 			}
 
-			logger.debug("Found {} targets.", targets.size());
+			// logger.debug("Found {} targets.", targets.size());
 
 			for (Follower target : targets) {
 				executeActionOnFollower(effectOnFollower.getAction(), target);
 			}
 		}
+		if (effect instanceof EffectOnPlayer) {
+			Player enemyPlayer = getOtherPlayer(owner);
+
+			EffectOnPlayer effectOnPlayer = (EffectOnPlayer) effect;
+
+			List<Player> targets = new ArrayList<Player>();
+
+			switch (effectOnPlayer.targeting) {
+			case ENEMY_LEADER:
+				targets.add(enemyPlayer);
+				break;
+			case OWN_LEADER:
+				targets.add(owner);
+				break;
+			default:
+				throw new AssertionError("unhandled effect type");
+			}
+
+			for (Player target : targets) {
+				executeActionOnPlayer(effectOnPlayer.getAction(), target);
+			}
+		}
+	}
+
+	private void executeActionOnPlayer(ActionOnPlayer action, Player target) {
+		switch (action.actionType) {
+		case DO_DAMAGE:
+			target.dealDamage(action.amount);
+			break;
+		case DRAW_CARD:
+			target.drawCardsFromDeck(action.amount);
+			break;
+		case HEAL_DEFENSE:
+			target.heal(action.amount);
+			break;
+		default:
+			break;
+
+		}
 
 	}
 
-	public void executeActionOnFollower(ActionOnFollower action, Follower follower) {
+	private void executeActionOnFollower(ActionOnFollower action, Follower follower) {
 
 		if (!follower.isOnOwnersBattlefield()) {
 			logger.debug("Target follower was not on owner's battlefield, so effect fizzled");
@@ -348,8 +398,7 @@ public class Match {
 			follower.heal(action.amount);
 			break;
 		case BUFF:
-			follower.buffAtk(action.atkBuff);
-			follower.buffDef(action.defBuff);
+			follower.buffStats(action.atkBuff, action.defBuff);
 			break;
 		case GIVE_APPLIED_EFFECT:
 			logger.info("Executing giving applied effect to a follower isn't supported yet.");

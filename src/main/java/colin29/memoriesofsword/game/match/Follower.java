@@ -103,7 +103,7 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 		}
 
 		int oldDef = def;
-		def = Math.max(def + healAmount, maxDef);
+		def = Math.min(def + healAmount, maxDef);
 
 		int amountHealed = def - oldDef;
 		logger.debug("Healed {} damage on {}", amountHealed, this.getName());
@@ -130,23 +130,31 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 		return def > parentCard.getDef();
 	}
 
-	public void buffAtk(int amount) {
-		if (amount < 0) {
-			logger.warn("Buff atk doesn't permit negative numbers");
+	/**
+	 * You should use this method to buff if you need to buff both stats, to avoid doubling triggering
+	 * 
+	 * @param atkBuff
+	 * @param defBuff
+	 */
+	public void buffStats(int atkBuff, int defBuff) {
+		if (atkBuff < 0 || defBuff < 0) {
+			logger.warn("Buff stats doesn't permit negative numbers: atkBuff {} defBuff {}", atkBuff, defBuff);
 			return;
 		}
-		this.atk += amount;
+		buffAtk(atkBuff);
+		buffDef(defBuff);
+		match.checkForThisFollowerBuffedEffects(this);
 		match.simple.notifyCardStatsModified();
 	}
 
-	public void buffDef(int amount) {
-		if (amount < 0) {
-			logger.warn("Buff def doesn't permit negative numbers");
-			return;
-		}
+	private void buffAtk(int amount) {
+		this.atk += amount;
+	}
+
+	private void buffDef(int amount) {
 		this.def += amount;
 		this.maxDef += amount;
-		match.simple.notifyCardStatsModified();
+
 	}
 
 	public Player getOwner() {

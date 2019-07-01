@@ -7,5 +7,10 @@ package colin29.memoriesofsword.game.match.cardeffect;
  *
  */
 public interface EffectSource {
-
+	/**
+	 * Get a name of the source in this context
+	 * 
+	 * @return
+	 */
+	public String getSourceName();
 }

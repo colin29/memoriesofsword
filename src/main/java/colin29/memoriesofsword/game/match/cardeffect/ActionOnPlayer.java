@@ -13,7 +13,7 @@ public class ActionOnPlayer {
 
 	public int amount; // used by heal_defense, do_damage, draw_card
 
-	ActionType actionType;
+	public ActionType actionType;
 
 	public ActionOnPlayer(ActionType actionType) {
 		this.actionType = actionType;
