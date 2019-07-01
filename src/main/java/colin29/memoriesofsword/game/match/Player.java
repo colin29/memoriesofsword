@@ -47,7 +47,7 @@ public class Player implements EffectSource {
 	/**
 	 * List of permanents the player owns that are on the battlefield
 	 */
-	List<Permanent> field = new ArrayList<Permanent>();
+	List<Permanent<?>> field = new ArrayList<Permanent<?>>();
 
 	@Override
 	public String toString() {
@@ -88,14 +88,14 @@ public class Player implements EffectSource {
 
 		// Actually play the card
 
-		if (card.type == Type.FOLLOWER || card.type == Type.AMULET) {
+		if (card.type.isPermanent()) {
 			if (!ignoreCost) {
 				playPoints -= card.getCost();
 				simple.notifyPlayPointsModified(playerNumber);
 			}
 			hand.remove(card);
 
-			Permanent permanent;
+			Permanent<?> permanent;
 
 			if (card.type == Type.FOLLOWER) {
 				permanent = new Follower(card);
@@ -109,13 +109,14 @@ public class Player implements EffectSource {
 
 			logger.debug("Card '{}' was played " + (ignoreCost ? "(ignoring cost)" : ""), card.getName());
 
-			// Execute fanfare effects
-
+			// Activate fanfare effects
 			if (card.type == Type.FOLLOWER) {
 				match.activateFanfareEffects((Follower) permanent);
 			} else if (card.type == Type.AMULET) {
 				match.activateFanfareEffects((Amulet) permanent);
 			}
+
+			match.checkForETBEffects(permanent);
 
 			return true;
 		} else {

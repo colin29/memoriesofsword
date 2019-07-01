@@ -17,6 +17,7 @@ import colin29.memoriesofsword.game.match.cardeffect.Effect;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
 import colin29.memoriesofsword.game.match.cardeffect.EffectSource;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.TriggerType;
 import colin29.memoriesofsword.game.match.cardeffect.InvalidTargetingTypeException;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
@@ -29,7 +30,7 @@ import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
  */
 public class Match {
 
-	Logger logger = LoggerFactory.getLogger(this.getClass());
+	protected Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	private int turnNumber;
 
@@ -168,7 +169,7 @@ public class Match {
 	}
 
 	void activateFanfareEffects(Follower follower) {
-		for (FollowerCardEffect cardEffect : follower.getEffects()) {
+		for (FollowerCardEffect cardEffect : follower.getCardEffects()) {
 			if (cardEffect.triggerType == FollowerCardEffect.TriggerType.FANFARE) {
 				for (Effect effect : cardEffect.getTriggeredEffects()) {
 					Effect copy = effect.cloneObject();
@@ -181,14 +182,74 @@ public class Match {
 	}
 
 	void activateFanfareEffects(Amulet amulet) {
-		for (AmuletCardEffect cardEffect : amulet.getEffects()) {
-			if (cardEffect.triggeredEffectType == AmuletCardEffect.TriggerType.FANFARE) {
+		for (AmuletCardEffect cardEffect : amulet.getCardEffects()) {
+			if (cardEffect.triggerType == AmuletCardEffect.TriggerType.FANFARE) {
 				for (Effect effect : cardEffect.getTriggeredEffects()) {
 					Effect copy = effect.cloneObject();
 					copy.setSource(amulet);
 					effectQueue.add(copy);
 				}
 			}
+		}
+		processEffectQueue();
+	}
+
+	public void checkForETBEffects(Permanent<?> permanent) {
+		if (permanent instanceof Follower) {
+			checkForAlliedETBEffects((Follower) permanent);
+		} else if (permanent instanceof Amulet) {
+			logger.debug("No Amulet_ETB trigger type yet");
+			return;
+		}
+	}
+
+	/**
+	 * @param follower
+	 */
+	private void checkForAlliedETBEffects(Follower newFollower) {
+		for (Permanent<?> permanent : activePlayer.field) {
+
+			List<Effect> triggeredEffects;
+
+			if (permanent instanceof Follower) {
+				Follower source = (Follower) permanent;
+				for (FollowerCardEffect c : source.getCardEffects()) {
+					if (c.triggerType == TriggerType.ETB_ALLIED_FOLLOWER) {
+						activateAllEffects(c.getTriggeredEffects(), source, newFollower);
+					}
+				}
+			} else if (permanent instanceof Amulet) {
+				Amulet source = (Amulet) permanent;
+
+				for (AmuletCardEffect c : source.getCardEffects()) {
+					if (c.triggerType == AmuletCardEffect.TriggerType.ETB_ALLIED_FOLLOWER) {
+						activateAllEffects(c.getTriggeredEffects(), source, newFollower);
+					}
+				}
+			} else {
+				throw new AssertionError();
+			}
+
+		}
+	}
+
+	/**
+	 * 
+	 * @param effects
+	 * @param source
+	 * @param THAT_FOLLOWER
+	 *            Some triggerTypes (ETB_ALLIED_FOLLOWER, inherently provide a follower, which is passed to effects that use that targeting). Can't be
+	 *            null
+	 */
+	private void activateAllEffects(List<Effect> effects, EffectSource source, Follower THAT_FOLLOWER) {
+		for (Effect effect : effects) {
+			Effect copy = effect.cloneObject();
+			copy.setSource(source);
+
+			if (copy instanceof EffectOnFollower) {
+				((EffectOnFollower) copy).THAT_FOLLOWER = THAT_FOLLOWER;
+			}
+			effectQueue.add(copy);
 		}
 		processEffectQueue();
 	}
@@ -255,8 +316,12 @@ public class Match {
 				break;
 			case THE_ENEMY_FOLLOWER:
 				throw new UnsupportedOperationException();
+			case THE_FOLLOWER:
+				targets = new ArrayList<Follower>();
+				targets.add(effectOnFollower.THAT_FOLLOWER);
+				break;
 			default:
-				throw new AssertionError("unhandled case");
+				throw new AssertionError("unhandled effect type");
 			}
 
 			logger.debug("Found {} targets.", targets.size());

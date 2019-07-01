@@ -31,7 +31,7 @@ public class FollowerCardEffect extends CardEffect {
 	}
 
 	public enum TriggerType {
-		FANFARE, CLASH, STRIKE, FOLLOWER_STRIKE, LEADER_STRIKE, LAST_WORD;
+		FANFARE, CLASH, STRIKE, FOLLOWER_STRIKE, LEADER_STRIKE, LAST_WORD, ETB_ALLIED_FOLLOWER;
 
 		public String getGameText() {
 			switch (this) {

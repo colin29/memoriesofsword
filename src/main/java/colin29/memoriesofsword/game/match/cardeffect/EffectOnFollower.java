@@ -1,5 +1,6 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
+import colin29.memoriesofsword.game.match.Follower;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 /**
@@ -22,7 +23,7 @@ public class EffectOnFollower extends Effect {
 	 * 
 	 */
 	public enum FollowerTargeting {
-		THIS_FOLLOWER, ALLIED_FOLLOWERS, OTHER_ALLIED_FOLLOWERS, ENEMY_FOLLOWERS, THE_ENEMY_FOLLOWER, OTHER_ENEMY_FOLLOWERS;
+		THIS_FOLLOWER, ALLIED_FOLLOWERS, OTHER_ALLIED_FOLLOWERS, ENEMY_FOLLOWERS, THE_FOLLOWER, THE_ENEMY_FOLLOWER, OTHER_ENEMY_FOLLOWERS;
 
 		public String getGameText() {
 			switch (this) {
@@ -43,6 +44,8 @@ public class EffectOnFollower extends Effect {
 			}
 		}
 	}
+
+	public Follower THAT_FOLLOWER; // Used by targetings that inherently provide a target (e.g. ETB_ALLIED_FOLLOWER)
 
 	public FollowerTargeting targeting;
 

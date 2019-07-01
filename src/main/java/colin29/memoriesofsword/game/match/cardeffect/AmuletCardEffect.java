@@ -38,7 +38,7 @@ public class AmuletCardEffect extends CardEffect {
 	public final Type type;
 
 	// For triggered effects only
-	public TriggerType triggeredEffectType;
+	public TriggerType triggerType;
 	private List<Effect> triggeredEffects = new ArrayList<Effect>();
 
 	public PropertyEffectType propertyEffectType;
@@ -48,7 +48,7 @@ public class AmuletCardEffect extends CardEffect {
 	 */
 	public AmuletCardEffect(TriggerType triggeredEffectType) {
 		type = Type.TRIGGERED_EFFECT;
-		this.triggeredEffectType = triggeredEffectType;
+		this.triggerType = triggeredEffectType;
 	}
 
 	public AmuletCardEffect(Type type) {
@@ -60,7 +60,7 @@ public class AmuletCardEffect extends CardEffect {
 	 */
 	public AmuletCardEffect(AmuletCardEffect src) {
 		this.type = src.type;
-		this.triggeredEffectType = src.triggeredEffectType;
+		this.triggerType = src.triggerType;
 		triggeredEffects = new ArrayList<Effect>();
 		for (Effect part : src.triggeredEffects) {
 			triggeredEffects.add(part.cloneObject());
@@ -85,7 +85,7 @@ public class AmuletCardEffect extends CardEffect {
 		switch (type) {
 		case TRIGGERED_EFFECT:
 			StringBuilder s = new StringBuilder();
-			s.append(triggeredEffectType.getGameText() + ": ");
+			s.append(triggerType.getGameText() + ": ");
 			for (Effect targetedAction : triggeredEffects) {
 				s.append(targetedAction.toString() + ". ");
 			}

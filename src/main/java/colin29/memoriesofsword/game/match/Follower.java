@@ -1,8 +1,5 @@
 package colin29.memoriesofsword.game.match;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,14 +157,6 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 		for (FollowerCardEffect effect : parentCard.getFollowerEffects()) {
 			origEffects.add(new FollowerCardEffect(effect));
 		}
-	}
-
-	// Returns a list of all effects on this follower (in order)
-	public List<FollowerCardEffect> getEffects() {
-		List<FollowerCardEffect> effects = new ArrayList<FollowerCardEffect>();
-		effects.addAll(origEffects);
-		effects.addAll(appliedEffects);
-		return effects;
 	}
 
 	public void addAppliedEffect(FollowerCardEffect effect) {

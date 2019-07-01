@@ -18,7 +18,7 @@ import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
  * 
  * All permanents take up a slot on their owner's field. <br>
  * 
- * The parameterized type just represents the corresponding effect type. There is not a tight coupling between the two, just permanent who stores
+ * The parameterized type just represents the corresponding card effect type. There is not a tight coupling between the two, just permanent who stores
  * effects
  * 
  * @author Colin Ta
@@ -74,5 +74,15 @@ public abstract class Permanent<T extends CardEffect> implements EffectSource {
 	public String generateOrigEffectsText() {
 		return Card.generateTextForListOfEffects(origEffects);
 	};
+
+	/**
+	 * Returns a list of all effects on this follower, in order
+	 */
+	public final List<T> getCardEffects() {
+		List<T> effects = new ArrayList<T>();
+		effects.addAll(origEffects);
+		effects.addAll(appliedEffects);
+		return effects;
+	}
 
 }

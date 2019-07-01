@@ -4,9 +4,9 @@ import colin29.memoriesofsword.game.CardListing;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollower;
 import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
-import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower.FollowerTargeting;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 
 /**
  * Static class that creates the test card listings
@@ -23,7 +23,8 @@ public class TestCardListings {
 		c3.addEffect(createAoeDamageFollowerEffect());
 
 		CardListing c4 = CardListing.makeAmuletTempCardListing("Horn of Unica", 3);
-		c4.addEffect(createHornOfUnicaEffect());
+		// c4.addEffect(createHornOfUnicaEffect());
+		c4.addEffect(createHornOfUnicaAlliedETBEffect());
 
 		cardRepo.addCard(c1, c2, c3, c4);
 	}
@@ -49,6 +50,20 @@ public class TestCardListings {
 
 		ActionOnFollower buff = new ActionOnFollower(ActionOnFollower.ActionType.BUFF);
 		buff.atkBuff = 2;
+		buff.defBuff = 1;
+		targetedAction.setAction(buff);
+
+		return myEffect;
+	}
+
+	private static AmuletCardEffect createHornOfUnicaAlliedETBEffect() {
+		AmuletCardEffect myEffect = new AmuletCardEffect(AmuletCardEffect.TriggerType.ETB_ALLIED_FOLLOWER);
+
+		EffectOnFollower targetedAction = new EffectOnFollower(FollowerTargeting.THE_FOLLOWER);
+		myEffect.addTriggeredEffect(targetedAction);
+
+		ActionOnFollower buff = new ActionOnFollower(ActionOnFollower.ActionType.BUFF);
+		buff.atkBuff = 0;
 		buff.defBuff = 1;
 		targetedAction.setAction(buff);
 

@@ -60,7 +60,11 @@ public class Card implements CardInfo {
 	private final List<SpellEffect> spellEffects = new ArrayList<SpellEffect>();
 
 	public enum Type { // Card includes all the fields. Unused fields for a type (such as 'atk' for a spell) will simply be left default.
-		FOLLOWER, AMULET, SPELL
+		FOLLOWER, AMULET, SPELL;
+
+		public boolean isPermanent() {
+			return (this == FOLLOWER || this == AMULET);
+		}
 	}
 
 	public final Type type;
