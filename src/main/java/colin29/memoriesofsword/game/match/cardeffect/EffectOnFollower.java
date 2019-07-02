@@ -58,7 +58,7 @@ public class EffectOnFollower extends Effect {
 	 */
 	public Follower THAT_FOLLOWER;
 
-	public FollowerTargeting targeting;
+	final public FollowerTargeting targeting;
 
 	private ActionOnFollower action = null;
 

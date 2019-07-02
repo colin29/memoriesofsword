@@ -3,11 +3,14 @@ package colin29.memoriesofsword;
 import colin29.memoriesofsword.game.CardListing;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollower;
+import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnPlayer.ActionType;
 import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower.FollowerTargeting;
+import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollowerOrPlayer;
+import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollowerOrPlayer.FollowerOrPlayerTargeting;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer.Targeting;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
@@ -30,7 +33,7 @@ public class TestCardListings {
 		c2.addEffect(createShieldDudeEffect());
 
 		CardListing c3 = CardListing.makeFollowerTempCardListing("Goblin", 1, 1, 2);
-		c3.addEffect(createAoeDamageFollowerEffect());
+		c3.addEffect(createAoeDamageEffect());
 
 		CardListing c4 = CardListing.makeAmuletTempCardListing("Horn of Unica", 3);
 		c4.addEffect(createHornOfUnicaEffect());
@@ -48,14 +51,15 @@ public class TestCardListings {
 		EffectOnFollower e = new EffectOnFollower(FollowerTargeting.THE_ENEMY_FOLLOWER);
 
 		ActionOnFollower doDamage = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
-		doDamage.amount = 2;
+		doDamage.amount = 6;
 		e.setAction(doDamage);
 		effect.addTriggeredEffect(e);
+		effect.addTriggeredEffect(e.cloneObject());
 
 		return effect;
 	}
 
-	private static FollowerCardEffect createAoeDamageFollowerEffect() {
+	private static FollowerCardEffect createAoeDamageEffect() {
 		FollowerCardEffect effect = new FollowerCardEffect(FollowerCardEffect.TriggerType.FANFARE);
 
 		EffectOnFollower e = new EffectOnFollower(FollowerTargeting.ENEMY_FOLLOWERS);
@@ -64,6 +68,13 @@ public class TestCardListings {
 		ActionOnFollower doDamage = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
 		doDamage.amount = 2;
 		e.setAction(doDamage);
+
+		EffectOnFollowerOrPlayer e2 = new EffectOnFollowerOrPlayer(FollowerOrPlayerTargeting.ALL_ENEMIES);
+		effect.addTriggeredEffect(e2);
+
+		ActionOnFollowerOrPlayer doDamageAllEnemies = new ActionOnFollowerOrPlayer(ActionOnFollowerOrPlayer.ActionType.DO_DAMAGE);
+		doDamageAllEnemies.amount = 2;
+		e2.setAction(doDamageAllEnemies);
 
 		return effect;
 	}

@@ -19,7 +19,7 @@ public abstract class Effect {
 	 */
 	public abstract Effect cloneObject();
 
-	protected final static String noStringRepText = "{No string representation implemented for this action type}";
+	protected final static String noStringRepText = "{No string representation implemented for this effect type}";
 
 	/**
 	 * Returns a text representation that IS used to generated card text

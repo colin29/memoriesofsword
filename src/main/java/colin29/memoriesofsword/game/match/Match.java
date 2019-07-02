@@ -12,14 +12,17 @@ import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.Deck;
 import colin29.memoriesofsword.game.User;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollower;
+import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.Effect;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
+import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectSource;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.TriggerType;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.InvalidTargetingTypeException;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
@@ -314,26 +317,25 @@ public class Match {
 		}
 
 		EffectSource source = effect.getSource();
-		Player owner;
+		final Player player;
 
 		if (source instanceof Player) {
-			owner = (Player) source;
+			player = (Player) source;
 		} else if (source instanceof Permanent) {
-			owner = ((Permanent<?>) source).parentCard.getOwner();
+			player = ((Permanent<?>) source).parentCard.getOwner();
 		} else {
 			throw new AssertionError();
 		}
+		Player enemyPlayer = getOtherPlayer(player);
 
 		if (effect instanceof EffectOnFollower) {
-
-			Player enemyPlayer = getOtherPlayer(owner);
 
 			EffectOnFollower effectOnFollower = (EffectOnFollower) effect;
 			List<Follower> targets;
 
 			switch (effectOnFollower.targeting) {
 			case ALLIED_FOLLOWERS:
-				targets = owner.getAllFollowers();
+				targets = player.getAllFollowers();
 				break;
 			case ENEMY_FOLLOWERS:
 				targets = enemyPlayer.getAllFollowers();
@@ -362,14 +364,9 @@ public class Match {
 				throw new AssertionError("unhandled effect type");
 			}
 
-			// logger.debug("Found {} targets.", targets.size());
-
-			for (Follower target : targets) {
-				executeActionOnFollower(effectOnFollower.getAction(), target);
-			}
+			targets.forEach((target) -> executeActionOnFollower(effectOnFollower.getAction(), target));
 		}
 		if (effect instanceof EffectOnPlayer) {
-			Player enemyPlayer = getOtherPlayer(owner);
 
 			EffectOnPlayer effectOnPlayer = (EffectOnPlayer) effect;
 
@@ -380,16 +377,48 @@ public class Match {
 				targets.add(enemyPlayer);
 				break;
 			case OWN_LEADER:
-				targets.add(owner);
+				targets.add(player);
 				break;
 			default:
 				throw new AssertionError("unhandled effect type");
 			}
-
-			for (Player target : targets) {
-				executeActionOnPlayer(effectOnPlayer.getAction(), target);
-			}
+			targets.forEach((target) -> executeActionOnPlayer(effectOnPlayer.getAction(), target));
 		}
+		if (effect instanceof EffectOnFollowerOrPlayer) {
+
+			EffectOnFollowerOrPlayer e = (EffectOnFollowerOrPlayer) effect;
+
+			List<FollowerOrPlayer> targets = new ArrayList<FollowerOrPlayer>();
+
+			switch (e.targeting) {
+			case ALL_ALLIES:
+				targets.add(player);
+				targets.addAll(player.getAllFollowers());
+				break;
+			case ALL_ENEMIES:
+				targets.add(enemyPlayer);
+				targets.addAll(enemyPlayer.getAllFollowers());
+				break;
+			default:
+				throw new AssertionError("unhandled effect type");
+
+			}
+			targets.forEach((target) -> executeActionOnFollowerOrPlayer(e.getAction(), target));
+		}
+	}
+
+	private void executeActionOnFollowerOrPlayer(ActionOnFollowerOrPlayer action, FollowerOrPlayer target) {
+		switch (action.actionType) {
+		case DO_DAMAGE:
+			target.dealDamage(action.amount);
+			break;
+		case HEAL_DEFENSE:
+			target.heal(action.amount);
+			break;
+		default:
+			throw new AssertionError("Unhandled FollowerOrPlayer action type");
+		}
+
 	}
 
 	private void executeActionOnPlayer(ActionOnPlayer action, Player target) {

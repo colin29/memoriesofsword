@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.PropertyType;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.Type;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
 
 /**
  * An follower instance that exists on the battlefield <br>
@@ -16,7 +17,7 @@ import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.Type;
  * @author Colin Ta
  *
  */
-public class Follower extends Permanent<FollowerCardEffect> implements FollowerInfo, Attackable {
+public class Follower extends Permanent<FollowerCardEffect> implements FollowerInfo, Attackable, FollowerOrPlayer {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 

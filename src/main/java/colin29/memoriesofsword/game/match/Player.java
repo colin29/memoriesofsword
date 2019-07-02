@@ -9,13 +9,14 @@ import org.slf4j.LoggerFactory;
 import colin29.memoriesofsword.GameException;
 import colin29.memoriesofsword.game.match.Card.Type;
 import colin29.memoriesofsword.game.match.cardeffect.EffectSource;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
 
 /**
  * A player in the context of a match. Atm is mostly a data class for Match: contains all the match state information that can be divided off to a
  * player
  *
  */
-public class Player implements EffectSource, Attackable {
+public class Player implements EffectSource, Attackable, FollowerOrPlayer {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
