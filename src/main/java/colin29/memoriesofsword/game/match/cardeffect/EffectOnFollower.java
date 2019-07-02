@@ -58,19 +58,19 @@ public class EffectOnFollower extends Effect {
 		}
 	}
 
+	final public FollowerTargeting targeting;
+
+	private ActionOnFollower action = null;
+
 	/**
 	 * Used by targetings that inherently provide a follower target (e.g. ETB_ALLIED_FOLLOWER, CLASH)
 	 */
 	public Follower THAT_FOLLOWER;
 
 	/**
-	 * Used by prompted targeting (ie. SELECTED_FOLLOWER)
+	 * Used by user prompt targeting (ie. SELECTED_FOLLOWER)
 	 */
 	public Follower SELECTED_FOLLOWER;
-
-	final public FollowerTargeting targeting;
-
-	private ActionOnFollower action = null;
 
 	public EffectOnFollower(FollowerTargeting targeting) {
 		this.targeting = targeting;
@@ -79,6 +79,9 @@ public class EffectOnFollower extends Effect {
 	public EffectOnFollower(EffectOnFollower src) {
 		targeting = src.targeting;
 		action = new ActionOnFollower(src.action);
+
+		THAT_FOLLOWER = src.THAT_FOLLOWER;
+		SELECTED_FOLLOWER = src.SELECTED_FOLLOWER;
 	}
 
 	public void setAction(ActionOnFollower action) {

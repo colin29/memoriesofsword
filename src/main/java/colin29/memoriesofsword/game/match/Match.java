@@ -231,7 +231,7 @@ public class Match {
 					}
 				}
 			}
-			// Now that everything is recorded, we prompt the user
+			// Now that everything is stashed, we prompt the user
 			ifSelectionStillRequiredPromptUserElseContinue();
 
 		} else {
@@ -247,15 +247,20 @@ public class Match {
 		}
 	}
 
-	public void ifSelectionStillRequiredPromptUserElseContinue() {
+	/**
+	 * @return true if selection is still required (and an async call was made)
+	 */
+	public boolean ifSelectionStillRequiredPromptUserElseContinue() {
 		if (!effectsLeftThatNeedUserSelection.isEmpty()) {
 			EffectOnFollower effect = effectsLeftThatNeedUserSelection.remove(0);
 			userUI.promptUserForFollowerSelect((Follower follower) -> {
 				effect.SELECTED_FOLLOWER = follower;
 				ifSelectionStillRequiredPromptUserElseContinue();
 			}, effect);
+			return true;
 		} else {
 			activateAllEffectsOnHold();
+			return false;
 		}
 	}
 
@@ -688,6 +693,14 @@ public class Match {
 
 	public int getTurnNumber() {
 		return turnNumber;
+	}
+
+	@FunctionalInterface
+	public static interface FollowerCallback {
+		/**
+		 * @return true if further selection is required (and other async call is being made)
+		 */
+		public abstract void provideSelection(Follower follower);
 	}
 
 }

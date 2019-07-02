@@ -1,8 +1,6 @@
 package colin29.memoriesofsword.game.matchscreen;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +49,7 @@ import colin29.memoriesofsword.game.match.CardInfo;
 import colin29.memoriesofsword.game.match.Follower;
 import colin29.memoriesofsword.game.match.ListOfCardsEmptyException;
 import colin29.memoriesofsword.game.match.Match;
+import colin29.memoriesofsword.game.match.Match.FollowerCallback;
 import colin29.memoriesofsword.game.match.Permanent;
 import colin29.memoriesofsword.game.match.Player;
 import colin29.memoriesofsword.game.match.SimpleMatchStateListener;
@@ -1045,12 +1044,11 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		final Vector2 end = new Vector2();
 	}
 
-	final List<Consumer<Follower>> followerSelectedCallbacks = new ArrayList<Consumer<Follower>>();
-	// List<Permant>
+	FollowerCallback followerSelectedCallback;
 
 	@Override
-	public void promptUserForFollowerSelect(Consumer<Follower> callback, EffectOnFollower effect) {
-		followerSelectedCallbacks.add(callback);
+	public void promptUserForFollowerSelect(FollowerCallback callback, EffectOnFollower effect) {
+		followerSelectedCallback = callback;
 		promptContext = PromptContext.USER_PROMPT;
 
 		createAndDisplayTargetingInfoPanel(effect, effect.getSource().getOwner().getPlayerNumber());
@@ -1063,16 +1061,23 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	private void fufillUserPromptForFollowerSelect(Follower follower) {
 		// followerSelectedCallbacks.forEach((callback) -> callback.accept(follower));
 
-		for (Consumer<Follower> callback : followerSelectedCallbacks) {
-			callback.accept(follower);
+		if (followerSelectedCallback == null) {
+			logger.warn("Follower selected callback is null. It shouldn't be.");
 		}
-		followerSelectedCallbacks.clear();
+
+		// Need to copy a tempRef because we need to clear the main field BEFORE making the callback. Because the callback could make another async
+		// call, we don't want to modify related state after making the callback
+		FollowerCallback followerSelectedCallbackTempRef = followerSelectedCallback;
+		followerSelectedCallback = null;
 		promptContext = PromptContext.IDLE;
 		removeTargetingInfoPanel();
 
 		makeValidHandCardsDraggable();
 		makeValidUnitsAttackDraggable();
 		enableActivePlayerEndTurnButton();
+
+		followerSelectedCallbackTempRef.provideSelection(follower);
+
 	}
 
 	protected void onPermanentClicked(Permanent<?> permanent) {

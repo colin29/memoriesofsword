@@ -145,6 +145,7 @@ public class TestCardListings {
 		e1.setAction(dmg);
 
 		effect.addTriggeredEffect(e1);
+		effect.addTriggeredEffect(e1.cloneObject());
 		return effect;
 	}
 
