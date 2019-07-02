@@ -42,6 +42,7 @@ import colin29.memoriesofsword.App;
 import colin29.memoriesofsword.MyFonts;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.match.Amulet;
+import colin29.memoriesofsword.game.match.Attackable;
 import colin29.memoriesofsword.game.match.Card;
 import colin29.memoriesofsword.game.match.Card.Type;
 import colin29.memoriesofsword.game.match.CardInfo;
@@ -744,7 +745,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			}
 		}
 
-		addEnemyFollowersAsDragTargets();
+		addEnemyFollowersAndLeaderAsDragTargets();
 
 	}
 
@@ -765,26 +766,30 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		});
 	}
 
-	private void addEnemyFollowersAsDragTargets() {
+	private void addEnemyFollowersAndLeaderAsDragTargets() {
 		PlayerPartitionUIElements elements = getUIElements(match.getNonActivePlayerNumber());
-
 		for (PermanentGraphic p : elements.listOfFieldGraphics) {
 			if (p.getPermanent() instanceof Follower) {
 				Follower defender = (Follower) p.getPermanent();
-				dadAttacking.addTarget(new Target(p) {
-					@Override
-					public boolean drag(Source source, Payload payload, float x, float y, int pointer) {
-						return true;
-					}
-
-					@Override
-					public void drop(Source source, Payload payload, float x, float y, int pointer) {
-						Follower attacker = (Follower) ((PermanentGraphic) source.getActor()).getPermanent();
-						attacker.attack(defender);
-					}
-				});
+				addAttackableAsDragTarget(defender, p);
 			}
 		}
+		addAttackableAsDragTarget(match.getNonActivePlayer(), elements.handPanel);
+	}
+
+	private void addAttackableAsDragTarget(Attackable defender, Actor dropTarget) {
+		dadAttacking.addTarget(new Target(dropTarget) {
+			@Override
+			public boolean drag(Source source, Payload payload, float x, float y, int pointer) {
+				return true;
+			}
+
+			@Override
+			public void drop(Source source, Payload payload, float x, float y, int pointer) {
+				Follower attacker = (Follower) ((PermanentGraphic) source.getActor()).getPermanent();
+				attacker.attack(defender);
+			}
+		});
 	}
 
 	private PlayerPartitionUIElements getUIElements(int playerNumber) {
@@ -864,7 +869,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
 		if (pointer == Input.Buttons.LEFT) {
-			logger.debug("left mouse dragging");
 			Vector3 cursor = camera.unproject(new Vector3(screenX, screenY, 0));
 			attackingLine.end.set(cursor.x, cursor.y);
 		}

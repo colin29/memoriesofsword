@@ -166,18 +166,37 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 			logger.warn("Follower can't attack own Leader. Ignoring");
 			return;
 		}
+		if (!canAttackPlayers()) {
+			logger.warn("Follower is unable to attack followers. Ignoring.");
+			return;
+		}
 
 		logger.debug(getLeader().getPNum() + " '{}' attacks " + target.getPlayerNum(), getName());
 
 		// TODO: Activate strike (generic) triggers
 
+		attackCount += 1;
 		target.dealDamage(atk);
 		match.simple.notifyUnitAttacked();
+	}
+
+	public void attack(Attackable target) {
+		if (target instanceof Follower) {
+			attack((Follower) target);
+		} else if (target instanceof Player) {
+			attack((Player) target);
+		} else {
+			logger.warn("Unusupported Attackable type {}", target.getClass());
+		}
 	}
 
 	public void attack(Follower other) {
 		if (getLeader() == other.getLeader()) {
 			logger.warn("Follower can't attack allied follower. Ignoring");
+			return;
+		}
+		if (!canAttackFollowers()) {
+			logger.warn("Follower is unable to attack followers. Ignoring.");
 			return;
 		}
 
@@ -202,6 +221,10 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 
 	int getMaxAttacksPerTurn() {
 		return 1;
+	}
+
+	void resetAttacksPerTurn() {
+		attackCount = 0;
 	}
 
 	/**

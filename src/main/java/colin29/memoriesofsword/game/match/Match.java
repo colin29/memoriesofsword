@@ -156,6 +156,8 @@ public class Match {
 			activePlayer.maxPP += 1;
 		activePlayer.playPoints = activePlayer.maxPP;
 
+		player.onTurnStart();
+
 		simple.notifyTurnedChanged();
 		simple.notifyPlayPointsModified(player.playerNumber);
 
@@ -530,12 +532,12 @@ public class Match {
 		return isItPlayersTurn(player1) ? 1 : 2;
 	}
 
-	public Player getInactivePlayer() {
+	public Player getNonActivePlayer() {
 		return getOtherPlayer(activePlayer);
 	}
 
 	public int getNonActivePlayerNumber() {
-		return getInactivePlayer().playerNumber;
+		return getNonActivePlayer().playerNumber;
 	}
 
 	public int getTurnNumber() {

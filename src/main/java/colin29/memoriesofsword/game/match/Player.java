@@ -125,6 +125,10 @@ public class Player implements EffectSource, Attackable {
 		}
 	}
 
+	void onTurnStart() {
+		getAllFollowers().forEach((follower) -> follower.resetAttacksPerTurn());
+	}
+
 	public void drawFromDeck() {
 		hand.addCardToBottom(deck.drawFromTop());
 		notifyForDrawAction();
