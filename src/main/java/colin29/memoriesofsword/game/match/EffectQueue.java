@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import colin29.memoriesofsword.game.match.cardeffect.Effect;
+import colin29.memoriesofsword.game.match.cardeffect.EffectSource;
 
 public class EffectQueue {
 
@@ -27,11 +28,27 @@ public class EffectQueue {
 	private boolean frozen;
 
 	/**
+	 * 
+	 * @param effect
+	 * @param source
+	 */
+	public Effect addCopyToEffectQueue(Effect effect, EffectSource source) {
+		Effect copy = effect.cloneObject();
+		copy.setSource(source);
+		add(copy);
+		return copy;
+	}
+
+	public void addEffectAlreadyCopiedAndSourceSet(Effect copy) {
+		add(copy);
+	}
+
+	/**
 	 * Remember effects' source must be set before adding them
 	 * 
 	 * @param effect
 	 */
-	public void add(Effect effect) {
+	private void add(Effect effect) {
 		effectsAddedCount += 1;
 
 		if (effectsAddedCount > DETECT_INFINITE_LOOP_THRESHOLD) {

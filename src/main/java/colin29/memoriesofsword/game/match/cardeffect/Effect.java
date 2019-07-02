@@ -32,7 +32,7 @@ public abstract class Effect {
 	}
 
 	/**
-	 * This setter must be called before adding the effect to the effect queue (and executing it)
+	 * This setter must be called before adding the effect to the effect queue
 	 * 
 	 * @param source
 	 * @param owner

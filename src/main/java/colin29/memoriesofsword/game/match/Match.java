@@ -2,7 +2,6 @@ package colin29.memoriesofsword.game.match;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -181,13 +180,88 @@ public class Match {
 
 	}
 
+	private final ArrayList<EffectOnFollower> effectsLeftThatNeedUserSelection = new ArrayList<EffectOnFollower>();
+
+	/**
+	 * When an ability requires targeting the current thread must be abandoned. So all effects on hold are stored here. When all targeting is
+	 * complete, all these effects are added to the effectQueue
+	 */
+	private final ArrayList<Effect> effectsOnHold = new ArrayList<Effect>();
+
 	void activateFanfareEffects(Follower newPermanent) {
+
+		effectsLeftThatNeedUserSelection.clear();
+
+		boolean userSelectionRequired = false;
+
+		// scan for effects that require user selection
 		for (FollowerCardEffect cardEffect : newPermanent.getCardEffects()) {
 			if (cardEffect.triggerType == FollowerCardEffect.TriggerType.FANFARE) {
+
 				for (Effect effect : cardEffect.getTriggeredEffects()) {
-					addToEffectQueue(effect, newPermanent);
+					if (effect instanceof EffectOnFollower) {
+						EffectOnFollower effectFol = (EffectOnFollower) effect;
+						if (effectFol.targeting == FollowerTargeting.SELECTED_FOLLOWER) {
+							userSelectionRequired = true;
+						}
+					}
 				}
 			}
+		}
+		effectsOnHold.clear();
+		effectsLeftThatNeedUserSelection.clear();
+
+		if (userSelectionRequired) { // If user selection is required, we stash all the effects, tally up all the effects that required targeting,
+										// then prompt the user for them, one by one
+			for (FollowerCardEffect cardEffect : newPermanent.getCardEffects()) {
+				if (cardEffect.triggerType == FollowerCardEffect.TriggerType.FANFARE) {
+
+					for (Effect effect : cardEffect.getTriggeredEffects()) {
+
+						Effect copy = effect.cloneObject();
+						copy.setSource(newPermanent);
+
+						effectsOnHold.add(copy);
+						if (effect instanceof EffectOnFollower) {
+							EffectOnFollower effectFol = (EffectOnFollower) effect;
+							if (effectFol.targeting == FollowerTargeting.SELECTED_FOLLOWER) {
+								effectsLeftThatNeedUserSelection.add((EffectOnFollower) copy);
+							}
+						}
+					}
+				}
+			}
+			// Now that everything is recorded, we prompt the user
+			ifSelectionStillRequiredPromptUserElseContinue();
+
+		} else {
+			for (FollowerCardEffect cardEffect : newPermanent.getCardEffects()) {
+				if (cardEffect.triggerType == FollowerCardEffect.TriggerType.FANFARE) {
+
+					for (Effect effect : cardEffect.getTriggeredEffects()) {
+						effectQueue.addCopyToEffectQueue(effect, newPermanent);
+					}
+				}
+			}
+			processEffectQueue();
+		}
+	}
+
+	public void ifSelectionStillRequiredPromptUserElseContinue() {
+		if (!effectsLeftThatNeedUserSelection.isEmpty()) {
+			EffectOnFollower effect = effectsLeftThatNeedUserSelection.remove(0);
+			userUI.promptUserForFollowerSelect((Follower follower) -> {
+				effect.SELECTED_FOLLOWER = follower;
+				ifSelectionStillRequiredPromptUserElseContinue();
+			}, effect);
+		} else {
+			activateAllEffectsOnHold();
+		}
+	}
+
+	public void activateAllEffectsOnHold() {
+		for (Effect effect : effectsOnHold) {
+			effectQueue.addEffectAlreadyCopiedAndSourceSet(effect);
 		}
 		processEffectQueue();
 	}
@@ -196,7 +270,7 @@ public class Match {
 		for (AmuletCardEffect cardEffect : newPermanent.getCardEffects()) {
 			if (cardEffect.triggerType == AmuletCardEffect.TriggerType.FANFARE) {
 				for (Effect effect : cardEffect.getTriggeredEffects()) {
-					addToEffectQueue(effect, newPermanent);
+					effectQueue.addCopyToEffectQueue(effect, newPermanent);
 				}
 			}
 		}
@@ -207,17 +281,11 @@ public class Match {
 		for (FollowerCardEffect cardEffect : follower.getCardEffects()) {
 			if (cardEffect.triggerType == FollowerCardEffect.TriggerType.THIS_FOLLOWER_BUFFED) {
 				for (Effect effect : cardEffect.getTriggeredEffects()) {
-					addToEffectQueue(effect, follower);
+					effectQueue.addCopyToEffectQueue(effect, follower);
 				}
 			}
 		}
 		processEffectQueue();
-	}
-
-	private void addToEffectQueue(Effect effect, EffectSource source) {
-		Effect copy = effect.cloneObject();
-		copy.setSource(source);
-		effectQueue.add(copy);
 	}
 
 	public void checkForFollowerETBEffects(Permanent<?> permanent) {
@@ -291,13 +359,12 @@ public class Match {
 	 */
 	private void activateAllEffects(List<Effect> effects, EffectSource source, Follower THAT_FOLLOWER) {
 		for (Effect effect : effects) {
-			Effect copy = effect.cloneObject();
-			copy.setSource(source);
+			Effect copy = effectQueue.addCopyToEffectQueue(effect, source);
 
 			if (copy instanceof EffectOnFollower) {
 				((EffectOnFollower) copy).THAT_FOLLOWER = THAT_FOLLOWER;
 			}
-			effectQueue.add(copy);
+
 		}
 		processEffectQueue();
 	}
@@ -308,7 +375,6 @@ public class Match {
 	 * You probably want to implement this trigger type by trigger type
 	 * 
 	 */
-	private boolean asyncCallMade = false;
 
 	void processEffectQueue() {
 
@@ -317,16 +383,12 @@ public class Match {
 			return;
 		}
 
-		outer: while (!effectQueue.isEmpty()) {
+		while (!effectQueue.isEmpty()) {
 			logger.debug("Processing Effect Queue");
 			List<Effect> effects = effectQueue.removeAll();
 
 			for (Effect effect : effects) {
 				executeEffect(effect);
-				if (asyncCallMade) {
-					logger.debug("async call made, breaking out. The callback will call processEffectQueue() to finish.");
-					break outer;
-				}
 			}
 			effectQueue.finishedExecutingEffects();
 		}
@@ -387,13 +449,17 @@ public class Match {
 				break;
 			case SELECTED_FOLLOWER:
 				targets = new ArrayList<Follower>();
-				promptUserForFollowerTarget(effectOnFollower, true);
+				if (effectOnFollower.SELECTED_FOLLOWER == null) {
+					logger.warn("Selected_folower is null, skipping executing this effect.");
+					return;
+				} else {
+					targets.add(effectOnFollower.SELECTED_FOLLOWER);
+				}
 				break;
 			default:
 				throw new AssertionError("unhandled effect type");
 
 			}
-
 			targets.forEach((target) -> executeActionOnFollower(effectOnFollower.getAction(), target));
 		}
 		if (effect instanceof EffectOnPlayer) {
@@ -435,30 +501,6 @@ public class Match {
 			}
 			targets.forEach((target) -> executeActionOnFollowerOrPlayer(e.getAction(), target));
 		}
-	}
-
-	private void promptUserForFollowerTarget(EffectOnFollower effect, boolean isPromptCancellable) {
-
-		Consumer<Follower> callback = (Follower selectedFollower) -> {
-			effect.SELECTED_FOLLOWER = selectedFollower;
-			executeTargetedEffect(effect);
-			processEffectQueue(); // finish processing the event queue
-		};
-
-		userUI.promptUserForFollowerSelect(callback, effect);
-
-	}
-
-	private void executeTargetedEffect(EffectOnFollower effect) {
-		if (effect.targeting != FollowerTargeting.SELECTED_FOLLOWER) {
-			logger.warn("effect isn't a targeted effect. Ignoring");
-			return;
-		}
-		if (effect.SELECTED_FOLLOWER == null) {
-			logger.warn("selected follower was null. Ignoring.");
-			return;
-		}
-		executeActionOnFollower(effect.getAction(), effect.SELECTED_FOLLOWER);
 	}
 
 	private void executeActionOnFollowerOrPlayer(ActionOnFollowerOrPlayer action, FollowerOrPlayer target) {
@@ -542,7 +584,7 @@ public class Match {
 	 * 
 	 * @param permanent
 	 */
-	private void removeFromField(Permanent permanent) {
+	private void removeFromField(Permanent<?> permanent) {
 		Player owner = permanent.getParentCard().getOwner();
 		if (!owner.field.contains(permanent)) {
 			logger.warn("Tried removing a permanent from a player's field, permanent was not found. Ignoring.");
