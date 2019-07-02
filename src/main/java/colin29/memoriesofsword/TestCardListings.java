@@ -30,6 +30,7 @@ public class TestCardListings {
 		c1.addEffect(createForestStrikerEffect());
 
 		CardListing c2 = CardListing.makeFollowerTempCardListing("Shield Dude", 4, 1, 7);
+		c2.addEffect(new FollowerCardEffect(PropertyType.RUSH));
 		c2.addEffect(createShieldDudeEffect());
 
 		CardListing c3 = CardListing.makeFollowerTempCardListing("Goblin", 1, 1, 2);
@@ -141,7 +142,15 @@ public class TestCardListings {
 	}
 
 	private static FollowerCardEffect createShieldDudeEffect() {
-		FollowerCardEffect effect = new FollowerCardEffect(PropertyType.RUSH);
+		FollowerCardEffect effect = new FollowerCardEffect(TriggerType.STRIKE);
+
+		EffectOnFollowerOrPlayer e2 = new EffectOnFollowerOrPlayer(FollowerOrPlayerTargeting.ALL_ENEMIES);
+		effect.addTriggeredEffect(e2);
+
+		ActionOnFollowerOrPlayer doDamageAllEnemies = new ActionOnFollowerOrPlayer(ActionOnFollowerOrPlayer.ActionType.DO_DAMAGE);
+		doDamageAllEnemies.amount = 1;
+		e2.setAction(doDamageAllEnemies);
+
 		return effect;
 	}
 

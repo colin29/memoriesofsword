@@ -68,6 +68,7 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 	 * 
 	 * @return The actual amount of damage dealt (can be overkill).
 	 */
+	@Override
 	public int dealDamage(int damage) {
 
 		if (!isOnOwnersBattlefield()) {
@@ -95,6 +96,7 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 	 * @param healAmount
 	 * @return The amount actually healed (doesn't count overheal)
 	 */
+	@Override
 	public int heal(int healAmount) {
 
 		if (!isOnOwnersBattlefield()) {
@@ -162,25 +164,6 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 
 	}
 
-	public void attack(Player target) {
-		if (getLeader() == target) {
-			logger.warn("Follower can't attack own Leader. Ignoring");
-			return;
-		}
-		if (!canAttackPlayers()) {
-			logger.warn("Follower is unable to attack followers. Ignoring.");
-			return;
-		}
-
-		logger.debug(getLeader().getPNum() + " '{}' attacks " + target.getPlayerNum(), getName());
-
-		// TODO: Activate strike (generic) triggers
-
-		attackCount += 1;
-		target.dealDamage(atk);
-		match.simple.notifyUnitAttacked();
-	}
-
 	public void attack(Attackable target) {
 		if (target instanceof Follower) {
 			attack((Follower) target);
@@ -203,18 +186,24 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 
 		logger.debug(getLeader().getPNum() + " '{}' attacks " + getEnemyLeader().getPNum() + " '{}'", this.getName(),
 				other.getName());
+		attackCount += 1;
 
-		// TODO: Activate Follower strike triggers
+		match.checkForStrikeEffects(this);
+
+		if (!isOnOwnersBattlefield() || !other.isOnOwnersBattlefield()) {
+			logger.debug("A follower died during strike effects, combat ended");
+			return;
+		}
+
 		match.checkForClashEffects(this, other);
 
 		if (!isOnOwnersBattlefield() || !other.isOnOwnersBattlefield()) {
-			logger.debug("A follower died during pre-combat effects, combat ended");
+			logger.debug("A follower died during clash effects, combat ended");
 			return;
 		}
 
 		// Do damage to each other simultaneously
 		match.effectQueue.freeze();
-		attackCount += 1;
 		this.dealDamage(other.atk); // We want the active follower's last word triggers to happen first, so we have it take damage first
 		other.dealDamage(atk);
 		match.effectQueue.unfreeze();
@@ -225,6 +214,29 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 
 	private boolean summoningSickness = true;
 	private int attackCount = 0;
+
+	public void attack(Player target) {
+		if (getLeader() == target) {
+			logger.warn("Follower can't attack own Leader. Ignoring");
+			return;
+		}
+		if (!canAttackPlayers()) {
+			logger.warn("Follower is unable to attack followers. Ignoring.");
+			return;
+		}
+		attackCount += 1;
+		logger.debug(getLeader().getPNum() + " '{}' attacks " + target.getPlayerNum(), getName());
+
+		match.checkForStrikeEffects(this);
+
+		if (!isOnOwnersBattlefield()) {
+			logger.debug("Attacker died during strike effects, combat ended");
+			return;
+		}
+
+		target.dealDamage(atk);
+		match.simple.notifyUnitAttacked();
+	}
 
 	int getMaxAttacksPerTurn() {
 		return 1;

@@ -239,6 +239,14 @@ public class Match {
 		}
 	}
 
+	public void checkForStrikeEffects(Follower source) {
+		for (FollowerCardEffect c : source.getCardEffects()) {
+			if (c.triggerType == TriggerType.STRIKE) {
+				activateAllEffects(c.getTriggeredEffects(), source, null);
+			}
+		}
+	}
+
 	/**
 	 * @param follower
 	 */
