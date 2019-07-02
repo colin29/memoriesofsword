@@ -147,6 +147,7 @@ public class Player implements EffectSource, Attackable, FollowerOrPlayer {
 	 * 
 	 * @return The actual amount of damage dealt (can be overkill).
 	 */
+	@Override
 	public int dealDamage(int damage) {
 
 		if (damage < 0) {
@@ -165,6 +166,7 @@ public class Player implements EffectSource, Attackable, FollowerOrPlayer {
 	 * @param healAmount
 	 * @return The amount actually healed (doesn't count overheal)
 	 */
+	@Override
 	public int heal(int healAmount) {
 
 		if (healAmount < 0) {
@@ -269,6 +271,11 @@ public class Player implements EffectSource, Attackable, FollowerOrPlayer {
 
 	public Match getMatch() {
 		return match;
+	}
+
+	@Override
+	public Player getOwner() {
+		return this;
 	}
 
 }

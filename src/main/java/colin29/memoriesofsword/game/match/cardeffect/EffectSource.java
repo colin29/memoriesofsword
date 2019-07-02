@@ -1,5 +1,7 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
+import colin29.memoriesofsword.game.match.Player;
+
 /**
  * Marker interface: things that can be the source of an effect (ie. players and permanents)
  * 
@@ -13,4 +15,12 @@ public interface EffectSource {
 	 * @return
 	 */
 	public String getSourceName();
+
+	/**
+	 * Get regular name
+	 * 
+	 */
+	public String getName();
+
+	public Player getOwner();
 }

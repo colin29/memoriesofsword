@@ -105,4 +105,9 @@ public abstract class Permanent<T extends CardEffect> implements EffectSource {
 		return getLeader().getPNum() + " " + getName();
 	}
 
+	@Override
+	public Player getOwner() {
+		return getParentCard().getOwner();
+	}
+
 }

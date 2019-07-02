@@ -54,6 +54,8 @@ import colin29.memoriesofsword.game.match.Match;
 import colin29.memoriesofsword.game.match.Permanent;
 import colin29.memoriesofsword.game.match.Player;
 import colin29.memoriesofsword.game.match.SimpleMatchStateListener;
+import colin29.memoriesofsword.game.match.cardeffect.Effect;
+import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
 import colin29.memoriesofsword.game.matchscreen.graphics.AmuletGraphic;
 import colin29.memoriesofsword.game.matchscreen.graphics.FollowerGraphic;
 import colin29.memoriesofsword.game.matchscreen.graphics.HandCardGraphic;
@@ -93,6 +95,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	Table infoPanel; // shows detailed information about a clicked permanent
 
+	Table targetingInfoPanel; // shows info about the effect of the current targeting (user prompt)
+
 	/**
 	 * Represents the line to draw between follower and cursor, when the user is dragging to attack
 	 */
@@ -100,13 +104,16 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	boolean attackingLineVisible = true;
 
 	/**
-	 * When user is being prompted, all normal UI will be disabled.
+	 * When user_prompt is on, the UI will respond to a Follower (other other graphic) being clicked. A valid targeting will fufill the prompt request
+	 * and UIContext will be set back to idle
+	 * 
+	 * Note: disabling the normal UI must be done separately.
 	 */
-	public enum UIContext {
-		NORMAL, USER_PROMPT;
+	public enum PromptContext {
+		IDLE, USER_PROMPT;
 	}
 
-	private UIContext uiContext = UIContext.NORMAL;
+	private PromptContext promptContext = PromptContext.IDLE;
 
 	public MatchScreen(AppWithResources app, CardRepository cardRepo) {
 		super(app);
@@ -415,7 +422,9 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				logger.debug("{} was clicked", graphic.getPermanent().getName());
-				createAndDisplayInfoPanel(graphic);
+				if (promptContext == PromptContext.IDLE) {
+					createAndDisplayInfoPanel(graphic);
+				}
 			}
 		});
 	}
@@ -425,22 +434,20 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				logger.debug("{} was clicked", graphic.getParentCard().getName());
-				createAndDisplayInfoPanel(graphic);
+				if (promptContext == PromptContext.IDLE) {
+					createAndDisplayInfoPanel(graphic);
+				}
 			}
 		});
 	}
 
 	private void createAndDisplayInfoPanel(PermanentGraphic graphic) {
-		if (infoPanel != null) {
-			removeInfoPanel();
-		}
+		removeInfoPanel();
 		this.infoPanel = createInfoPanel(graphic.getPermanent());
 	}
 
 	private void createAndDisplayInfoPanel(HandCardGraphic graphic) {
-		if (infoPanel != null) {
-			removeInfoPanel();
-		}
+		removeInfoPanel();
 		this.infoPanel = createInfoPanel(graphic.getParentCard());
 	}
 
@@ -544,9 +551,14 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		Table appliedEffectsPanel;
 	}
 
+	/**
+	 * OK if info panel is already null
+	 */
 	private void removeInfoPanel() {
-		infoPanel.remove();
-		infoPanel = null;
+		if (infoPanel != null) {
+			infoPanel.remove();
+			infoPanel = null;
+		}
 	}
 
 	/**
@@ -778,6 +790,18 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	}
 
+	private void disableValidUnitsAttackDraggable() {
+
+		dadAttacking.clear();
+
+		PlayerPartitionUIElements elements = getUIElements(match.getActivePlayerNumber());
+
+		for (PermanentGraphic p : elements.listOfFieldGraphics) {
+			outlineRenderer.stopDrawingMyOutline(p);
+		}
+
+	}
+
 	private void makeAttackDraggable(PermanentGraphic permGraphic) { // cards are cast by dragging to the field
 		dadAttacking.addSource(new Source(permGraphic) {
 			@Override
@@ -884,8 +908,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 		if (button == Input.Buttons.LEFT) {
-			if (infoPanel != null)
-				removeInfoPanel();
+			removeInfoPanel();
 		}
 		return false;
 	}
@@ -1026,11 +1049,15 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	// List<Permant>
 
 	@Override
-	public void promptUserForFollowerSelect(Consumer<Follower> callback) {
+	public void promptUserForFollowerSelect(Consumer<Follower> callback, EffectOnFollower effect) {
 		followerSelectedCallbacks.add(callback);
-		uiContext = UIContext.USER_PROMPT;
+		promptContext = PromptContext.USER_PROMPT;
+
+		createAndDisplayTargetingInfoPanel(effect, effect.getSource().getOwner().getPlayerNumber());
 
 		disableValidHandCardsDraggable();
+		disableValidUnitsAttackDraggable();
+		disableActivePlayerEndTurnButton();
 	}
 
 	private void fufillUserPromptForFollowerSelect(Follower follower) {
@@ -1040,19 +1067,71 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			callback.accept(follower);
 		}
 		followerSelectedCallbacks.clear();
+		promptContext = PromptContext.IDLE;
+		removeTargetingInfoPanel();
 
-		uiContext = UIContext.NORMAL;
 		makeValidHandCardsDraggable();
+		makeValidUnitsAttackDraggable();
+		enableActivePlayerEndTurnButton();
 	}
 
 	protected void onPermanentClicked(Permanent<?> permanent) {
 		if (permanent instanceof Follower) {
 			Follower follower = (Follower) permanent;
-			if (uiContext == UIContext.USER_PROMPT) {
+			if (promptContext == PromptContext.USER_PROMPT) {
 				fufillUserPromptForFollowerSelect(follower);
 			}
 		}
 
+	}
+
+	private void disableActivePlayerEndTurnButton() {
+		getUIElements(match.getActivePlayerNumber()).endTurnButton.setDisabled(true);
+	}
+
+	private void enableActivePlayerEndTurnButton() {
+		getUIElements(match.getActivePlayerNumber()).endTurnButton.setDisabled(false);
+	}
+
+	private void createAndDisplayTargetingInfoPanel(Effect effect, int playerNumber) {
+
+		removeTargetingInfoPanel();
+
+		Table tempRoot = new Table();
+		Table main = new Table();
+
+		Label titleText = new Label(effect.getSource().getName(), createLabelStyle(fonts.largishFont()));
+		Label effectText = new Label(effect.toString(), createLabelStyle(fonts.mediumFont()));
+
+		tempRoot.setFillParent(true);
+
+		tempRoot.left();
+
+		if (playerNumber == 1) {
+			tempRoot.bottom();
+		} else {
+			tempRoot.top();
+		}
+
+		tempRoot.add(main);
+
+		main.setBackground(RenderUtil.getSolidBG(Color.DARK_GRAY));
+
+		main.add(titleText).row();
+		main.add(effectText);
+
+		stage.addActor(tempRoot);
+		targetingInfoPanel = tempRoot;
+	}
+
+	/**
+	 * It's OK if info panel is null already
+	 */
+	private void removeTargetingInfoPanel() {
+		if (targetingInfoPanel != null) {
+			targetingInfoPanel.remove();
+			targetingInfoPanel = null;
+		}
 	}
 
 }

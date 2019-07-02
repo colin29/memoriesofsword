@@ -445,7 +445,7 @@ public class Match {
 			processEffectQueue(); // finish processing the event queue
 		};
 
-		userUI.promptUserForFollowerSelect(callback);
+		userUI.promptUserForFollowerSelect(callback, effect);
 
 	}
 
