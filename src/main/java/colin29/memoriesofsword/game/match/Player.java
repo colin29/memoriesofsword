@@ -90,14 +90,10 @@ public class Player implements EffectSource, Attackable, FollowerOrPlayer {
 		// Actually play the card
 
 		if (card.type.isPermanent()) {
-			if (!ignoreCost) {
-				playPoints -= card.getCost();
-				simple.notifyPlayPointsModified(playerNumber);
-			}
-			hand.remove(card);
+
+			// We create the permanent and see it's fanfare effects
 
 			Permanent<?> permanent;
-
 			if (card.type == Type.FOLLOWER) {
 				permanent = new Follower(card);
 			} else if (card.type == Type.AMULET) {
@@ -105,18 +101,27 @@ public class Player implements EffectSource, Attackable, FollowerOrPlayer {
 			} else {
 				throw new GameException("Spell Type not supported yet. But this shouldn't happen anyways");
 			}
-			field.add(permanent);
-			notifyForPlayToFieldAction();
 
-			logger.debug("Card '{}' was played " + (ignoreCost ? "(ignoring cost)" : ""), card.getName());
+			boolean asyncCallMade = false;
 
 			// Activate fanfare effects
 			if (card.type == Type.FOLLOWER) {
-				match.activateFanfareEffects((Follower) permanent);
+				asyncCallMade = match.activateFanfareEffects((Follower) permanent, () -> {
+					actuallyPlayTheCard(card, permanent, ignoreCost);
+					match.activateAllEffectsOnHold(); // activate the fanfare effects
+					match.checkForFollowerETBEffects(permanent);
+				});
 			} else if (card.type == Type.AMULET) {
 				match.activateFanfareEffects((Amulet) permanent);
 			}
 
+			// If an async call was made, we delay actually playing the card until all targeting is finished (or user cancels the targeting -->
+			// cancels playing the card)
+			if (asyncCallMade) {
+				return false;
+			}
+
+			actuallyPlayTheCard(card, permanent, ignoreCost);
 			match.checkForFollowerETBEffects(permanent);
 
 			return true;
@@ -124,6 +129,27 @@ public class Player implements EffectSource, Attackable, FollowerOrPlayer {
 			logger.debug("Not yet supported: playing spells");
 			return false;
 		}
+	}
+
+	/**
+	 * This does not activate any effects
+	 * 
+	 * @param card
+	 * @param permanent
+	 * @param ignoreCost
+	 */
+	private void actuallyPlayTheCard(Card card, Permanent<?> permanent, boolean ignoreCost) {
+		if (!ignoreCost) {
+			playPoints -= card.getCost();
+			simple.notifyPlayPointsModified(playerNumber);
+		}
+		hand.remove(card);
+
+		field.add(permanent);
+		notifyForPlayToFieldAction();
+
+		logger.debug("Card '{}' was played " + (ignoreCost ? "(ignoring cost)" : ""), card.getName());
+
 	}
 
 	void onTurnStart() {
@@ -200,6 +226,7 @@ public class Player implements EffectSource, Attackable, FollowerOrPlayer {
 		return field.contains(permanent);
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}

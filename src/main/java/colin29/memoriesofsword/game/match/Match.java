@@ -188,7 +188,13 @@ public class Match {
 	 */
 	private final ArrayList<Effect> effectsOnHold = new ArrayList<Effect>();
 
-	void activateFanfareEffects(Follower newPermanent) {
+	/**
+	 * 
+	 * @param newPermanent
+	 * @return true if the parent needs to wait for a player targeting (aysnc call made) When all targeting is done, a method call will resume
+	 *         caller's work.
+	 */
+	boolean activateFanfareEffects(Follower newPermanent, Runnable onCompleted) {
 
 		effectsLeftThatNeedUserSelection.clear();
 
@@ -232,8 +238,8 @@ public class Match {
 				}
 			}
 			// Now that everything is stashed, we prompt the user
-			ifSelectionStillRequiredPromptUserElseContinue();
-
+			ifSelectionStillRequiredPromptUserElseContinue(onCompleted);
+			return true;
 		} else {
 			for (FollowerCardEffect cardEffect : newPermanent.getCardEffects()) {
 				if (cardEffect.triggerType == FollowerCardEffect.TriggerType.FANFARE) {
@@ -244,22 +250,23 @@ public class Match {
 				}
 			}
 			processEffectQueue();
+			return false;
 		}
 	}
 
 	/**
 	 * @return true if selection is still required (and an async call was made)
 	 */
-	public boolean ifSelectionStillRequiredPromptUserElseContinue() {
+	public boolean ifSelectionStillRequiredPromptUserElseContinue(Runnable onCompleted) {
 		if (!effectsLeftThatNeedUserSelection.isEmpty()) {
 			EffectOnFollower effect = effectsLeftThatNeedUserSelection.remove(0);
 			userUI.promptUserForFollowerSelect((Follower follower) -> {
 				effect.SELECTED_FOLLOWER = follower;
-				ifSelectionStillRequiredPromptUserElseContinue();
+				ifSelectionStillRequiredPromptUserElseContinue(onCompleted);
 			}, effect);
 			return true;
 		} else {
-			activateAllEffectsOnHold();
+			onCompleted.run();
 			return false;
 		}
 	}
