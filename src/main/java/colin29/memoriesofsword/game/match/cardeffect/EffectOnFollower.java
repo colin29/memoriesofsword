@@ -26,9 +26,12 @@ public class EffectOnFollower extends Effect {
 	 * 
 	 * THE_ENEMY_FOLLOWER is used for clash and follower-strike
 	 * 
+	 * SELECTED_FOLLOWER is a special targeting that indicates the user should be prompted and will chose a follower <br>
+	 * Because of complexity in async callbacks and task resuming, SELECTED FOLLOWER is ONLY supported with trigger types: FANFARE atm.
+	 * 
 	 */
 	public enum FollowerTargeting {
-		THIS_FOLLOWER, ALLIED_FOLLOWERS, OTHER_ALLIED_FOLLOWERS, ENEMY_FOLLOWERS, ETB_FOLLOWER, THE_ENEMY_FOLLOWER, OTHER_ENEMY_FOLLOWERS;
+		THIS_FOLLOWER, ALLIED_FOLLOWERS, OTHER_ALLIED_FOLLOWERS, ENEMY_FOLLOWERS, ETB_FOLLOWER, THE_ENEMY_FOLLOWER, OTHER_ENEMY_FOLLOWERS, SELECTED_FOLLOWER;
 
 		public String getGameText() {
 			switch (this) {
@@ -46,6 +49,8 @@ public class EffectOnFollower extends Effect {
 				return "all other enemy followers";
 			case ETB_FOLLOWER:
 				return "it";
+			case SELECTED_FOLLOWER:
+				return "a follower";
 			default:
 				return "{unknown follower-targeting}";
 
@@ -57,6 +62,11 @@ public class EffectOnFollower extends Effect {
 	 * Used by targetings that inherently provide a follower target (e.g. ETB_ALLIED_FOLLOWER, CLASH)
 	 */
 	public Follower THAT_FOLLOWER;
+
+	/**
+	 * Used by prompted targeting (ie. SELECTED_FOLLOWER)
+	 */
+	public Follower SELECTED_FOLLOWER;
 
 	final public FollowerTargeting targeting;
 

@@ -31,22 +31,16 @@ public class SandBoxMatchDriver {
 		match.nextTurn();
 
 		Player player2 = match.getPlayer(2);
-		player2.playCardWithoutPayingCost((Card) player2.getHand().get(0));
-		player2.playCardWithoutPayingCost((Card) player2.getHand().get(0));
+		player2.playCardWithoutPayingCost((Card) player2.getHand().get(1));
+		// player2.playCardWithoutPayingCost((Card) player2.getHand().get(0));
 
 		match.nextTurn();
 		Player player1 = match.getPlayer1Sandboxing();
-		player1.playCardWithoutPayingCost((Card) player1.getHand().get(0));
-		player1.playCardWithoutPayingCost((Card) player1.getHand().get(0));
-
-		player1.playCardWithoutPayingCost(player1.hand.getCards().get(1));
+		// player1.playCardWithoutPayingCost((Card) player1.getHand().get(0));
+		// player1.playCardWithoutPayingCost((Card) player1.getHand().get(0));
+		//
+		// player1.playCardWithoutPayingCost(player1.hand.getCards().get(1));
 		// player1.playCardWithoutPayingCost(c2);
-
-		Follower f1 = (Follower) player1.getFieldInfo().get(0);
-		Follower f2 = (Follower) player2.getFieldInfo().get(0);
-
-		// f1.attackFollower(f2);
-		f1.attack(f1.getEnemyLeader());
 
 		match.nextTurn();
 		match.nextTurn();

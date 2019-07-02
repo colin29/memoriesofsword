@@ -2,6 +2,7 @@ package colin29.memoriesofsword.game.match;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,13 +11,13 @@ import colin29.memoriesofsword.GameException;
 import colin29.memoriesofsword.game.CardListing;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.Deck;
-import colin29.memoriesofsword.game.User;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollower;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnFollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.ActionOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.Effect;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
+import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower.FollowerTargeting;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectSource;
@@ -24,6 +25,7 @@ import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.TriggerType;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.InvalidTargetingTypeException;
+import colin29.memoriesofsword.game.matchscreen.PromptableForUserSelection;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 /**
@@ -56,22 +58,25 @@ public class Match {
 
 	final SimpleMatchStateNotifier simple = new SimpleMatchStateNotifier();
 
+	private final PromptableForUserSelection userUI;
+
 	/**
 	 * If users are not provided, a match will construct two players unassociated with any user
 	 */
-	public Match(CardRepository cardRepo) {
+	public Match(PromptableForUserSelection userUI, CardRepository cardRepo) {
 		player1 = new Player(this, simple, 1);
 		player2 = new Player(this, simple, 2);
 
+		this.userUI = userUI;
 		this.cardRepo = cardRepo;
 	}
 
-	public Match(User user1, Deck deck1, User user2, Deck deck2, CardRepository cardRepo) {
-		// TODO: incorporate actual user info
-		player1 = new Player(this, simple, 1);
-		player2 = new Player(this, simple, 2);
-		this.cardRepo = cardRepo;
-	}
+	// public Match(User user1, Deck deck1, User user2, Deck deck2, CardRepository cardRepo) {
+	// // TODO: incorporate actual user info
+	// player1 = new Player(this, simple, 1);
+	// player2 = new Player(this, simple, 2);
+	// this.cardRepo = cardRepo;
+	// }
 
 	/**
 	 * Two players can use the same deck without issue, they are merely read from at the start of the match.
@@ -278,8 +283,8 @@ public class Match {
 
 	/**
 	 * 
-	 * @param effects
-	 * @param source
+	 * Adds all effects to the effect queue, then calls processEffectQueue()
+	 * 
 	 * @param THAT_FOLLOWER
 	 *            Some triggerTypes (ETB_ALLIED_FOLLOWER, inherently provide a follower, which is passed to effects that use that targeting). Can't be
 	 *            null
@@ -297,6 +302,14 @@ public class Match {
 		processEffectQueue();
 	}
 
+	/**
+	 * When this is set, the executing method (any method that calls processEffectQueue) should finish doing what is appropriate and exit out
+	 * 
+	 * You probably want to implement this trigger type by trigger type
+	 * 
+	 */
+	private boolean asyncCallMade = false;
+
 	void processEffectQueue() {
 
 		if (effectQueue.isFrozen()) {
@@ -304,12 +317,16 @@ public class Match {
 			return;
 		}
 
-		while (!effectQueue.isEmpty()) {
+		outer: while (!effectQueue.isEmpty()) {
 			logger.debug("Processing Effect Queue");
 			List<Effect> effects = effectQueue.removeAll();
 
 			for (Effect effect : effects) {
 				executeEffect(effect);
+				if (asyncCallMade) {
+					logger.debug("async call made, breaking out. The callback will call processEffectQueue() to finish.");
+					break outer;
+				}
 			}
 			effectQueue.finishedExecutingEffects();
 		}
@@ -368,8 +385,13 @@ public class Match {
 				targets = new ArrayList<Follower>();
 				targets.add(effectOnFollower.THAT_FOLLOWER);
 				break;
+			case SELECTED_FOLLOWER:
+				targets = new ArrayList<Follower>();
+				promptUserForFollowerTarget(effectOnFollower, true);
+				break;
 			default:
 				throw new AssertionError("unhandled effect type");
+
 			}
 
 			targets.forEach((target) -> executeActionOnFollower(effectOnFollower.getAction(), target));
@@ -413,6 +435,30 @@ public class Match {
 			}
 			targets.forEach((target) -> executeActionOnFollowerOrPlayer(e.getAction(), target));
 		}
+	}
+
+	private void promptUserForFollowerTarget(EffectOnFollower effect, boolean isPromptCancellable) {
+
+		Consumer<Follower> callback = (Follower selectedFollower) -> {
+			effect.SELECTED_FOLLOWER = selectedFollower;
+			executeTargetedEffect(effect);
+			processEffectQueue(); // finish processing the event queue
+		};
+
+		userUI.promptUserForFollowerSelect(callback);
+
+	}
+
+	private void executeTargetedEffect(EffectOnFollower effect) {
+		if (effect.targeting != FollowerTargeting.SELECTED_FOLLOWER) {
+			logger.warn("effect isn't a targeted effect. Ignoring");
+			return;
+		}
+		if (effect.SELECTED_FOLLOWER == null) {
+			logger.warn("selected follower was null. Ignoring.");
+			return;
+		}
+		executeActionOnFollower(effect.getAction(), effect.SELECTED_FOLLOWER);
 	}
 
 	private void executeActionOnFollowerOrPlayer(ActionOnFollowerOrPlayer action, FollowerOrPlayer target) {

@@ -28,6 +28,7 @@ public class TestCardListings {
 	public static void addTestCardsToRepo(CardRepository cardRepo) {
 		CardListing c1 = CardListing.makeFollowerTempCardListing("Forest Striker", 3, 2, 3);
 		c1.addEffect(createForestStrikerEffect());
+		c1.addEffect(createForestStrikerFanfareTargetedEffect());
 
 		CardListing c2 = CardListing.makeFollowerTempCardListing("Shield Dude", 4, 1, 7);
 		c2.addEffect(new FollowerCardEffect(PropertyType.RUSH));
@@ -124,13 +125,7 @@ public class TestCardListings {
 		dmg.amount = 2;
 		e1.setAction(dmg);
 
-		EffectOnFollower e2 = new EffectOnFollower(FollowerTargeting.THIS_FOLLOWER);
-		ActionOnFollower selfDmg = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
-		selfDmg.amount = 1;
-		e2.setAction(selfDmg);
-
 		effect.addTriggeredEffect(e1);
-		effect.addTriggeredEffect(e2);
 
 		// EffectOnFollower e3CausesInfiniteLoop = new EffectOnFollower(FollowerTargeting.THIS_FOLLOWER);
 		// ActionOnFollower selfBuff = new ActionOnFollower(ActionOnFollower.ActionType.BUFF);
@@ -138,6 +133,18 @@ public class TestCardListings {
 		// e3CausesInfiniteLoop.setAction(selfBuff);
 		// effect.addTriggeredEffect(e3CausesInfiniteLoop);
 
+		return effect;
+	}
+
+	private static FollowerCardEffect createForestStrikerFanfareTargetedEffect() {
+		FollowerCardEffect effect = new FollowerCardEffect(FollowerCardEffect.TriggerType.FANFARE);
+
+		EffectOnFollower e1 = new EffectOnFollower(FollowerTargeting.SELECTED_FOLLOWER);
+		ActionOnFollower dmg = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
+		dmg.amount = 2;
+		e1.setAction(dmg);
+
+		effect.addTriggeredEffect(e1);
 		return effect;
 	}
 

@@ -1,6 +1,8 @@
 package colin29.memoriesofsword.game.matchscreen;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +67,7 @@ import colin29.memoriesofsword.util.template.BaseScreen;
  * A Match screen will create a match when it is created. Then when the match finishes, it will call whatever screen it likes.
  *
  */
-public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMatchStateListener {
+public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMatchStateListener, PromptableForUserSelection {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -97,6 +99,15 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	final Segment attackingLine = new Segment();
 	boolean attackingLineVisible = true;
 
+	/**
+	 * When user is being prompted, all normal UI will be disabled.
+	 */
+	public enum UIContext {
+		NORMAL, USER_PROMPT;
+	}
+
+	private UIContext uiContext = UIContext.NORMAL;
+
 	public MatchScreen(AppWithResources app, CardRepository cardRepo) {
 		super(app);
 		this.app = app;
@@ -109,7 +120,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		/// Set up Match
 
-		match = new Match(cardRepo);
+		match = new Match(this, cardRepo);
 
 		match.useTestDecks();
 		match.beginMatch();
@@ -326,6 +337,13 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			PermanentGraphic p = createPermanentGraphic(entity);
 			fieldPanel.add(p).size(permanentGraphicWidth, permanentGraphicHeight);
 			elements.listOfFieldGraphics.add(p);
+			p.addListener(new ClickListener() {
+				@Override
+				public void clicked(InputEvent event, float x, float y) {
+					logger.debug("Permanent Graphic {} clicked", entity.getPNumName());
+					onPermanentClicked(entity);
+				}
+			});
 		}
 		makeValidUnitsAttackDraggable();
 	}
@@ -991,6 +1009,36 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	static class Segment {
 		final Vector2 start = new Vector2();
 		final Vector2 end = new Vector2();
+	}
+
+	final List<Consumer<Follower>> followerSelectedCallbacks = new ArrayList<Consumer<Follower>>();
+	// List<Permant>
+
+	@Override
+	public void promptUserForFollowerSelect(Consumer<Follower> callback) {
+		followerSelectedCallbacks.add(callback);
+		uiContext = UIContext.USER_PROMPT;
+	}
+
+	private void fufillUserPromptForFollowerSelect(Follower follower) {
+		// followerSelectedCallbacks.forEach((callback) -> callback.accept(follower));
+
+		for (Consumer<Follower> callback : followerSelectedCallbacks) {
+			callback.accept(follower);
+		}
+
+		followerSelectedCallbacks.clear();
+		uiContext = UIContext.NORMAL;
+	}
+
+	protected void onPermanentClicked(Permanent<?> permanent) {
+		if (permanent instanceof Follower) {
+			Follower follower = (Follower) permanent;
+			if (uiContext == UIContext.USER_PROMPT) {
+				fufillUserPromptForFollowerSelect(follower);
+			}
+		}
+
 	}
 
 }
