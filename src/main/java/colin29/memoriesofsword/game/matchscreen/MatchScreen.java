@@ -670,6 +670,17 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		addFieldsAsDragTargets();
 	}
 
+	private void disableValidHandCardsDraggable() {
+		dragAndDrop.clear();
+		for (int playerNumber = 1; playerNumber <= 2; playerNumber++) {
+			List<HandCardGraphic> graphics = getUIElements(playerNumber).listOfHandGraphics;
+			for (HandCardGraphic graphic : graphics) {
+				outlineRenderer.stopDrawingMyOutline(graphic);
+			}
+		}
+
+	}
+
 	private void makeDraggable(HandCardGraphic cardGraphic) { // cards are cast by dragging to the field
 		dragAndDrop.addSource(new Source(cardGraphic) {
 
@@ -1018,6 +1029,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	public void promptUserForFollowerSelect(Consumer<Follower> callback) {
 		followerSelectedCallbacks.add(callback);
 		uiContext = UIContext.USER_PROMPT;
+
+		disableValidHandCardsDraggable();
 	}
 
 	private void fufillUserPromptForFollowerSelect(Follower follower) {
@@ -1026,9 +1039,10 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		for (Consumer<Follower> callback : followerSelectedCallbacks) {
 			callback.accept(follower);
 		}
-
 		followerSelectedCallbacks.clear();
+
 		uiContext = UIContext.NORMAL;
+		makeValidHandCardsDraggable();
 	}
 
 	protected void onPermanentClicked(Permanent<?> permanent) {
