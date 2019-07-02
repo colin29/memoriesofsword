@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import colin29.memoriesofsword.game.CardListing;
 import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.CardEffect;
+import colin29.memoriesofsword.game.match.cardeffect.EffectSource;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.SpellEffect;
 
@@ -26,7 +27,7 @@ import colin29.memoriesofsword.game.match.cardeffect.SpellEffect;
  * @author Colin Ta
  *
  */
-public class Card implements CardInfo {
+public class Card implements EffectSource, CardInfo {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -197,6 +198,23 @@ public class Card implements CardInfo {
 		for (SpellEffect effect : listing.getSpellEffects()) {
 			spellEffects.add(new SpellEffect(effect));
 		}
+	}
+
+	@Override
+	public String getSourceName() {
+		return getPNumName();
+	}
+
+	/**
+	 * Get the permanent's name, prepended with the player number: "p2"
+	 */
+	public String getPNumName() {
+		return getOwner().getPNum() + " " + getName();
+	}
+
+	@Override
+	public Card getSourceCard() {
+		return this;
 	}
 
 }

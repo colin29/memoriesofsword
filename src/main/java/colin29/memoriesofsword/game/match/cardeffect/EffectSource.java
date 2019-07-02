@@ -1,5 +1,6 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
+import colin29.memoriesofsword.game.match.Card;
 import colin29.memoriesofsword.game.match.Player;
 
 /**
@@ -23,4 +24,6 @@ public interface EffectSource {
 	public String getName();
 
 	public Player getOwner();
+
+	public Card getSourceCard();
 }

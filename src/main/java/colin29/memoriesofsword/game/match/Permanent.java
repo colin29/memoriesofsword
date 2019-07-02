@@ -67,6 +67,7 @@ public abstract class Permanent<T extends CardEffect> implements EffectSource {
 		return owner.isOnMyField(this);
 	}
 
+	@Override
 	public String getName() {
 		return parentCard.getName();
 	}
@@ -96,6 +97,11 @@ public abstract class Permanent<T extends CardEffect> implements EffectSource {
 	@Override
 	public String getSourceName() {
 		return getPNumName();
+	}
+
+	@Override
+	public Card getSourceCard() {
+		return getParentCard();
 	}
 
 	/**

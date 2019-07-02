@@ -1046,12 +1046,15 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	FollowerCallback followerSelectedCallback;
 
+	Table targetingSourceCardPanel;
+
 	@Override
 	public void promptUserForFollowerSelect(FollowerCallback callback, EffectOnFollower effect) {
 		followerSelectedCallback = callback;
 		promptContext = PromptContext.USER_PROMPT;
 
 		createAndDisplayTargetingInfoPanel(effect, effect.getSource().getOwner().getPlayerNumber());
+		createAndDisplayTargetingSourceCardPanel(effect.getSource().getSourceCard());
 
 		disableValidHandCardsDraggable();
 		disableValidUnitsAttackDraggable();
@@ -1070,7 +1073,9 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		FollowerCallback followerSelectedCallbackTempRef = followerSelectedCallback;
 		followerSelectedCallback = null;
 		promptContext = PromptContext.IDLE;
+
 		removeTargetingInfoPanel();
+		removeTargetingSourceCardPanel();
 
 		makeValidHandCardsDraggable();
 		makeValidUnitsAttackDraggable();
@@ -1078,6 +1083,25 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		followerSelectedCallbackTempRef.provideSelection(follower);
 
+	}
+
+	private void createAndDisplayTargetingSourceCardPanel(Card card) {
+		removeTargetingSourceCardPanel();
+
+		Table tempRoot = new Table();
+		tempRoot.setFillParent(true);
+		tempRoot.left().pad(40);
+		stage.addActor(tempRoot);
+		tempRoot.add(createHandCardGraphic(card)).size(cardGraphicWidth, cardGraphicHeight);
+
+		targetingSourceCardPanel = tempRoot;
+	}
+
+	private void removeTargetingSourceCardPanel() {
+		if (targetingSourceCardPanel != null) {
+			targetingSourceCardPanel.remove();
+			targetingSourceCardPanel = null;
+		}
 	}
 
 	protected void onPermanentClicked(Permanent<?> permanent) {

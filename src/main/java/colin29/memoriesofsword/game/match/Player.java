@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import colin29.memoriesofsword.GameException;
 import colin29.memoriesofsword.game.match.Card.Type;
-import colin29.memoriesofsword.game.match.cardeffect.EffectSource;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
 
 /**
@@ -16,7 +15,7 @@ import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
  * player
  *
  */
-public class Player implements EffectSource, Attackable, FollowerOrPlayer {
+public class Player implements Attackable, FollowerOrPlayer {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -226,14 +225,8 @@ public class Player implements EffectSource, Attackable, FollowerOrPlayer {
 		return field.contains(permanent);
 	}
 
-	@Override
 	public String getName() {
 		return name;
-	}
-
-	@Override
-	public String getSourceName() {
-		return "Player " + playerNumber;
 	}
 
 	/**
@@ -298,11 +291,6 @@ public class Player implements EffectSource, Attackable, FollowerOrPlayer {
 
 	public Match getMatch() {
 		return match;
-	}
-
-	@Override
-	public Player getOwner() {
-		return this;
 	}
 
 }
