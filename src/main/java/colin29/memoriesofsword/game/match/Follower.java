@@ -70,7 +70,7 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 	public int dealDamage(int damage) {
 
 		if (!isOnOwnersBattlefield()) {
-			logger.warn("Tried to heal, permanent not on owner's battlefield.");
+			logger.warn("Tried to damage, permanent not on owner's battlefield.");
 			return 0;
 		}
 
@@ -203,7 +203,13 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 		logger.debug(getLeader().getPNum() + " '{}' attacks " + getEnemyLeader().getPNum() + " '{}'", this.getName(),
 				other.getName());
 
-		// TODO: Activate clash effects and Follower strike triggers
+		// TODO: Activate Follower strike triggers
+		match.checkForClashEffects(this, other);
+
+		if (!isOnOwnersBattlefield() || !other.isOnOwnersBattlefield()) {
+			logger.debug("A follower died during pre-combat effects, combat ended");
+			return;
+		}
 
 		// Do damage to each other simultaneously
 		match.effectQueue.freeze();

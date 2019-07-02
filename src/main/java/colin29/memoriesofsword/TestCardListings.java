@@ -12,6 +12,7 @@ import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer.Targeting;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.PropertyType;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.TriggerType;
 
 /**
  * Static class that creates the test card listings
@@ -35,7 +36,23 @@ public class TestCardListings {
 		c4.addEffect(createHornOfUnicaEffect());
 		c4.addEffect(createHornOfUnicaAlliedETBEffect());
 
-		cardRepo.addCard(c1, c2, c3, c4);
+		CardListing c5 = CardListing.makeFollowerTempCardListing("Dagger master", 4, 2, 5);
+		c5.addEffect(createDaggerMasterEffect());
+
+		cardRepo.addCard(c1, c2, c3, c4, c5);
+	}
+
+	private static FollowerCardEffect createDaggerMasterEffect() {
+		FollowerCardEffect effect = new FollowerCardEffect(TriggerType.CLASH);
+
+		EffectOnFollower e = new EffectOnFollower(FollowerTargeting.THE_ENEMY_FOLLOWER);
+
+		ActionOnFollower doDamage = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
+		doDamage.amount = 2;
+		e.setAction(doDamage);
+		effect.addTriggeredEffect(e);
+
+		return effect;
 	}
 
 	private static FollowerCardEffect createAoeDamageFollowerEffect() {

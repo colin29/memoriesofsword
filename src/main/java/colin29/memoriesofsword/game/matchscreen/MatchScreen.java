@@ -877,6 +877,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	@Override
 	public boolean mouseMoved(int screenX, int screenY) {
+		attackingLineVisible = false;
 		return false;
 	}
 

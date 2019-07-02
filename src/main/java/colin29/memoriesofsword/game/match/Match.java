@@ -130,11 +130,12 @@ public class Match {
 		testListings.add(cardRepo.getCardById(9001));
 		testListings.add(cardRepo.getCardById(9002));
 		testListings.add(cardRepo.getCardById(9003));
+		testListings.add(cardRepo.getCardById(9004));
 
 		// Let's make a deck of 10 cards, alternating between these
 
 		for (int n = 0; n < 10; n++) {
-			int index = n % 4;
+			int index = n % testListings.size();
 			CardListing listing = testListings.get(index);
 			player.deck.addCardToBottom((createCard(listing, player)));
 		}
@@ -214,6 +215,24 @@ public class Match {
 	public void checkForFollowerETBEffects(Permanent<?> permanent) {
 		if (permanent instanceof Follower) {
 			checkForAlliedETBEffects((Follower) permanent);
+		}
+	}
+
+	public void checkForClashEffects(Follower attacker, Follower defender) {
+
+		for (FollowerCardEffect c : attacker.getCardEffects()) {
+			if (c.triggerType == TriggerType.CLASH) {
+				activateAllEffects(c.getTriggeredEffects(), attacker, defender);
+			}
+		}
+		if (!attacker.isOnOwnersBattlefield() || !defender.isOnOwnersBattlefield()) {
+			logger.debug("A follower died after attacker's clash effects, defender effects skipped");
+			return;
+		}
+		for (FollowerCardEffect c : defender.getCardEffects()) {
+			if (c.triggerType == TriggerType.CLASH) {
+				activateAllEffects(c.getTriggeredEffects(), defender, attacker);
+			}
 		}
 	}
 
@@ -332,7 +351,9 @@ public class Match {
 				}
 				break;
 			case THE_ENEMY_FOLLOWER:
-				throw new UnsupportedOperationException();
+				targets = new ArrayList<Follower>();
+				targets.add(effectOnFollower.THAT_FOLLOWER);
+				break;
 			case ETB_FOLLOWER:
 				targets = new ArrayList<Follower>();
 				targets.add(effectOnFollower.THAT_FOLLOWER);
