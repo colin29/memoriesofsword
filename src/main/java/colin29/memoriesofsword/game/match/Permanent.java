@@ -5,6 +5,7 @@ import java.util.List;
 
 import colin29.memoriesofsword.game.match.cardeffect.CardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.EffectSource;
+import colin29.memoriesofsword.game.matchscreen.PermanentOrPlayer;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 /**
@@ -24,7 +25,7 @@ import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
  * @author Colin Ta
  *
  */
-public abstract class Permanent<T extends CardEffect> implements EffectSource {
+public abstract class Permanent<T extends CardEffect> implements EffectSource, PermanentOrPlayer {
 
 	/**
 	 * A permanent on the field has a 1-1 association with a parentCard. Two permanents cannot be associated with the same card.

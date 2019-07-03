@@ -38,7 +38,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 
-import colin29.memoriesofsword.App;
+import colin29.memoriesofsword.GameException;
 import colin29.memoriesofsword.MyFonts;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.match.Amulet;
@@ -50,11 +50,16 @@ import colin29.memoriesofsword.game.match.Follower;
 import colin29.memoriesofsword.game.match.ListOfCardsEmptyException;
 import colin29.memoriesofsword.game.match.Match;
 import colin29.memoriesofsword.game.match.Match.FollowerCallback;
+import colin29.memoriesofsword.game.match.Match.FollowerOrPlayerCallback;
+import colin29.memoriesofsword.game.match.Match.PlayerCallback;
 import colin29.memoriesofsword.game.match.Permanent;
 import colin29.memoriesofsword.game.match.Player;
 import colin29.memoriesofsword.game.match.SimpleMatchStateListener;
 import colin29.memoriesofsword.game.match.cardeffect.Effect;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
+import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollowerOrPlayer;
+import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer;
+import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
 import colin29.memoriesofsword.game.matchscreen.graphics.AmuletGraphic;
 import colin29.memoriesofsword.game.matchscreen.graphics.FollowerGraphic;
 import colin29.memoriesofsword.game.matchscreen.graphics.HandCardGraphic;
@@ -74,7 +79,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	private Match match;
 
-	final Skin skin = App.getSkin();
+	final Skin skin;
 	final MyFonts fonts;
 
 	InputMultiplexer multiplexer = new InputMultiplexer();
@@ -118,6 +123,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		super(app);
 		this.app = app;
 		fonts = app.getFonts();
+		skin = app.getSkin();
 
 		outlineRenderer = new OutlineRenderer(app.getShapeRenderer());
 		for (int i = 0; i < NUM_PLAYERS; i++) {
@@ -193,7 +199,10 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		Table fieldPanel = new Table();
 		fieldPanel.defaults().space(20);
-		Table handPanel = new Table();
+		TargetableTable handPanel = new TargetableTable(match.getPlayer(playerNumber));
+
+		handPanel.setBackground(RenderUtil.getSolidBG(Color.DARK_GRAY));
+
 		if (normalOrientation) {
 			mainArea.add(fieldPanel).expand().fill();
 			mainArea.add(endTurnButton);
@@ -205,8 +214,17 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			mainArea.add(fieldPanel).expand().fill();
 			mainArea.add(endTurnButton);
 		}
+		handPanel.setTouchable(Touchable.enabled);
+		handPanel.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				logger.debug("hand panel clicked");
+				onTargetableActorClicked(handPanel);
+			}
 
-		elements.handPanel = handPanel;
+		});
+
+		elements.setHandPanel(handPanel);
 		elements.fieldPanel = fieldPanel;
 
 		regenerateHandDisplay(playerNumber);
@@ -338,7 +356,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		elements.listOfFieldGraphics.clear();
 
 		Table fieldPanel = getUIElements(playerNumber).fieldPanel;
-		fieldPanel.clear();
+		fieldPanel.clearChildren();
 		for (Permanent<?> entity : entitiesOnField) {
 			PermanentGraphic p = createPermanentGraphic(entity);
 			fieldPanel.add(p).size(permanentGraphicWidth, permanentGraphicHeight);
@@ -347,7 +365,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 				@Override
 				public void clicked(InputEvent event, float x, float y) {
 					logger.debug("Permanent Graphic {} clicked", entity.getPNumName());
-					onPermanentClicked(entity);
+					onTargetableActorClicked(p);
 				}
 			});
 		}
@@ -358,7 +376,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	final Color DARK_RED = RenderUtil.rgb(128, 0, 0);
 	final Color FOREST = Color.FOREST;
 
-	private PermanentGraphic createPermanentGraphic(final Permanent permanent) {
+	private PermanentGraphic createPermanentGraphic(final Permanent<?> permanent) {
 
 		// Should have a label that shows the card name
 
@@ -579,8 +597,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		elements.listOfHandGraphics.clear();
 
-		Table handPanel = elements.handPanel;
-		handPanel.clear();
+		Table handPanel = elements.getHandPanel();
+		handPanel.clearChildren();
 
 		List<CardInfo> p1CardsInHand = match.getPlayer(playerNumber).getHand();
 		for (CardInfo card : p1CardsInHand) {
@@ -826,7 +844,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 				addAttackableAsDragTarget(defender, p);
 			}
 		}
-		addAttackableAsDragTarget(match.getNonActivePlayer(), elements.handPanel);
+		addAttackableAsDragTarget(match.getNonActivePlayer(), elements.getHandPanel());
 	}
 
 	private void addAttackableAsDragTarget(Attackable defender, Actor dropTarget) {
@@ -1020,7 +1038,9 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	 */
 	private static class PlayerPartitionUIElements {
 
-		public Table handPanel;
+		private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+		private TargetableTable handPanel;
 		List<HandCardGraphic> listOfHandGraphics;
 
 		List<PermanentGraphic> listOfFieldGraphics;
@@ -1044,6 +1064,24 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			this.playerNumber = playerNumber;
 		}
 
+		public TargetableTable getHandPanel() {
+			return handPanel;
+		}
+
+		/**
+		 * Hand panel is effectively final, it can only be set once
+		 */
+		public void setHandPanel(TargetableTable handPanel) {
+			if (handPanel == null) {
+				logger.warn("Hand panel can't be set to null");
+				return;
+			}
+			if (this.handPanel != null) {
+				throw new GameException("HandPanel can't be re-assigned after it is set");
+			}
+			this.handPanel = handPanel;
+		}
+
 	}
 
 	static class Segment {
@@ -1052,7 +1090,16 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	}
 
 	FollowerCallback followerSelectedCallback;
+	PlayerCallback playerSelectedCallback;
+	FollowerOrPlayerCallback followerOrPlayerSelectedCallback;
+
 	Runnable selectionCancelledCallback;
+
+	private enum PromptedTargetType {
+		FOLLOWER, PLAYER, FOLLOWER_OR_PLAYER;
+	}
+
+	PromptedTargetType promptedTargetType;
 
 	Table targetingSourceCardPanel;
 
@@ -1060,21 +1107,61 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	public void promptUserForFollowerSelect(EffectOnFollower effect, FollowerCallback callback, Runnable onCancelled) {
 		followerSelectedCallback = callback;
 		selectionCancelledCallback = onCancelled;
-		promptContext = PromptContext.USER_PROMPT;
+		promptedTargetType = PromptedTargetType.FOLLOWER;
+		beginTargetingContext(effect);
+	}
 
-		createAndDisplayTargetingInfoPanel(effect, effect.getSource().getOwner().getPlayerNumber());
-		createAndDisplayTargetingSourceCardPanel(effect.getSource().getSourceCard());
+	@Override
+	public void promptUserForPlayerSelect(EffectOnPlayer effect, PlayerCallback callback, Runnable onCancelled) {
+		playerSelectedCallback = callback;
+		selectionCancelledCallback = onCancelled;
+		promptedTargetType = PromptedTargetType.PLAYER;
+		beginTargetingContext(effect);
+	}
 
-		disableValidHandCardsDraggable();
-		disableValidUnitsAttackDraggable();
-		disableActivePlayerEndTurnButton();
+	@Override
+	public void promptUserForFollowerOrPlayerSelect(EffectOnFollowerOrPlayer effect, FollowerOrPlayerCallback callback, Runnable onCancelled) {
+		followerOrPlayerSelectedCallback = callback;
+		selectionCancelledCallback = onCancelled;
+		promptedTargetType = PromptedTargetType.FOLLOWER_OR_PLAYER;
+		beginTargetingContext(effect);
+	}
+
+	protected void onTargetableActorClicked(TargetableActor actor) {
+
+		if (promptContext != PromptContext.USER_PROMPT) {
+			return;
+		}
+
+		PermanentOrPlayer target = actor.getTarget();
+		switch (promptedTargetType) {
+
+		case PLAYER:
+			if (target instanceof Player) {
+				fufillUserPromptForPlayerSelect((Player) target);
+			}
+			break;
+		case FOLLOWER:
+			if (target instanceof Follower) {
+				fufillUserPromptForFollowerSelect((Follower) target);
+			}
+			break;
+		case FOLLOWER_OR_PLAYER:
+			if (target instanceof FollowerOrPlayer) {
+				fufillUserPromptForFollowerOrPlayerSelect((FollowerOrPlayer) target);
+			}
+			break;
+		default:
+			throw new AssertionError("Unsupported prompt target type");
+		}
+
 	}
 
 	private void fufillUserPromptForFollowerSelect(Follower follower) {
-		// followerSelectedCallbacks.forEach((callback) -> callback.accept(follower));
 
 		// Need to copy a tempRef because we need to clear the main field BEFORE making the callback. Because the callback could make another async
 		// call, we don't want to modify related state after making the callback
+
 		FollowerCallback followerSelectedCallbackTempRef = followerSelectedCallback;
 		followerSelectedCallback = null;
 
@@ -1082,9 +1169,37 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		if (followerSelectedCallbackTempRef == null) {
 			logger.warn("Follower selected callback is null. It shouldn't be.");
-		} else {
-			followerSelectedCallbackTempRef.provideSelection(follower);
+			return;
 		}
+		followerSelectedCallbackTempRef.provideSelection(follower);
+
+	}
+
+	private void fufillUserPromptForPlayerSelect(Player player) {
+		PlayerCallback callbackTempRef = playerSelectedCallback;
+		playerSelectedCallback = null;
+
+		endFollowerTargettingContext();
+
+		if (callbackTempRef == null) {
+			logger.warn("Player selected callback is null. It shouldn't be.");
+			return;
+		}
+		callbackTempRef.provideSelection(player);
+
+	}
+
+	private void fufillUserPromptForFollowerOrPlayerSelect(FollowerOrPlayer followerOrPlayer) {
+		FollowerOrPlayerCallback callbackTempRef = followerOrPlayerSelectedCallback;
+		followerOrPlayerSelectedCallback = null;
+
+		endFollowerTargettingContext();
+
+		if (callbackTempRef == null) {
+			logger.warn("FollowerOrPlayer selected callback is null. It shouldn't be.");
+			return;
+		}
+		callbackTempRef.provideSelection(followerOrPlayer);
 
 	}
 
@@ -1104,7 +1219,19 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	}
 
+	private void beginTargetingContext(Effect effect) {
+		promptContext = PromptContext.USER_PROMPT;
+		createAndDisplayTargetingInfoPanel(effect, effect.getSource().getOwner().getPlayerNumber());
+		createAndDisplayTargetingSourceCardPanel(effect.getSource().getSourceCard());
+
+		disableValidHandCardsDraggable();
+		disableValidUnitsAttackDraggable();
+		disableActivePlayerEndTurnButton();
+	}
+
 	private void endFollowerTargettingContext() {
+		promptedTargetType = null;
+
 		promptContext = PromptContext.IDLE;
 		removeTargetingInfoPanel();
 		removeTargetingSourceCardPanel();
@@ -1131,16 +1258,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			targetingSourceCardPanel.remove();
 			targetingSourceCardPanel = null;
 		}
-	}
-
-	protected void onPermanentClicked(Permanent<?> permanent) {
-		if (permanent instanceof Follower) {
-			Follower follower = (Follower) permanent;
-			if (promptContext == PromptContext.USER_PROMPT) {
-				fufillUserPromptForFollowerSelect(follower);
-			}
-		}
-
 	}
 
 	private void disableActivePlayerEndTurnButton() {

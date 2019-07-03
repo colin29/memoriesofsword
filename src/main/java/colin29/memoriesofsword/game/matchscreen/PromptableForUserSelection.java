@@ -1,7 +1,11 @@
 package colin29.memoriesofsword.game.matchscreen;
 
 import colin29.memoriesofsword.game.match.Match.FollowerCallback;
+import colin29.memoriesofsword.game.match.Match.FollowerOrPlayerCallback;
+import colin29.memoriesofsword.game.match.Match.PlayerCallback;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
+import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollowerOrPlayer;
+import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer;
 
 /**
  * 
@@ -16,4 +20,8 @@ public interface PromptableForUserSelection {
 	 * @param callback
 	 */
 	void promptUserForFollowerSelect(EffectOnFollower effect, FollowerCallback callback, Runnable onCancelled);
+
+	void promptUserForPlayerSelect(EffectOnPlayer effect, PlayerCallback callback, Runnable onCancelled);
+
+	void promptUserForFollowerOrPlayerSelect(EffectOnFollowerOrPlayer effect, FollowerOrPlayerCallback callback, Runnable onCancelled);
 }

@@ -715,10 +715,17 @@ public class Match {
 
 	@FunctionalInterface
 	public static interface FollowerCallback {
-		/**
-		 * @return true if further selection is required (and other async call is being made)
-		 */
 		public abstract void provideSelection(Follower follower);
+	}
+
+	@FunctionalInterface
+	public static interface PlayerCallback {
+		public abstract void provideSelection(Player follower);
+	}
+
+	@FunctionalInterface
+	public static interface FollowerOrPlayerCallback {
+		public abstract void provideSelection(FollowerOrPlayer follower);
 	}
 
 }

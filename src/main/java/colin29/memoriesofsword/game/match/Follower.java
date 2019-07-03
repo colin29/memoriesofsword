@@ -221,7 +221,7 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 			return;
 		}
 		if (!canAttackPlayers()) {
-			logger.warn("Follower is unable to attack followers. Ignoring.");
+			logger.warn("Follower is unable to attack player. Ignoring.");
 			return;
 		}
 		attackCount += 1;

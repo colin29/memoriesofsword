@@ -36,7 +36,8 @@ public class App extends Game implements AppWithResources {
 	public final MyFonts fonts = new MyFonts();
 	AssetManager assets;
 
-	public static Skin getSkin() {
+	@Override
+	public Skin getSkin() {
 		return skin;
 	}
 
@@ -57,8 +58,7 @@ public class App extends Game implements AppWithResources {
 
 		TestCardListings.addTestCardsToRepo(cardRepo);
 
-		SandBoxMatchDriver sandboxDriver = new SandBoxMatchDriver(this, cardRepo);
-		// this.setScreen(new MatchScreen(this, cardRepo));
+		new SandBoxMatchDriver(this, cardRepo);
 	}
 
 	private void loadImages() {

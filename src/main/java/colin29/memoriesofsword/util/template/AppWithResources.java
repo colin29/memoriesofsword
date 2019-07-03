@@ -3,6 +3,7 @@ package colin29.memoriesofsword.util.template;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 import colin29.memoriesofsword.MyFonts;
 
@@ -18,4 +19,6 @@ public interface AppWithResources {
 	public AssetManager getAssets();
 
 	public MyFonts getFonts();
+
+	public Skin getSkin();
 }
