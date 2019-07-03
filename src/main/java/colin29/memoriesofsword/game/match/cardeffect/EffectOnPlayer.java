@@ -1,12 +1,13 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
+import colin29.memoriesofsword.game.match.Player;
 import colin29.memoriesofsword.util.StringUtil;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 public class EffectOnPlayer extends Effect {
 
 	public enum Targeting {
-		OWN_LEADER, ENEMY_LEADER;
+		OWN_LEADER, ENEMY_LEADER, SELECTED_LEADER;
 
 		public String getGameText() {
 			switch (this) {
@@ -14,15 +15,23 @@ public class EffectOnPlayer extends Effect {
 				return "your leader";
 			case ENEMY_LEADER:
 				return "the enemy leader";
+			case SELECTED_LEADER:
+				return "a leader";
 			default:
 				return "{unknown player-targeting}";
 			}
+		}
+
+		public boolean isUsingUserTargeting() {
+			return (this == SELECTED_LEADER);
 		}
 	}
 
 	public Targeting targeting;
 
 	ActionOnPlayer action = null;
+
+	public Player SELECTED_PLAYER;
 
 	public EffectOnPlayer(Targeting targeting) {
 		this.targeting = targeting;
@@ -31,6 +40,8 @@ public class EffectOnPlayer extends Effect {
 	public EffectOnPlayer(EffectOnPlayer src) {
 		targeting = src.targeting;
 		action = new ActionOnPlayer(src.action);
+
+		SELECTED_PLAYER = src.SELECTED_PLAYER;
 	}
 
 	@Override
@@ -74,6 +85,11 @@ public class EffectOnPlayer extends Effect {
 			return noStringRepText;
 		}
 
+	}
+
+	@Override
+	public boolean isUsingUserTargeting() {
+		return targeting.isUsingUserTargeting();
 	}
 
 }

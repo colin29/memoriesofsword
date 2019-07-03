@@ -44,4 +44,9 @@ public abstract class Effect {
 		this.source = source;
 	}
 
+	/**
+	 * Returns true if the effect is of type such that it uses user targeting
+	 */
+	public abstract boolean isUsingUserTargeting();
+
 }

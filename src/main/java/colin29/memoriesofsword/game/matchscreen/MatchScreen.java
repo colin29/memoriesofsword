@@ -201,8 +201,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		fieldPanel.defaults().space(20);
 		TargetableTable handPanel = new TargetableTable(match.getPlayer(playerNumber));
 
-		handPanel.setBackground(RenderUtil.getSolidBG(Color.DARK_GRAY));
-
 		if (normalOrientation) {
 			mainArea.add(fieldPanel).expand().fill();
 			mainArea.add(endTurnButton);
@@ -218,7 +216,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		handPanel.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
-				logger.debug("hand panel clicked");
 				onTargetableActorClicked(handPanel);
 			}
 

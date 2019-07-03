@@ -6,7 +6,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower.FollowerTargeting;
 import colin29.memoriesofsword.util.StringUtil;
 
 /**
@@ -132,14 +131,16 @@ public class FollowerCardEffect extends CardEffect {
 			logger.warn("Tried to add trigger effects, but card effect doesn't have type triggered_effect");
 			return;
 		}
-		if (effect instanceof EffectOnFollower) {
-			if (((EffectOnFollower) effect).targeting == FollowerTargeting.SELECTED_FOLLOWER) {
-				if (triggerType != TriggerType.FANFARE) {
-					logger.warn("Selected_follower targeting is only supported for fanfare effects");
-					return;
-				}
+
+		if (effect.isUsingUserTargeting()) {
+			if (triggerType != TriggerType.FANFARE) {
+				logger.warn(
+						"Tried to add effect '{}' to trigger type ({}) but selected targeting is only supported for fanfare triggers",
+						effect.toString(), triggerType.name());
+				return;
 			}
 		}
+
 		triggeredEffects.add(effect);
 	}
 

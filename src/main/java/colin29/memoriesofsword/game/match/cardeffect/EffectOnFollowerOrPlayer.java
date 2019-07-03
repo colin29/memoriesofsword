@@ -10,7 +10,7 @@ public class EffectOnFollowerOrPlayer extends Effect {
 	 *
 	 */
 	public enum FollowerOrPlayerTargeting {
-		ALL_ENEMIES, ALL_ALLIES;
+		ALL_ENEMIES, ALL_ALLIES, SELECTED_TARGET;
 
 		public String getGameText() {
 			switch (this) {
@@ -18,11 +18,19 @@ public class EffectOnFollowerOrPlayer extends Effect {
 				return "all allies";
 			case ALL_ENEMIES:
 				return "all enemies";
+			case SELECTED_TARGET:
+				return "an ally or enemy";
 			default:
 				return "{Unknown FollowerOrPlayer effect}";
 			}
 		}
+
+		public boolean isUsingUserTargeting() {
+			return (this == SELECTED_TARGET);
+		}
 	}
+
+	public FollowerOrPlayer SELECTED_TARGET;
 
 	final public FollowerOrPlayerTargeting targeting;
 	private ActionOnFollowerOrPlayer action;
@@ -34,6 +42,8 @@ public class EffectOnFollowerOrPlayer extends Effect {
 	public EffectOnFollowerOrPlayer(EffectOnFollowerOrPlayer src) {
 		targeting = src.targeting;
 		action = new ActionOnFollowerOrPlayer(src.action);
+
+		SELECTED_TARGET = src.SELECTED_TARGET;
 	}
 
 	public void setAction(ActionOnFollowerOrPlayer action) {
@@ -62,6 +72,11 @@ public class EffectOnFollowerOrPlayer extends Effect {
 		default:
 			return noStringRepText;
 		}
+	}
+
+	@Override
+	public boolean isUsingUserTargeting() {
+		return targeting.isUsingUserTargeting();
 	}
 
 }

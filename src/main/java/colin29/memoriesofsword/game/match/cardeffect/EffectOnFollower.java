@@ -56,6 +56,10 @@ public class EffectOnFollower extends Effect {
 
 			}
 		}
+
+		public boolean isUsingUserTargeting() {
+			return (this == SELECTED_FOLLOWER);
+		}
 	}
 
 	final public FollowerTargeting targeting;
@@ -118,6 +122,11 @@ public class EffectOnFollower extends Effect {
 		default:
 			return noStringRepText;
 		}
+	}
+
+	@Override
+	public boolean isUsingUserTargeting() {
+		return targeting.isUsingUserTargeting();
 	}
 
 }

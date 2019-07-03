@@ -48,15 +48,20 @@ public class TestCardListings {
 	}
 
 	private static FollowerCardEffect createDaggerMasterEffect() {
-		FollowerCardEffect effect = new FollowerCardEffect(TriggerType.CLASH);
+		FollowerCardEffect effect = new FollowerCardEffect(TriggerType.FANFARE);
 
-		EffectOnFollower e = new EffectOnFollower(FollowerTargeting.THE_ENEMY_FOLLOWER);
-
-		ActionOnFollower doDamage = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
-		doDamage.amount = 6;
+		EffectOnFollowerOrPlayer e = new EffectOnFollowerOrPlayer(FollowerOrPlayerTargeting.SELECTED_TARGET);
+		ActionOnFollowerOrPlayer doDamage = new ActionOnFollowerOrPlayer(ActionOnFollowerOrPlayer.ActionType.DO_DAMAGE);
+		doDamage.amount = 2;
 		e.setAction(doDamage);
+
+		EffectOnPlayer e2 = new EffectOnPlayer(EffectOnPlayer.Targeting.SELECTED_LEADER);
+		ActionOnPlayer doDamagePlayer = new ActionOnPlayer(ActionOnPlayer.ActionType.DO_DAMAGE);
+		doDamagePlayer.amount = 2;
+		e2.setAction(doDamagePlayer);
+
 		effect.addTriggeredEffect(e);
-		effect.addTriggeredEffect(e.cloneObject());
+		effect.addTriggeredEffect(e2);
 
 		return effect;
 	}

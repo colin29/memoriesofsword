@@ -116,10 +116,11 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 			// cancels playing the card)
 			if (asyncCallMade) {
 				return false;
+			} else {
+				finishResolvingPlayingTheCard(card, permanent, ignoreCost);
+				return true;
 			}
-			finishResolvingPlayingTheCard(card, permanent, ignoreCost);
 
-			return true;
 		} else {
 			logger.debug("Not yet supported: playing spells");
 			return false;

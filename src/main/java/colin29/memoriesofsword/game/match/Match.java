@@ -16,7 +16,6 @@ import colin29.memoriesofsword.game.match.cardeffect.ActionOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.Effect;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
-import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower.FollowerTargeting;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectSource;
@@ -180,7 +179,40 @@ public class Match {
 
 	}
 
-	private final ArrayList<EffectOnFollower> effectsLeftThatNeedUserSelection = new ArrayList<EffectOnFollower>();
+	/**
+	 * 
+	 * Adds all fanfare triggered effects to the effect queue (but does not process the effect queue yet).
+	 * 
+	 * @return true if the parent needs to exit out and wait for player targeting (aysnc call made). When all targeting is done, all fanfare effects
+	 *         will be added to the effect queue, then ifAsyncOnCompleted will be called
+	 */
+	boolean activateFanfareEffects(Follower newPermanent, Runnable ifAsyncOnCompleted) {
+
+		// Get all all triggered fanfare effects
+		List<Effect> triggeredEffects = new ArrayList<Effect>();
+
+		for (FollowerCardEffect cardEffect : newPermanent.getCardEffects()) {
+			if (cardEffect.triggerType == FollowerCardEffect.TriggerType.FANFARE) {
+				for (Effect effect : cardEffect.getTriggeredEffects()) {
+					Effect copy = effect.cloneObject();
+					copy.setSource(newPermanent);
+					triggeredEffects.add(copy);
+				}
+			}
+		}
+
+		boolean asyncCallMade = startUserPromptForTheseEffectsIfAnyRequireTargeting(triggeredEffects, ifAsyncOnCompleted);
+
+		if (asyncCallMade) {
+			return true;
+		} else {
+			triggeredEffects.forEach((Effect effect) -> effectQueue.addCopyToEffectQueue(effect, newPermanent));
+			return false;
+		}
+
+	}
+
+	private final ArrayList<Effect> effectsLeftThatNeedUserSelection = new ArrayList<Effect>();
 
 	/**
 	 * When an ability requires targeting the current thread must be abandoned. So all effects on hold are stored here. When all targeting is
@@ -189,74 +221,43 @@ public class Match {
 	private final ArrayList<Effect> effectsOnHold = new ArrayList<Effect>();
 
 	/**
-	 * 
-	 * @param newPermanent
-	 * @return true if the parent needs to wait for a player targeting (aysnc call made) When all targeting is done, a method call will resume
-	 *         caller's work.
+	 * @param effects
+	 *            effects should be copied already and source should be set
+	 * @return true if the any of these effects need user targeting and thus an async call was made
 	 */
-	boolean activateFanfareEffects(Follower newPermanent, Runnable onCompleted) {
+	private boolean startUserPromptForTheseEffectsIfAnyRequireTargeting(List<Effect> effects, Runnable onCompleted) {
 
-		effectsLeftThatNeedUserSelection.clear();
-
-		boolean userSelectionRequired = false;
-
-		// scan for effects that require user selection
-		for (FollowerCardEffect cardEffect : newPermanent.getCardEffects()) {
-			if (cardEffect.triggerType == FollowerCardEffect.TriggerType.FANFARE) {
-
-				for (Effect effect : cardEffect.getTriggeredEffects()) {
-					if (effect instanceof EffectOnFollower) {
-						EffectOnFollower effectFol = (EffectOnFollower) effect;
-						if (effectFol.targeting == FollowerTargeting.SELECTED_FOLLOWER) {
-							userSelectionRequired = true;
-						}
-					}
-				}
+		boolean requireTargeting = false;
+		for (Effect effect : effects) {
+			if (effect.isUsingUserTargeting()) {
+				requireTargeting = true;
 			}
 		}
-		effectsOnHold.clear();
-		effectsLeftThatNeedUserSelection.clear();
 
-		if (userSelectionRequired) { // If user selection is required, we stash all the effects, tally up all the effects that required targeting,
-										// then prompt the user for them, one by one
-			for (FollowerCardEffect cardEffect : newPermanent.getCardEffects()) {
-				if (cardEffect.triggerType == FollowerCardEffect.TriggerType.FANFARE) {
+		if (requireTargeting) {
+			effectsLeftThatNeedUserSelection.clear();
+			effectsOnHold.clear();
 
-					for (Effect effect : cardEffect.getTriggeredEffects()) {
-
-						Effect copy = effect.cloneObject();
-						copy.setSource(newPermanent);
-						effectsOnHold.add(copy);
-
-						if (effect instanceof EffectOnFollower) {
-							EffectOnFollower effectFol = (EffectOnFollower) effect;
-							if (effectFol.targeting == FollowerTargeting.SELECTED_FOLLOWER) {
-								effectsLeftThatNeedUserSelection.add((EffectOnFollower) copy);
-							}
-						}
-					}
+			for (Effect e : effects) {
+				effectsOnHold.add(e);
+				if (e.isUsingUserTargeting()) {
+					effectsLeftThatNeedUserSelection.add(e);
 				}
 			}
-			// Now that everything is stashed, we prompt the user
+
 			ifSelectionStillRequiredPromptUserElseContinue(onCompleted);
+
 			return true;
 		} else {
-			for (FollowerCardEffect cardEffect : newPermanent.getCardEffects()) {
-				if (cardEffect.triggerType == FollowerCardEffect.TriggerType.FANFARE) {
-
-					for (Effect effect : cardEffect.getTriggeredEffects()) {
-						effectQueue.addCopyToEffectQueue(effect, newPermanent);
-					}
-				}
-			}
 			return false;
 		}
+
 	}
 
 	/**
 	 * @return true if selection is still required (and an async call was made)
 	 */
-	public boolean ifSelectionStillRequiredPromptUserElseContinue(Runnable onCompleted) {
+	public void ifSelectionStillRequiredPromptUserElseContinue(Runnable onCompleted) {
 
 		Runnable onCancel = () -> {
 			effectsOnHold.clear();
@@ -264,21 +265,36 @@ public class Match {
 		};
 
 		if (!effectsLeftThatNeedUserSelection.isEmpty()) {
-			EffectOnFollower effect = effectsLeftThatNeedUserSelection.remove(0);
-			userUI.promptUserForFollowerSelect(effect, (Follower follower) -> {
-				effect.SELECTED_FOLLOWER = follower;
-				ifSelectionStillRequiredPromptUserElseContinue(() -> {
-					effectsOnHold.forEach((Effect e) -> effectQueue.addEffectAlreadyCopiedAndSourceSet(e));
-					effectsOnHold.clear();
-					onCompleted.run();
-				});
-			}, onCancel);
-			return true;
-		} else
 
-		{
+			// Make async call to the UI, which will fill fufill a single prompt and callback this method (or cancel this operation)
+
+			Effect effect = effectsLeftThatNeedUserSelection.remove(0);
+
+			if (effect instanceof EffectOnFollower) {
+				EffectOnFollower e = (EffectOnFollower) effect;
+				userUI.promptUserForFollowerSelect(e, (Follower follower) -> {
+					e.SELECTED_FOLLOWER = follower;
+					ifSelectionStillRequiredPromptUserElseContinue(onCompleted);
+				}, onCancel);
+			} else if (effect instanceof EffectOnPlayer) {
+				EffectOnPlayer e = (EffectOnPlayer) effect;
+				userUI.promptUserForPlayerSelect(e, (Player player) -> {
+					e.SELECTED_PLAYER = player;
+					ifSelectionStillRequiredPromptUserElseContinue(onCompleted);
+				}, onCancel);
+			} else if (effect instanceof EffectOnFollowerOrPlayer) {
+				EffectOnFollowerOrPlayer e = (EffectOnFollowerOrPlayer) effect;
+				userUI.promptUserForFollowerOrPlayerSelect(e, (FollowerOrPlayer target) -> {
+					e.SELECTED_TARGET = target;
+					ifSelectionStillRequiredPromptUserElseContinue(onCompleted);
+				}, onCancel);
+			}
+
+		} else { // no more targeting required, can move on
+			effectsOnHold.forEach((Effect e) -> effectQueue.addEffectAlreadyCopiedAndSourceSet(e));
+			effectsOnHold.clear();
 			onCompleted.run();
-			return false;
+			return;
 		}
 	}
 
@@ -498,6 +514,14 @@ public class Match {
 			case OWN_LEADER:
 				targets.add(player);
 				break;
+			case SELECTED_LEADER:
+				if (effectOnPlayer.SELECTED_PLAYER == null) {
+					logger.warn("Selected_folower is null, skipping executing this effect.");
+					return;
+				} else {
+					targets.add(effectOnPlayer.SELECTED_PLAYER);
+				}
+				break;
 			default:
 				throw new AssertionError("unhandled effect type");
 			}
@@ -517,6 +541,14 @@ public class Match {
 			case ALL_ENEMIES:
 				targets.add(enemyPlayer);
 				targets.addAll(enemyPlayer.getAllFollowers());
+				break;
+			case SELECTED_TARGET:
+				if (e.SELECTED_TARGET == null) {
+					logger.warn("Selected_target (followerOrPlayer) is null, skipping executing this effect.");
+					return;
+				} else {
+					targets.add(e.SELECTED_TARGET);
+				}
 				break;
 			default:
 				throw new AssertionError("unhandled effect type");
