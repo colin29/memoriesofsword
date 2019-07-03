@@ -86,8 +86,6 @@ public class Player implements Attackable, FollowerOrPlayer {
 			return false;
 		}
 
-		// Actually play the card
-
 		if (card.type.isPermanent()) {
 
 			// We create the permanent and see it's fanfare effects
@@ -106,9 +104,7 @@ public class Player implements Attackable, FollowerOrPlayer {
 			// Activate fanfare effects
 			if (card.type == Type.FOLLOWER) {
 				asyncCallMade = match.activateFanfareEffects((Follower) permanent, () -> {
-					actuallyPlayTheCard(card, permanent, ignoreCost);
-					match.activateAllEffectsOnHold(); // activate the fanfare effects
-					match.checkForFollowerETBEffects(permanent);
+					finishResolvingPlayingTheCard(card, permanent, ignoreCost);
 				});
 			} else if (card.type == Type.AMULET) {
 				match.activateFanfareEffects((Amulet) permanent);
@@ -119,15 +115,23 @@ public class Player implements Attackable, FollowerOrPlayer {
 			if (asyncCallMade) {
 				return false;
 			}
-
-			actuallyPlayTheCard(card, permanent, ignoreCost);
-			match.checkForFollowerETBEffects(permanent);
+			finishResolvingPlayingTheCard(card, permanent, ignoreCost);
 
 			return true;
 		} else {
 			logger.debug("Not yet supported: playing spells");
 			return false;
 		}
+	}
+
+	/**
+	 * Called after fanfare effects are added to the effect queue
+	 * 
+	 */
+	private void finishResolvingPlayingTheCard(Card card, Permanent<?> permanent, boolean ignoreCost) {
+		actuallyPlayTheCard(card, permanent, ignoreCost);
+		match.processEffectQueue(); // execute fanfare effects
+		match.checkForFollowerETBEffects(permanent);
 	}
 
 	/**

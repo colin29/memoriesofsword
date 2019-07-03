@@ -226,8 +226,8 @@ public class Match {
 
 						Effect copy = effect.cloneObject();
 						copy.setSource(newPermanent);
-
 						effectsOnHold.add(copy);
+
 						if (effect instanceof EffectOnFollower) {
 							EffectOnFollower effectFol = (EffectOnFollower) effect;
 							if (effectFol.targeting == FollowerTargeting.SELECTED_FOLLOWER) {
@@ -249,7 +249,6 @@ public class Match {
 					}
 				}
 			}
-			processEffectQueue();
 			return false;
 		}
 	}
@@ -262,10 +261,16 @@ public class Match {
 			EffectOnFollower effect = effectsLeftThatNeedUserSelection.remove(0);
 			userUI.promptUserForFollowerSelect((Follower follower) -> {
 				effect.SELECTED_FOLLOWER = follower;
-				ifSelectionStillRequiredPromptUserElseContinue(onCompleted);
+				ifSelectionStillRequiredPromptUserElseContinue(() -> {
+					effectsOnHold.forEach((Effect e) -> effectQueue.addEffectAlreadyCopiedAndSourceSet(e));
+					effectsOnHold.clear();
+					onCompleted.run();
+				});
 			}, effect);
 			return true;
-		} else {
+		} else
+
+		{
 			onCompleted.run();
 			return false;
 		}
