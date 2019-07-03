@@ -909,6 +909,13 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		if (button == Input.Buttons.LEFT) {
 			removeInfoPanel();
 		}
+
+		// A right click generally signals a cancel of the current operation, if allowed
+		if (button == Input.Buttons.RIGHT) {
+			if (promptContext == PromptContext.USER_PROMPT) {
+				cancelUserPromptForFollowerSelect();
+			}
+		}
 		return false;
 	}
 
@@ -1045,12 +1052,14 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	}
 
 	FollowerCallback followerSelectedCallback;
+	Runnable selectionCancelledCallback;
 
 	Table targetingSourceCardPanel;
 
 	@Override
-	public void promptUserForFollowerSelect(FollowerCallback callback, EffectOnFollower effect) {
+	public void promptUserForFollowerSelect(EffectOnFollower effect, FollowerCallback callback, Runnable onCancelled) {
 		followerSelectedCallback = callback;
+		selectionCancelledCallback = onCancelled;
 		promptContext = PromptContext.USER_PROMPT;
 
 		createAndDisplayTargetingInfoPanel(effect, effect.getSource().getOwner().getPlayerNumber());
@@ -1064,25 +1073,45 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	private void fufillUserPromptForFollowerSelect(Follower follower) {
 		// followerSelectedCallbacks.forEach((callback) -> callback.accept(follower));
 
-		if (followerSelectedCallback == null) {
-			logger.warn("Follower selected callback is null. It shouldn't be.");
-		}
-
 		// Need to copy a tempRef because we need to clear the main field BEFORE making the callback. Because the callback could make another async
 		// call, we don't want to modify related state after making the callback
 		FollowerCallback followerSelectedCallbackTempRef = followerSelectedCallback;
 		followerSelectedCallback = null;
-		promptContext = PromptContext.IDLE;
 
+		endFollowerTargettingContext();
+
+		if (followerSelectedCallbackTempRef == null) {
+			logger.warn("Follower selected callback is null. It shouldn't be.");
+		} else {
+			followerSelectedCallbackTempRef.provideSelection(follower);
+		}
+
+	}
+
+	private void cancelUserPromptForFollowerSelect() {
+
+		logger.debug("Targeting cancelled!");
+
+		Runnable selectionCancelledCallbackTempRef = selectionCancelledCallback;
+		selectionCancelledCallback = null;
+		endFollowerTargettingContext();
+
+		if (selectionCancelledCallbackTempRef == null) {
+			logger.warn("Follower selected callback is null. It shouldn't be.");
+		} else {
+			selectionCancelledCallbackTempRef.run();
+		}
+
+	}
+
+	private void endFollowerTargettingContext() {
+		promptContext = PromptContext.IDLE;
 		removeTargetingInfoPanel();
 		removeTargetingSourceCardPanel();
 
 		makeValidHandCardsDraggable();
 		makeValidUnitsAttackDraggable();
 		enableActivePlayerEndTurnButton();
-
-		followerSelectedCallbackTempRef.provideSelection(follower);
-
 	}
 
 	private void createAndDisplayTargetingSourceCardPanel(Card card) {

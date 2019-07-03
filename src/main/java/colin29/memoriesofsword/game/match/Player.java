@@ -72,7 +72,8 @@ public class Player implements Attackable, FollowerOrPlayer {
 
 	/**
 	 * 
-	 * @return whether the card was successfully played
+	 * @return whether the card was successfully played. Note that this could return false if the card had triggered effects (turning this into an
+	 *         async call)
 	 */
 	private boolean playCard(Card card, boolean ignoreCost) {
 		logger.debug("Player " + playerNumber + " tries to play card '{}'", card.getName());

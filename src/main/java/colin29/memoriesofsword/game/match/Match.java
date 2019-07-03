@@ -257,16 +257,22 @@ public class Match {
 	 * @return true if selection is still required (and an async call was made)
 	 */
 	public boolean ifSelectionStillRequiredPromptUserElseContinue(Runnable onCompleted) {
+
+		Runnable onCancel = () -> {
+			effectsOnHold.clear();
+			effectsLeftThatNeedUserSelection.clear();
+		};
+
 		if (!effectsLeftThatNeedUserSelection.isEmpty()) {
 			EffectOnFollower effect = effectsLeftThatNeedUserSelection.remove(0);
-			userUI.promptUserForFollowerSelect((Follower follower) -> {
+			userUI.promptUserForFollowerSelect(effect, (Follower follower) -> {
 				effect.SELECTED_FOLLOWER = follower;
 				ifSelectionStillRequiredPromptUserElseContinue(() -> {
 					effectsOnHold.forEach((Effect e) -> effectQueue.addEffectAlreadyCopiedAndSourceSet(e));
 					effectsOnHold.clear();
 					onCompleted.run();
 				});
-			}, effect);
+			}, onCancel);
 			return true;
 		} else
 

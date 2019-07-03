@@ -11,9 +11,9 @@ import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
 public interface PromptableForUserSelection {
 
 	/**
-	 * @param callback
 	 * @param effect
 	 *            This is just used to provide the name / string-rep of the effect. The actual continuation should be specified in the callback
+	 * @param callback
 	 */
-	void promptUserForFollowerSelect(FollowerCallback callback, EffectOnFollower effect);
+	void promptUserForFollowerSelect(EffectOnFollower effect, FollowerCallback callback, Runnable onCancelled);
 }
