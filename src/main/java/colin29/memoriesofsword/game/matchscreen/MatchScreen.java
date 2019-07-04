@@ -1092,6 +1092,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	PlayerCallback playerSelectedCallback;
 	FollowerOrPlayerCallback followerOrPlayerSelectedCallback;
 
+	Predicate<PermanentOrPlayer> isTargetValid;
+
 	Runnable selectionCancelledCallback;
 
 	private enum PromptedTargetType {
@@ -1153,6 +1155,14 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		}
 
 		PermanentOrPlayer target = actor.getTarget();
+
+		if (isTargetValid == null) {
+			logger.warn("istargetValid is null, it shouldn't be. Overwriting it with true predicate.");
+			isTargetValid = (PermanentOrPlayer) -> true;
+		}
+		if (!isTargetValid.test(target)) {
+			return;
+		}
 		switch (promptedTargetType) {
 
 		case PLAYER:
@@ -1240,6 +1250,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	private void beginTargetingContext(Effect effect, Predicate<PermanentOrPlayer> predicate) {
 		promptContext = PromptContext.USER_PROMPT;
+		isTargetValid = predicate;
+
 		createAndDisplayTargetingInfoPanel(effect, effect.getSource().getOwner().getPlayerNumber());
 		createAndDisplayTargetingSourceCardPanel(effect.getSource().getSourceCard());
 
@@ -1251,9 +1263,11 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	}
 
 	private void endFollowerTargettingContext() {
-		promptedTargetType = null;
 
 		promptContext = PromptContext.IDLE;
+		promptedTargetType = null;
+		isTargetValid = null;
+
 		removeTargetingInfoPanel();
 		removeTargetingSourceCardPanel();
 
