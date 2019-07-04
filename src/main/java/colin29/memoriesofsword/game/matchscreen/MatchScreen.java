@@ -1105,10 +1105,17 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	@Override
 	public void promptUserForFollowerSelect(EffectOnFollower effect, Predicate<PermanentOrPlayer> predicate, FollowerCallback callback,
 			Runnable onCancelled) {
+
 		followerSelectedCallback = callback;
 		selectionCancelledCallback = onCancelled;
 		promptedTargetType = PromptedTargetType.FOLLOWER;
-		beginTargetingContext(effect, predicate);
+
+		if ((getValidTargetableActors(predicate)).isEmpty()) {
+			effect.fizzledBecauseNoValidTargets();
+			fufillUserPromptForFollowerSelect((Follower) null);
+		} else {
+			beginTargetingContext(effect, predicate);
+		}
 	}
 
 	@Override
@@ -1117,7 +1124,12 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		playerSelectedCallback = callback;
 		selectionCancelledCallback = onCancelled;
 		promptedTargetType = PromptedTargetType.PLAYER;
-		beginTargetingContext(effect, predicate);
+		if ((getValidTargetableActors(predicate)).isEmpty()) {
+			effect.fizzledBecauseNoValidTargets();
+			fufillUserPromptForPlayerSelect((Player) null);
+		} else {
+			beginTargetingContext(effect, predicate);
+		}
 	}
 
 	@Override
@@ -1126,7 +1138,12 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		followerOrPlayerSelectedCallback = callback;
 		selectionCancelledCallback = onCancelled;
 		promptedTargetType = PromptedTargetType.FOLLOWER_OR_PLAYER;
-		beginTargetingContext(effect, predicate);
+		if ((getValidTargetableActors(predicate)).isEmpty()) {
+			effect.fizzledBecauseNoValidTargets();
+			fufillUserPromptForFollowerOrPlayerSelect((FollowerOrPlayer) null);
+		} else {
+			beginTargetingContext(effect, predicate);
+		}
 	}
 
 	protected void onTargetableActorClicked(TargetableActor actor) {

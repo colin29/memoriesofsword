@@ -469,6 +469,11 @@ public class Match {
 			throw new MissingEffectSourceException();
 		}
 
+		if (effect.isUsingUserTargeting() && effect.isFizzledBecauseNoValidTargets()) {
+			logger.info("Effect fizzled: '{}' (from {})  due to lack of targets.", effect.toString(), effect.getSource().getSourceName());
+			return;
+		}
+
 		EffectSource source = effect.getSource();
 		final Player player;
 

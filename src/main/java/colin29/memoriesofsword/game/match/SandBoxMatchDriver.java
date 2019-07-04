@@ -31,7 +31,7 @@ public class SandBoxMatchDriver {
 		match.nextTurn();
 
 		Player player2 = match.getPlayer(2);
-		player2.playCardWithoutPayingCost((Card) player2.getHand().get(1));
+		// player2.playCardWithoutPayingCost((Card) player2.getHand().get(1));
 		// player2.playCardWithoutPayingCost((Card) player2.getHand().get(0));
 
 		match.nextTurn();

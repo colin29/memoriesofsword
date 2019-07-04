@@ -49,4 +49,20 @@ public abstract class Effect {
 	 */
 	public abstract boolean isUsingUserTargeting();
 
+	private boolean fizzledBecauseNoValidTargets;
+
+	/**
+	 * Call this when a targeted effect has no valid targets and will fizzle. We have this field so we can distinguish from a missing SELECTED_TARGET
+	 * due to program error from there being no valid targets. <br>
+	 * Match can look at the fizzled effect and see if it originates from a follower or spell and decide whether to cancel the action or proceed. <br>
+	 * Fizzled effects are valid to be executed and will do nothing.
+	 */
+	public void fizzledBecauseNoValidTargets() {
+		fizzledBecauseNoValidTargets = true;
+	}
+
+	public boolean isFizzledBecauseNoValidTargets() {
+		return fizzledBecauseNoValidTargets;
+	}
+
 }
