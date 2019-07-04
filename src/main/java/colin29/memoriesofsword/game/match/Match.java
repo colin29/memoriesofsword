@@ -519,7 +519,9 @@ public class Match {
 				targets = new ArrayList<Follower>();
 				targets.add(effectOnFollower.THAT_FOLLOWER);
 				break;
-			case SELECTED_FOLLOWER:
+			case SELECTED_FOLLOWER: // intentional fall-through: Selected targetings are treated the same
+			case SELECTED_ALLIED_FOLLOWER:
+			case SELECTED_ENEMY_FOLLOWER:
 				targets = new ArrayList<Follower>();
 				if (effectOnFollower.SELECTED_FOLLOWER == null) {
 					logger.warn("Selected_folower is null, skipping executing this effect.");
@@ -575,7 +577,7 @@ public class Match {
 				targets.add(enemyPlayer);
 				targets.addAll(enemyPlayer.getAllFollowers());
 				break;
-			case SELECTED_TARGET: // selected targetings are handled in the same way
+			case SELECTED_TARGET: // intentional fall-through: Selected targetings are treated the same
 			case SELECTED_ALLY:
 			case SELECTED_ENEMY:
 				if (e.SELECTED_TARGET == null) {

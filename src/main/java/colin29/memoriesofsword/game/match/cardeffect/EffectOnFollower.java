@@ -1,8 +1,11 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 
 import colin29.memoriesofsword.game.match.Follower;
+import colin29.memoriesofsword.game.match.cardeffect.filter.FollowerFilter;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 /**
@@ -64,7 +67,36 @@ public class EffectOnFollower extends Effect {
 		}
 
 		public boolean isUsingUserTargeting() {
-			return (this == SELECTED_FOLLOWER);
+			switch (this) {
+			case SELECTED_FOLLOWER:
+			case SELECTED_ENEMY_FOLLOWER:
+			case SELECTED_ALLIED_FOLLOWER:
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		public boolean isPlural() {
+			switch (this) { // intentional use of fall-through
+			case THIS_FOLLOWER:
+			case THE_ENEMY_FOLLOWER:
+			case ETB_FOLLOWER:
+				return false;
+
+			case ALLIED_FOLLOWERS:
+			case OTHER_ALLIED_FOLLOWERS:
+			case ENEMY_FOLLOWERS:
+			case OTHER_ENEMY_FOLLOWERS:
+				return true;
+
+			case SELECTED_FOLLOWER:
+			case SELECTED_ENEMY_FOLLOWER:
+			case SELECTED_ALLIED_FOLLOWER:
+				return false;
+			default:
+				return false;
+			}
 		}
 	}
 
@@ -82,6 +114,12 @@ public class EffectOnFollower extends Effect {
 	 */
 	public Follower SELECTED_FOLLOWER;
 
+	/**
+	 * If the effect is a selected effect, filters restrict the targeting. <br>
+	 * For other targeting types, they make the effect conditional
+	 */
+	private List<FollowerFilter> filters = new ArrayList<FollowerFilter>();
+
 	public EffectOnFollower(FollowerTargeting targeting) {
 		this.targeting = targeting;
 	}
@@ -92,6 +130,9 @@ public class EffectOnFollower extends Effect {
 
 		THAT_FOLLOWER = src.THAT_FOLLOWER;
 		SELECTED_FOLLOWER = src.SELECTED_FOLLOWER;
+		for (FollowerFilter f : src.filters) {
+			filters.add(f.cloneObject());
+		}
 	}
 
 	public void setAction(ActionOnFollower action) {
@@ -110,6 +151,10 @@ public class EffectOnFollower extends Effect {
 		return action;
 	}
 
+	public void addFilter(FollowerFilter filter) {
+		filters.add(filter);
+	}
+
 	@Override
 	public String toString() {
 		if (action == null) {
@@ -118,16 +163,24 @@ public class EffectOnFollower extends Effect {
 
 		switch (action.actionType) {
 		case BUFF:
-			return String.format("Give +%o/+%o to %s", action.atkBuff, action.defBuff, targeting.getGameText());
+			return String.format("Give +%o/+%o to %s%s", action.atkBuff, action.defBuff, targeting.getGameText(), getFiltersText());
 		case DO_DAMAGE:
-			return String.format("Do %o damage to %s", action.amount, targeting.getGameText());
+			return String.format("Do %o damage to %s%s", action.amount, targeting.getGameText(), getFiltersText());
 		case GIVE_APPLIED_EFFECT:
 			return "{give_applied_effect actions not supported yet}";
 		case HEAL_DEFENSE:
-			return String.format("Restore %o defense to %s", action.amount, targeting.getGameText());
+			return String.format("Restore %o defense to %s%s", action.amount, targeting.getGameText(), getFiltersText());
 		default:
 			return noStringRepText;
 		}
+	}
+
+	private String getFiltersText() {
+		String str = "";
+		for (FollowerFilter filter : filters) {
+			str += " " + filter.toString(targeting.isPlural());
+		}
+		return str;
 	}
 
 	@Override
@@ -158,6 +211,17 @@ public class EffectOnFollower extends Effect {
 		};
 	}
 
+	private Predicate<Follower> getFiltersPredicate() {
+		return (Follower f) -> {
+			for (FollowerFilter filter : filters) {
+				if (!filter.getPredicate().test(f)) {
+					return false;
+				}
+			}
+			return true;
+		};
+	}
+
 	/**
 	 * Get the predicate used to determine whether a given target is valid.
 	 * 
@@ -167,7 +231,7 @@ public class EffectOnFollower extends Effect {
 	 */
 	public Predicate<Follower> getPredicate() {
 		return (Follower f) -> {
-			return getTargetingPredicate().test(f);
+			return getTargetingPredicate().test(f) && getFiltersPredicate().test(f);
 		};
 	}
 

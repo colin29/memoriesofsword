@@ -16,6 +16,9 @@ import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer.Targeting;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.PropertyType;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.TriggerType;
+import colin29.memoriesofsword.game.match.cardeffect.filter.FollowerFilter;
+import colin29.memoriesofsword.game.match.cardeffect.filter.FollowerFilter.CompareStat;
+import colin29.memoriesofsword.game.match.cardeffect.filter.FollowerFilter.ComparisonType;
 
 /**
  * Static class that creates the test card listings
@@ -27,8 +30,8 @@ public class TestCardListings {
 
 	public static void addTestCardsToRepo(CardRepository cardRepo) {
 		CardListing c1 = CardListing.makeFollowerTempCardListing("Forest Striker", 3, 2, 3);
-		c1.addEffect(createForestStrikerEffect());
 		c1.addEffect(createForestStrikerFanfareTargetedEffect());
+		c1.addEffect(createForestStrikerEffect());
 
 		CardListing c2 = CardListing.makeFollowerTempCardListing("Shield Dude", 4, 1, 7);
 		c2.addEffect(new FollowerCardEffect(PropertyType.RUSH));
@@ -160,10 +163,11 @@ public class TestCardListings {
 	private static FollowerCardEffect createForestStrikerFanfareTargetedEffect() {
 		FollowerCardEffect effect = new FollowerCardEffect(FollowerCardEffect.TriggerType.FANFARE);
 
-		EffectOnFollower e1 = new EffectOnFollower(FollowerTargeting.SELECTED_FOLLOWER);
+		EffectOnFollower e1 = new EffectOnFollower(FollowerTargeting.SELECTED_ENEMY_FOLLOWER);
 		ActionOnFollower dmg = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
 		dmg.amount = 2;
 		e1.setAction(dmg);
+		e1.addFilter(new FollowerFilter(CompareStat.ATTACK, ComparisonType.LESS_THAN_OR_EQUAL, 1));
 
 		effect.addTriggeredEffect(e1);
 		effect.addTriggeredEffect(e1.cloneObject());
