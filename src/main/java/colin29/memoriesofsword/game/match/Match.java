@@ -534,7 +534,20 @@ public class Match {
 				throw new AssertionError("unhandled effect type");
 
 			}
-			targets.forEach((target) -> executeActionOnFollower(effectOnFollower.getAction(), target));
+
+			List<Follower> filteredTargets;
+			if (effectOnFollower.targeting.isAoETargeting()) {
+				filteredTargets = new ArrayList<Follower>();
+				for (Follower t : targets) {
+					if (effectOnFollower.getFiltersPredicate().test(t)) {
+						filteredTargets.add(t);
+					}
+				}
+			} else {
+				filteredTargets = targets;
+			}
+
+			filteredTargets.forEach((target) -> executeActionOnFollower(effectOnFollower.getAction(), target));
 		}
 		if (effect instanceof EffectOnPlayer) {
 

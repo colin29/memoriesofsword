@@ -90,8 +90,9 @@ public class TestCardListings {
 		EffectOnFollower e = new EffectOnFollower(FollowerTargeting.ENEMY_FOLLOWERS);
 
 		ActionOnFollower doDamage = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
-		doDamage.amount = 2;
+		doDamage.amount = 1;
 		e.setAction(doDamage);
+		e.addFilter(new FollowerFilter(CompareStat.ATTACK, ComparisonType.LESS_THAN_OR_EQUAL, 1));
 
 		effect.addTriggeredEffect(e);
 

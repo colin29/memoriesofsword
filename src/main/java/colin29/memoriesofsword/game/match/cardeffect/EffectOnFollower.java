@@ -77,23 +77,16 @@ public class EffectOnFollower extends Effect {
 			}
 		}
 
-		public boolean isPlural() {
+		/**
+		 * @return true if this targeting type is directed at a group and not a single target
+		 */
+		public boolean isAoETargeting() {
 			switch (this) { // intentional use of fall-through
-			case THIS_FOLLOWER:
-			case THE_ENEMY_FOLLOWER:
-			case ETB_FOLLOWER:
-				return false;
-
 			case ALLIED_FOLLOWERS:
 			case OTHER_ALLIED_FOLLOWERS:
 			case ENEMY_FOLLOWERS:
 			case OTHER_ENEMY_FOLLOWERS:
 				return true;
-
-			case SELECTED_FOLLOWER:
-			case SELECTED_ENEMY_FOLLOWER:
-			case SELECTED_ALLIED_FOLLOWER:
-				return false;
 			default:
 				return false;
 			}
@@ -152,6 +145,10 @@ public class EffectOnFollower extends Effect {
 	}
 
 	public void addFilter(FollowerFilter filter) {
+		if (!targeting.isUsingUserTargeting() && !targeting.isAoETargeting()) {
+			logger.warn("Filters are only valid with Effects that use User Targeting or are AoE Targeting. AddFilter ignored.");
+			return;
+		}
 		filters.add(filter);
 	}
 
@@ -178,7 +175,7 @@ public class EffectOnFollower extends Effect {
 	private String getFiltersText() {
 		String str = "";
 		for (FollowerFilter filter : filters) {
-			str += " " + filter.toString(targeting.isPlural());
+			str += " " + filter.toString(targeting.isAoETargeting());
 		}
 		return str;
 	}
@@ -211,7 +208,7 @@ public class EffectOnFollower extends Effect {
 		};
 	}
 
-	private Predicate<Follower> getFiltersPredicate() {
+	public Predicate<Follower> getFiltersPredicate() {
 		return (Follower f) -> {
 			for (FollowerFilter filter : filters) {
 				if (!filter.getPredicate().test(f)) {
