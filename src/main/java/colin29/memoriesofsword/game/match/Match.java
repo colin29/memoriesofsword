@@ -139,6 +139,7 @@ public class Match {
 		testListings.add(cardRepo.getCardById(9002));
 		testListings.add(cardRepo.getCardById(9003));
 		testListings.add(cardRepo.getCardById(9004));
+		testListings.add(cardRepo.getCardById(9005));
 
 		// Let's make a deck of 10 cards, alternating between these
 
@@ -574,9 +575,11 @@ public class Match {
 				targets.add(enemyPlayer);
 				targets.addAll(enemyPlayer.getAllFollowers());
 				break;
-			case SELECTED_TARGET:
+			case SELECTED_TARGET: // selected targetings are handled in the same way
+			case SELECTED_ALLY:
+			case SELECTED_ENEMY:
 				if (e.SELECTED_TARGET == null) {
-					logger.warn("Selected_target (followerOrPlayer) is null, skipping executing this effect.");
+					logger.warn("Selected target (followerOrPlayer) is null, skipping executing this effect.");
 					return;
 				} else {
 					targets.add(e.SELECTED_TARGET);

@@ -43,14 +43,29 @@ public class TestCardListings {
 
 		CardListing c5 = CardListing.makeFollowerTempCardListing("Dagger master", 4, 2, 5);
 		c5.addEffect(createDaggerMasterEffect());
+		CardListing c6 = CardListing.makeFollowerTempCardListing("Healing angel", 4, 3, 4);
+		c6.addEffect(createHealingAngelEffect());
 
-		cardRepo.addCard(c1, c2, c3, c4, c5);
+		cardRepo.addCard(c1, c2, c3, c4, c5, c6);
+	}
+
+	private static FollowerCardEffect createHealingAngelEffect() {
+		FollowerCardEffect effect = new FollowerCardEffect(TriggerType.FANFARE);
+
+		EffectOnFollowerOrPlayer e = new EffectOnFollowerOrPlayer(FollowerOrPlayerTargeting.SELECTED_ALLY);
+		ActionOnFollowerOrPlayer heal = new ActionOnFollowerOrPlayer(ActionOnFollowerOrPlayer.ActionType.HEAL_DEFENSE);
+		heal.amount = 2;
+		e.setAction(heal);
+
+		effect.addTriggeredEffect(e);
+
+		return effect;
 	}
 
 	private static FollowerCardEffect createDaggerMasterEffect() {
 		FollowerCardEffect effect = new FollowerCardEffect(TriggerType.FANFARE);
 
-		EffectOnFollowerOrPlayer e = new EffectOnFollowerOrPlayer(FollowerOrPlayerTargeting.SELECTED_TARGET);
+		EffectOnFollowerOrPlayer e = new EffectOnFollowerOrPlayer(FollowerOrPlayerTargeting.SELECTED_ENEMY);
 		ActionOnFollowerOrPlayer doDamage = new ActionOnFollowerOrPlayer(ActionOnFollowerOrPlayer.ActionType.DO_DAMAGE);
 		doDamage.amount = 2;
 		e.setAction(doDamage);
@@ -70,18 +85,19 @@ public class TestCardListings {
 		FollowerCardEffect effect = new FollowerCardEffect(FollowerCardEffect.TriggerType.FANFARE);
 
 		EffectOnFollower e = new EffectOnFollower(FollowerTargeting.ENEMY_FOLLOWERS);
-		effect.addTriggeredEffect(e);
 
 		ActionOnFollower doDamage = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
 		doDamage.amount = 2;
 		e.setAction(doDamage);
 
-		EffectOnFollowerOrPlayer e2 = new EffectOnFollowerOrPlayer(FollowerOrPlayerTargeting.ALL_ENEMIES);
-		effect.addTriggeredEffect(e2);
+		effect.addTriggeredEffect(e);
 
-		ActionOnFollowerOrPlayer doDamageAllEnemies = new ActionOnFollowerOrPlayer(ActionOnFollowerOrPlayer.ActionType.DO_DAMAGE);
-		doDamageAllEnemies.amount = 2;
-		e2.setAction(doDamageAllEnemies);
+		// EffectOnFollowerOrPlayer e2 = new EffectOnFollowerOrPlayer(FollowerOrPlayerTargeting.ALL_ENEMIES);
+		// effect.addTriggeredEffect(e2);
+		//
+		// ActionOnFollowerOrPlayer doDamageAllEnemies = new ActionOnFollowerOrPlayer(ActionOnFollowerOrPlayer.ActionType.DO_DAMAGE);
+		// doDamageAllEnemies.amount = 2;
+		// e2.setAction(doDamageAllEnemies);
 
 		return effect;
 	}

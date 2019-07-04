@@ -300,4 +300,9 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 		return match;
 	}
 
+	@Override
+	public Player getOwner() {
+		return this;
+	}
+
 }

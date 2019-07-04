@@ -12,7 +12,7 @@ public class EffectOnFollowerOrPlayer extends Effect {
 	 *
 	 */
 	public enum FollowerOrPlayerTargeting {
-		ALL_ENEMIES, ALL_ALLIES, SELECTED_TARGET;
+		ALL_ENEMIES, ALL_ALLIES, SELECTED_TARGET, SELECTED_ALLY, SELECTED_ENEMY;
 
 		public String getGameText() {
 			switch (this) {
@@ -22,6 +22,10 @@ public class EffectOnFollowerOrPlayer extends Effect {
 				return "all enemies";
 			case SELECTED_TARGET:
 				return "an ally or enemy";
+			case SELECTED_ALLY:
+				return "an ally";
+			case SELECTED_ENEMY:
+				return "an enemy";
 			default:
 				return "{Unknown FollowerOrPlayer effect}";
 			}
@@ -78,12 +82,37 @@ public class EffectOnFollowerOrPlayer extends Effect {
 
 	@Override
 	public boolean isUsingUserTargeting() {
-		return targeting.isUsingUserTargeting();
+		return (targeting == FollowerOrPlayerTargeting.SELECTED_TARGET || targeting == FollowerOrPlayerTargeting.SELECTED_ALLY
+				|| targeting == FollowerOrPlayerTargeting.SELECTED_ENEMY);
+	}
+
+	private Predicate<FollowerOrPlayer> getTargetingPredicate() {
+
+		if (!isUsingUserTargeting()) {
+			return (FollowerOrPlayer f) -> {
+				return true;
+			};
+		}
+
+		return (FollowerOrPlayer f) -> {
+			switch (targeting) {
+			case SELECTED_TARGET:
+				return true;
+			case SELECTED_ALLY:
+				return f.getOwner() == getSource().getOwner();
+			case SELECTED_ENEMY:
+				return f.getOwner() != getSource().getOwner();
+			default:
+				throw new AssertionError("Targeting predicate: unsupported targeting type");
+
+			}
+		};
+
 	}
 
 	public Predicate<FollowerOrPlayer> getPredicate() {
-		return (FollowerOrPlayer) -> { // only SELECTED_TARGET exists, which can take any FollowerorPlayer
-			return true;
+		return (FollowerOrPlayer f) -> {
+			return getTargetingPredicate().test(f);
 		};
 	}
 
