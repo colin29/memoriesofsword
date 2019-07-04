@@ -1,5 +1,7 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
+import java.util.function.Predicate;
+
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 public class EffectOnFollowerOrPlayer extends Effect {
@@ -77,6 +79,12 @@ public class EffectOnFollowerOrPlayer extends Effect {
 	@Override
 	public boolean isUsingUserTargeting() {
 		return targeting.isUsingUserTargeting();
+	}
+
+	public Predicate<FollowerOrPlayer> getPredicate() {
+		return (FollowerOrPlayer) -> { // only SELECTED_TARGET exists, which can take any FollowerorPlayer
+			return true;
+		};
 	}
 
 }

@@ -4,6 +4,16 @@ import colin29.memoriesofsword.game.match.Player;
 import colin29.memoriesofsword.util.StringUtil;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
+/**
+ *
+ *
+ * Note: getPredicate() don't exist for EffectOnPlayer, because there are only 2 players. If you wanted to restrict that any further, you could just
+ * specify a player
+ * 
+ * @author Colin Ta
+ *
+ */
+
 public class EffectOnPlayer extends Effect {
 
 	public enum Targeting {

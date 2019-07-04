@@ -2,6 +2,7 @@ package colin29.memoriesofsword.game.match;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.TriggerType;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.InvalidTargetingTypeException;
+import colin29.memoriesofsword.game.matchscreen.PermanentOrPlayer;
 import colin29.memoriesofsword.game.matchscreen.PromptableForUserSelection;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
@@ -272,22 +274,47 @@ public class Match {
 
 			if (effect instanceof EffectOnFollower) {
 				EffectOnFollower e = (EffectOnFollower) effect;
-				userUI.promptUserForFollowerSelect(e, (Follower follower) -> {
+
+				Predicate<PermanentOrPlayer> predicate = (PermanentOrPlayer target) -> {
+					if (target instanceof Follower) {
+						return e.getPredicate().test((Follower) target);
+					} else {
+						return false;
+					}
+				};
+
+				userUI.promptUserForFollowerSelect(e, predicate, (Follower follower) -> {
 					e.SELECTED_FOLLOWER = follower;
 					ifSelectionStillRequiredPromptUserElseContinue(onCompleted);
 				}, onCancel);
 			} else if (effect instanceof EffectOnPlayer) {
 				EffectOnPlayer e = (EffectOnPlayer) effect;
-				userUI.promptUserForPlayerSelect(e, (Player player) -> {
+
+				Predicate<PermanentOrPlayer> predicate = (PermanentOrPlayer target) -> {
+					return target instanceof Player;
+				};
+
+				userUI.promptUserForPlayerSelect(e, predicate, (Player player) -> {
 					e.SELECTED_PLAYER = player;
 					ifSelectionStillRequiredPromptUserElseContinue(onCompleted);
 				}, onCancel);
 			} else if (effect instanceof EffectOnFollowerOrPlayer) {
 				EffectOnFollowerOrPlayer e = (EffectOnFollowerOrPlayer) effect;
-				userUI.promptUserForFollowerOrPlayerSelect(e, (FollowerOrPlayer target) -> {
+
+				Predicate<PermanentOrPlayer> predicate = (PermanentOrPlayer target) -> {
+					if (target instanceof FollowerOrPlayer) {
+						return e.getPredicate().test((FollowerOrPlayer) target);
+					} else {
+						return false;
+					}
+				};
+
+				userUI.promptUserForFollowerOrPlayerSelect(e, predicate, (FollowerOrPlayer target) -> {
 					e.SELECTED_TARGET = target;
 					ifSelectionStillRequiredPromptUserElseContinue(onCompleted);
 				}, onCancel);
+			} else {
+				logger.warn("Making Prompt async calls: unsupported effect type.");
 			}
 
 		} else { // no more targeting required, can move on

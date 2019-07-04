@@ -1,6 +1,8 @@
 package colin29.memoriesofsword.game.matchscreen;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1101,27 +1103,30 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	Table targetingSourceCardPanel;
 
 	@Override
-	public void promptUserForFollowerSelect(EffectOnFollower effect, FollowerCallback callback, Runnable onCancelled) {
+	public void promptUserForFollowerSelect(EffectOnFollower effect, Predicate<PermanentOrPlayer> predicate, FollowerCallback callback,
+			Runnable onCancelled) {
 		followerSelectedCallback = callback;
 		selectionCancelledCallback = onCancelled;
 		promptedTargetType = PromptedTargetType.FOLLOWER;
-		beginTargetingContext(effect);
+		beginTargetingContext(effect, predicate);
 	}
 
 	@Override
-	public void promptUserForPlayerSelect(EffectOnPlayer effect, PlayerCallback callback, Runnable onCancelled) {
+	public void promptUserForPlayerSelect(EffectOnPlayer effect, Predicate<PermanentOrPlayer> predicate, PlayerCallback callback,
+			Runnable onCancelled) {
 		playerSelectedCallback = callback;
 		selectionCancelledCallback = onCancelled;
 		promptedTargetType = PromptedTargetType.PLAYER;
-		beginTargetingContext(effect);
+		beginTargetingContext(effect, predicate);
 	}
 
 	@Override
-	public void promptUserForFollowerOrPlayerSelect(EffectOnFollowerOrPlayer effect, FollowerOrPlayerCallback callback, Runnable onCancelled) {
+	public void promptUserForFollowerOrPlayerSelect(EffectOnFollowerOrPlayer effect, Predicate<PermanentOrPlayer> predicate,
+			FollowerOrPlayerCallback callback, Runnable onCancelled) {
 		followerOrPlayerSelectedCallback = callback;
 		selectionCancelledCallback = onCancelled;
 		promptedTargetType = PromptedTargetType.FOLLOWER_OR_PLAYER;
-		beginTargetingContext(effect);
+		beginTargetingContext(effect, predicate);
 	}
 
 	protected void onTargetableActorClicked(TargetableActor actor) {
@@ -1216,7 +1221,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	}
 
-	private void beginTargetingContext(Effect effect) {
+	private void beginTargetingContext(Effect effect, Predicate<PermanentOrPlayer> predicate) {
 		promptContext = PromptContext.USER_PROMPT;
 		createAndDisplayTargetingInfoPanel(effect, effect.getSource().getOwner().getPlayerNumber());
 		createAndDisplayTargetingSourceCardPanel(effect.getSource().getSourceCard());
@@ -1224,6 +1229,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		disableValidHandCardsDraggable();
 		disableValidUnitsAttackDraggable();
 		disableActivePlayerEndTurnButton();
+
+		startDrawingOutlinesAroundValidTargetableActors(predicate); // do this after because disabling UI includes clearing actor outlines.
 	}
 
 	private void endFollowerTargettingContext() {
@@ -1233,9 +1240,51 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		removeTargetingInfoPanel();
 		removeTargetingSourceCardPanel();
 
+		stopDrawingOutlinesAroundTargetableActors();
+
 		makeValidHandCardsDraggable();
 		makeValidUnitsAttackDraggable();
 		enableActivePlayerEndTurnButton();
+
+	}
+
+	private void startDrawingOutlinesAroundValidTargetableActors(Predicate<PermanentOrPlayer> predicate) {
+		List<TargetableActor> validActors = getValidTargetableActors(predicate);
+		for (TargetableActor t : validActors) {
+			outlineRenderer.startDrawingMyOutline((Actor) t, Color.ORANGE);
+		}
+	}
+
+	private void stopDrawingOutlinesAroundTargetableActors() {
+		for (TargetableActor t : getAllTargetableActors()) {
+			outlineRenderer.stopDrawingMyOutline((Actor) t);
+		}
+	}
+
+	private List<TargetableActor> getValidTargetableActors(Predicate<PermanentOrPlayer> predicate) {
+
+		List<TargetableActor> actors = getAllTargetableActors();
+		List<TargetableActor> validActors = new ArrayList<TargetableActor>();
+
+		for (TargetableActor actor : actors) {
+			if (predicate.test(actor.getTarget())) {
+				validActors.add(actor);
+			}
+		}
+		return validActors;
+	}
+
+	/**
+	 * @return list of actors, in no particular order
+	 */
+	private List<TargetableActor> getAllTargetableActors() {
+		List<TargetableActor> actors = new ArrayList<TargetableActor>();
+
+		for (PlayerPartitionUIElements element : playerUIElements) {
+			actors.addAll(element.listOfFieldGraphics);
+			actors.add(element.handPanel);
+		}
+		return actors;
 	}
 
 	private void createAndDisplayTargetingSourceCardPanel(Card card) {

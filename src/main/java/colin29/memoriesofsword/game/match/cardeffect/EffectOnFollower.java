@@ -1,5 +1,7 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
+import java.util.function.Predicate;
+
 import colin29.memoriesofsword.game.match.Follower;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
@@ -31,7 +33,7 @@ public class EffectOnFollower extends Effect {
 	 * 
 	 */
 	public enum FollowerTargeting {
-		THIS_FOLLOWER, ALLIED_FOLLOWERS, OTHER_ALLIED_FOLLOWERS, ENEMY_FOLLOWERS, ETB_FOLLOWER, THE_ENEMY_FOLLOWER, OTHER_ENEMY_FOLLOWERS, SELECTED_FOLLOWER;
+		THIS_FOLLOWER, ALLIED_FOLLOWERS, OTHER_ALLIED_FOLLOWERS, ENEMY_FOLLOWERS, ETB_FOLLOWER, THE_ENEMY_FOLLOWER, OTHER_ENEMY_FOLLOWERS, SELECTED_FOLLOWER, SELECTED_ALLIED_FOLLOWER, SELECTED_ENEMY_FOLLOWER;
 
 		public String getGameText() {
 			switch (this) {
@@ -51,6 +53,10 @@ public class EffectOnFollower extends Effect {
 				return "it";
 			case SELECTED_FOLLOWER:
 				return "a follower";
+			case SELECTED_ENEMY_FOLLOWER:
+				return "an enemy follower";
+			case SELECTED_ALLIED_FOLLOWER:
+				return "an allied follower";
 			default:
 				return "{unknown follower-targeting}";
 
@@ -127,6 +133,42 @@ public class EffectOnFollower extends Effect {
 	@Override
 	public boolean isUsingUserTargeting() {
 		return targeting.isUsingUserTargeting();
+	}
+
+	private Predicate<Follower> getTargetingPredicate() {
+
+		if (!isUsingUserTargeting()) {
+			return (Follower f) -> {
+				return true;
+			};
+		}
+
+		return (Follower f) -> {
+			switch (targeting) {
+			case SELECTED_FOLLOWER:
+				return true;
+			case SELECTED_ENEMY_FOLLOWER:
+				return f.getOwner() != getSource().getOwner();
+			case SELECTED_ALLIED_FOLLOWER:
+				return f.getOwner() == getSource().getOwner();
+			default:
+				throw new AssertionError("Targeting predicate: unsupported targeting type");
+
+			}
+		};
+	}
+
+	/**
+	 * Get the predicate used to determine whether a given target is valid.
+	 * 
+	 * This is the combination of targeting predicate (e.g. for SELECTED_ALLIED_FOLLOWER) and any filters
+	 * 
+	 * @return
+	 */
+	public Predicate<Follower> getPredicate() {
+		return (Follower f) -> {
+			return getTargetingPredicate().test(f);
+		};
 	}
 
 }
