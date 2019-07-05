@@ -46,9 +46,9 @@ import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.match.Amulet;
 import colin29.memoriesofsword.game.match.Attackable;
 import colin29.memoriesofsword.game.match.Card;
-import colin29.memoriesofsword.game.match.Card.Type;
 import colin29.memoriesofsword.game.match.CardInfo;
 import colin29.memoriesofsword.game.match.Follower;
+import colin29.memoriesofsword.game.match.FollowerCard;
 import colin29.memoriesofsword.game.match.ListOfCardsEmptyException;
 import colin29.memoriesofsword.game.match.Match;
 import colin29.memoriesofsword.game.match.Match.FollowerCallback;
@@ -516,9 +516,10 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		statsRow.add(costText);
 
-		if (card.getType() == Type.FOLLOWER) {
-			Label atkText = createColoredLabel(String.valueOf(card.getAtk()), largishStyle, DARK_BLUE, Align.center);
-			Label defText = createColoredLabel(String.valueOf(card.getDef()), largishStyle, DARK_RED, Align.center);
+		if (card instanceof FollowerCard) {
+			FollowerCard cardFol = (FollowerCard) card;
+			Label atkText = createColoredLabel(String.valueOf(cardFol.getAtk()), largishStyle, DARK_BLUE, Align.center);
+			Label defText = createColoredLabel(String.valueOf(cardFol.getDef()), largishStyle, DARK_RED, Align.center);
 
 			statsRow.add(atkText);
 			statsRow.add(defText);
@@ -643,14 +644,15 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		cardBody.add(cardHeader).expandX().fillX().row();
 
-		if (card.getType() == Type.FOLLOWER) {
+		if (card instanceof FollowerCard) {
 
 			Color DARK_BLUE = RenderUtil.rgb(51, 51, 204);
 			Color DARK_RED = RenderUtil.rgb(128, 0, 0);
 
-			Label atkText = new Label(String.valueOf(card.getAtk()), mediumStyle);
+			FollowerCard cardFol = (FollowerCard) card;
+			Label atkText = new Label(String.valueOf(cardFol.getAtk()), mediumStyle);
 			RenderUtil.setLabelBackgroundColor(atkText, DARK_BLUE);
-			Label defText = new Label(String.valueOf(card.getDef()), mediumStyle);
+			Label defText = new Label(String.valueOf(cardFol.getDef()), mediumStyle);
 			RenderUtil.setLabelBackgroundColor(defText, DARK_RED);
 
 			Table cardAtkDefColumn = new Table();

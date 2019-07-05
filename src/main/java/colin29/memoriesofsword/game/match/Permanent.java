@@ -32,7 +32,7 @@ public abstract class Permanent<T extends CardEffect> implements EffectSource, P
 	 * 
 	 * There are basically nothing that will change a parentCard when it is on the field.
 	 */
-	protected final Card parentCard;
+	final Card parentCard;
 
 	protected final Match match;
 

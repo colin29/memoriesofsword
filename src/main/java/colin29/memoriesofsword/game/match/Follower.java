@@ -24,6 +24,8 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 	// Later on in development, all buffs will be treated as enchantments that stay attached to the follower. Instead of being modified discreetly,
 	// atk will be calculated when requested
 
+	private final FollowerCard parentCard;
+
 	private int atk;
 	private int def;
 	/**
@@ -36,11 +38,13 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 	 * 
 	 * @param parentCard
 	 */
-	Follower(Card parentCard) {
+	Follower(FollowerCard parentCard) {
 		super(parentCard);
 		this.atk = parentCard.getAtk();
 		this.maxDef = parentCard.getDef();
 		def = maxDef;
+
+		this.parentCard = parentCard;
 
 		copyEffectsFromParentCard();
 	}
@@ -285,7 +289,7 @@ public class Follower extends Permanent<FollowerCardEffect> implements FollowerI
 	}
 
 	private void copyEffectsFromParentCard() {
-		for (FollowerCardEffect effect : parentCard.getFollowerEffects()) {
+		for (FollowerCardEffect effect : parentCard.getEffects()) {
 			origEffects.add(new FollowerCardEffect(effect));
 		}
 	}

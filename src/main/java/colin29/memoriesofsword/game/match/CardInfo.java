@@ -6,10 +6,6 @@ public interface CardInfo {
 
 	int getCost();
 
-	int getAtk();
-
-	int getDef();
-
 	Player getOwner();
 
 	Card.Type getType();

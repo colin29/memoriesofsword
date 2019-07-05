@@ -6,7 +6,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import colin29.memoriesofsword.GameException;
 import colin29.memoriesofsword.game.match.Card.Type;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
 import colin29.memoriesofsword.game.matchscreen.PermanentOrPlayer;
@@ -93,12 +92,12 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 			// We create the permanent and see it's fanfare effects
 
 			Permanent<?> permanent;
-			if (card.type == Type.FOLLOWER) {
-				permanent = new Follower(card);
-			} else if (card.type == Type.AMULET) {
-				permanent = new Amulet(card);
+			if (card instanceof FollowerCard) {
+				permanent = new Follower((FollowerCard) card);
+			} else if (card instanceof AmuletCard) {
+				permanent = new Amulet((AmuletCard) card);
 			} else {
-				throw new GameException("Spell Type not supported yet. But this shouldn't happen anyways");
+				throw new AssertionError("Unknown Permanent type");
 			}
 
 			boolean asyncCallMade = false;
@@ -121,13 +120,16 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 				return true;
 			}
 
-		} else if (card.type == Type.SPELL) {
-			if (!card.areAllSpellCardTargetingEffectsMet()) {
+		} else if (card instanceof SpellCard) {
+
+			SpellCard cardSpell = (SpellCard) card;
+
+			if (!cardSpell.areAllSpellCardTargetingEffectsMet()) {
 				logger.info("Spell card has not all targeting requirments met, play canceled.");
 				return false;
 			}
 
-			boolean asyncCallMade = match.activateOnCastEffects(card, () -> {
+			boolean asyncCallMade = match.activateOnCastEffects(cardSpell, () -> {
 				finishResolvingSpellCard(card, ignoreCost);
 			});
 			if (asyncCallMade) {

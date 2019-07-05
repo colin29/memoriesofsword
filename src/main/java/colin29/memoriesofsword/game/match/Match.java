@@ -153,7 +153,17 @@ public class Match {
 	}
 
 	private Card createCard(CardListing listing, Player owner) {
-		return new Card(listing, owner, this);
+		switch (listing.getType()) {
+		case AMULET:
+			return new AmuletCard(listing, owner, this);
+		case FOLLOWER:
+			return new FollowerCard(listing, owner, this);
+		case SPELL:
+			return new SpellCard(listing, owner, this);
+		default:
+			throw new AssertionError("Unknown Card type");
+
+		}
 	}
 
 	public void beginTurn(Player player) {
@@ -191,16 +201,16 @@ public class Match {
 	 * @return true if the parent needs to exit out and wait for player targeting (aysnc call made). When all targeting is done, all fanfare effects
 	 *         will be added to the effect queue, then ifAsyncOnCompleted will be called
 	 */
-	boolean activateFanfareEffects(Follower newPermanent, Runnable ifAsyncOnCompleted) {
+	boolean activateFanfareEffects(Follower newFollower, Runnable ifAsyncOnCompleted) {
 
 		// Get all all triggered fanfare effects
 		List<Effect> triggeredEffects = new ArrayList<Effect>();
 
-		for (FollowerCardEffect cardEffect : newPermanent.getCardEffects()) {
+		for (FollowerCardEffect cardEffect : newFollower.getCardEffects()) {
 			if (cardEffect.triggerType == FollowerCardEffect.TriggerType.FANFARE) {
 				for (Effect effect : cardEffect.getTriggeredEffects()) {
 					Effect copy = effect.cloneObject();
-					copy.setSource(newPermanent);
+					copy.setSource(newFollower);
 					triggeredEffects.add(copy);
 				}
 			}
@@ -211,18 +221,18 @@ public class Match {
 		if (asyncCallMade) {
 			return true;
 		} else {
-			triggeredEffects.forEach((Effect effect) -> effectQueue.addCopyToEffectQueue(effect, newPermanent));
+			triggeredEffects.forEach((Effect effect) -> effectQueue.addCopyToEffectQueue(effect, newFollower));
 			return false;
 		}
 
 	}
 
-	boolean activateOnCastEffects(Card spellCard, Runnable ifAsyncOnCompleted) {
+	boolean activateOnCastEffects(SpellCard spellCard, Runnable ifAsyncOnCompleted) {
 
 		// Get all all triggered fanfare effects
 		List<Effect> triggeredEffects = new ArrayList<Effect>();
 
-		for (SpellCardEffect cardEffect : spellCard.getSpellEffects()) {
+		for (SpellCardEffect cardEffect : spellCard.getEffects()) {
 			if (cardEffect.triggerType == SpellCardEffect.TriggerType.ON_CAST) {
 				for (Effect effect : cardEffect.getTriggeredEffects()) {
 					Effect copy = effect.cloneObject();
