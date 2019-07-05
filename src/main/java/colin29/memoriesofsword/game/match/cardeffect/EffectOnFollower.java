@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 
 import colin29.memoriesofsword.game.match.Follower;
 import colin29.memoriesofsword.game.match.cardeffect.filter.FollowerFilter;
+import colin29.memoriesofsword.game.matchscreen.PermanentOrPlayer;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 /**
@@ -230,6 +231,15 @@ public class EffectOnFollower extends Effect {
 		return (Follower f) -> {
 			return getTargetingPredicate().test(f) && getFiltersPredicate().test(f);
 		};
+	}
+
+	@Override
+	public boolean isValidTarget(PermanentOrPlayer target) {
+		if (target instanceof Follower) {
+			return getPredicate().test((Follower) target);
+		} else {
+			return false;
+		}
 	}
 
 }

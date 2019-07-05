@@ -304,13 +304,7 @@ public class Match {
 			if (effect instanceof EffectOnFollower) {
 				EffectOnFollower e = (EffectOnFollower) effect;
 
-				Predicate<PermanentOrPlayer> predicate = (PermanentOrPlayer target) -> {
-					if (target instanceof Follower) {
-						return e.getPredicate().test((Follower) target);
-					} else {
-						return false;
-					}
-				};
+				Predicate<PermanentOrPlayer> predicate = e::isValidTarget;
 
 				userUI.promptUserForFollowerSelect(e, predicate, (Follower follower) -> {
 					e.SELECTED_FOLLOWER = follower;
@@ -319,9 +313,7 @@ public class Match {
 			} else if (effect instanceof EffectOnPlayer) {
 				EffectOnPlayer e = (EffectOnPlayer) effect;
 
-				Predicate<PermanentOrPlayer> predicate = (PermanentOrPlayer target) -> {
-					return target instanceof Player;
-				};
+				Predicate<PermanentOrPlayer> predicate = e::isValidTarget;
 
 				userUI.promptUserForPlayerSelect(e, predicate, (Player player) -> {
 					e.SELECTED_PLAYER = player;
@@ -330,13 +322,7 @@ public class Match {
 			} else if (effect instanceof EffectOnFollowerOrPlayer) {
 				EffectOnFollowerOrPlayer e = (EffectOnFollowerOrPlayer) effect;
 
-				Predicate<PermanentOrPlayer> predicate = (PermanentOrPlayer target) -> {
-					if (target instanceof FollowerOrPlayer) {
-						return e.getPredicate().test((FollowerOrPlayer) target);
-					} else {
-						return false;
-					}
-				};
+				Predicate<PermanentOrPlayer> predicate = e::isValidTarget;
 
 				userUI.promptUserForFollowerOrPlayerSelect(e, predicate, (FollowerOrPlayer target) -> {
 					e.SELECTED_TARGET = target;
@@ -821,6 +807,23 @@ public class Match {
 
 	public int getTurnNumber() {
 		return turnNumber;
+	}
+
+	/**
+	 * Returns a list of every possible target (could include cards later on)
+	 * 
+	 * @return
+	 */
+	public List<PermanentOrPlayer> getAllTargets() {
+		List<PermanentOrPlayer> targets = new ArrayList<>();
+
+		targets.add(player1);
+		targets.add(player2);
+
+		targets.addAll(player1.field);
+		targets.addAll(player2.field);
+
+		return targets;
 	}
 
 	@FunctionalInterface

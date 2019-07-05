@@ -3,6 +3,8 @@ package colin29.memoriesofsword.game.match.cardeffect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import colin29.memoriesofsword.game.matchscreen.PermanentOrPlayer;
+
 /**
  * Effects are a complete description of some effect which can be executed.
  * 
@@ -64,5 +66,12 @@ public abstract class Effect {
 	public boolean isFizzledBecauseNoValidTargets() {
 		return fizzledBecauseNoValidTargets;
 	}
+
+	/**
+	 * Should only be used for selected targeting types, or aoe effects.
+	 * 
+	 * On other effects types the returned value has no meaning
+	 */
+	public abstract boolean isValidTarget(PermanentOrPlayer target);
 
 }

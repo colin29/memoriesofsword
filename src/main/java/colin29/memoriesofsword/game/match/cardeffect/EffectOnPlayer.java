@@ -1,6 +1,7 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
 import colin29.memoriesofsword.game.match.Player;
+import colin29.memoriesofsword.game.matchscreen.PermanentOrPlayer;
 import colin29.memoriesofsword.util.StringUtil;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
@@ -100,6 +101,11 @@ public class EffectOnPlayer extends Effect {
 	@Override
 	public boolean isUsingUserTargeting() {
 		return targeting.isUsingUserTargeting();
+	}
+
+	@Override
+	public boolean isValidTarget(PermanentOrPlayer target) {
+		return target instanceof Player;
 	}
 
 }

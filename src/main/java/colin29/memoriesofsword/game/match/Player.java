@@ -122,7 +122,11 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 			}
 
 		} else if (card.type == Type.SPELL) {
-			logger.debug("Not yet supported: playing spells");
+			if (!card.areAllSpellCardTargetingEffectsMet()) {
+				logger.info("Spell card has not all targeting requirments met, play canceled.");
+				return false;
+			}
+
 			boolean asyncCallMade = match.activateOnCastEffects(card, () -> {
 				finishResolvingSpellCard(card, ignoreCost);
 			});
