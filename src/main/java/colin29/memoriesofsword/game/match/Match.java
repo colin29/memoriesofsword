@@ -24,6 +24,7 @@ import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.TriggerType;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.InvalidTargetingTypeException;
+import colin29.memoriesofsword.game.match.cardeffect.SpellCardEffect;
 import colin29.memoriesofsword.game.matchscreen.PermanentOrPlayer;
 import colin29.memoriesofsword.game.matchscreen.PromptableForUserSelection;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
@@ -140,6 +141,7 @@ public class Match {
 		testListings.add(cardRepo.getCardById(9003));
 		testListings.add(cardRepo.getCardById(9004));
 		testListings.add(cardRepo.getCardById(9005));
+		testListings.add(cardRepo.getCardById(9006));
 
 		// Let's make a deck of 10 cards, alternating between these
 
@@ -210,6 +212,32 @@ public class Match {
 			return true;
 		} else {
 			triggeredEffects.forEach((Effect effect) -> effectQueue.addCopyToEffectQueue(effect, newPermanent));
+			return false;
+		}
+
+	}
+
+	boolean activateOnCastEffects(Card spellCard, Runnable ifAsyncOnCompleted) {
+
+		// Get all all triggered fanfare effects
+		List<Effect> triggeredEffects = new ArrayList<Effect>();
+
+		for (SpellCardEffect cardEffect : spellCard.getSpellEffects()) {
+			if (cardEffect.triggerType == SpellCardEffect.TriggerType.ON_CAST) {
+				for (Effect effect : cardEffect.getTriggeredEffects()) {
+					Effect copy = effect.cloneObject();
+					copy.setSource(spellCard);
+					triggeredEffects.add(copy);
+				}
+			}
+		}
+
+		boolean asyncCallMade = startUserPromptForTheseEffectsIfAnyRequireTargeting(triggeredEffects, ifAsyncOnCompleted);
+
+		if (asyncCallMade) {
+			return true;
+		} else {
+			triggeredEffects.forEach((Effect effect) -> effectQueue.addCopyToEffectQueue(effect, spellCard));
 			return false;
 		}
 
@@ -478,8 +506,8 @@ public class Match {
 		EffectSource source = effect.getSource();
 		final Player player;
 
-		if (source instanceof Player) {
-			player = (Player) source;
+		if (source instanceof Card) {
+			player = ((Card) source).getOwner();
 		} else if (source instanceof Permanent) {
 			player = ((Permanent<?>) source).parentCard.getOwner();
 		} else {

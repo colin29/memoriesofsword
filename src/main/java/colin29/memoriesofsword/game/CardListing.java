@@ -11,7 +11,7 @@ import colin29.memoriesofsword.game.match.Card;
 import colin29.memoriesofsword.game.match.Card.Type;
 import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
-import colin29.memoriesofsword.game.match.cardeffect.SpellEffect;
+import colin29.memoriesofsword.game.match.cardeffect.SpellCardEffect;
 
 /**
  * A Card outside the context of a match. Unlike a cards within a match, a card listing is generally not modified.
@@ -42,7 +42,7 @@ public class CardListing {
 
 	private final List<FollowerCardEffect> followerEffects = new ArrayList<FollowerCardEffect>();
 	private final List<AmuletCardEffect> amuletEffects = new ArrayList<AmuletCardEffect>();
-	private final List<SpellEffect> spellEffects = new ArrayList<SpellEffect>();
+	private final List<SpellCardEffect> spellEffects = new ArrayList<SpellCardEffect>();
 
 	CardListing(String name, int cost, int atk, int def, int id, Card.Type type) {
 		this.name = name;
@@ -60,6 +60,10 @@ public class CardListing {
 
 	public static CardListing makeAmuletTempCardListing(String name, int cost) {
 		return new CardListing(name, cost, 0, 0, generateNextTempId(), Type.AMULET);
+	}
+
+	public static CardListing makeSpellTempCardListing(String name, int cost) {
+		return new CardListing(name, cost, 0, 0, generateNextTempId(), Type.SPELL);
 	}
 
 	public int getAtk() {
@@ -127,7 +131,7 @@ public class CardListing {
 		amuletEffects.add(effect);
 	}
 
-	public void addEffect(SpellEffect effect) {
+	public void addEffect(SpellCardEffect effect) {
 		if (effect == null) {
 			logger.warn("Can't add a null effect. Ignored.");
 			return;
@@ -147,7 +151,7 @@ public class CardListing {
 		return Collections.unmodifiableList(amuletEffects);
 	}
 
-	public List<SpellEffect> getSpellEffects() {
+	public List<SpellCardEffect> getSpellEffects() {
 		return Collections.unmodifiableList(spellEffects);
 	}
 

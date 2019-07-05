@@ -16,6 +16,7 @@ import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer.Targeting;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.PropertyType;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect.TriggerType;
+import colin29.memoriesofsword.game.match.cardeffect.SpellCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.filter.FollowerFilter;
 import colin29.memoriesofsword.game.match.cardeffect.filter.FollowerFilter.CompareStat;
 import colin29.memoriesofsword.game.match.cardeffect.filter.FollowerFilter.ComparisonType;
@@ -48,8 +49,10 @@ public class TestCardListings {
 		c5.addEffect(createDaggerMasterEffect());
 		CardListing c6 = CardListing.makeFollowerTempCardListing("Healing angel", 4, 3, 4);
 		c6.addEffect(createHealingAngelEffect());
+		CardListing c7 = CardListing.makeSpellTempCardListing("Frost Bolt", 2);
+		c7.addEffect(createFrostBoltEffect());
 
-		cardRepo.addCard(c1, c2, c3, c4, c5, c6);
+		cardRepo.addCard(c1, c2, c3, c4, c5, c6, c7);
 	}
 
 	private static FollowerCardEffect createHealingAngelEffect() {
@@ -185,6 +188,26 @@ public class TestCardListings {
 		doDamageAllEnemies.amount = 1;
 		e2.setAction(doDamageAllEnemies);
 
+		return effect;
+	}
+
+	private static SpellCardEffect createFrostBoltEffect() {
+
+		SpellCardEffect effect = new SpellCardEffect(SpellCardEffect.TriggerType.ON_CAST);
+
+		EffectOnFollower e1 = new EffectOnFollower(FollowerTargeting.SELECTED_ENEMY_FOLLOWER);
+		ActionOnFollower action = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
+		action.amount = 2;
+		e1.setAction(action);
+
+		EffectOnFollower e2 = new EffectOnFollower(FollowerTargeting.ENEMY_FOLLOWERS);
+		ActionOnFollower doDamage = new ActionOnFollower(ActionOnFollower.ActionType.DO_DAMAGE);
+		doDamage.amount = 1;
+		e2.setAction(doDamage);
+		e2.addFilter(new FollowerFilter(CompareStat.ATTACK, ComparisonType.LESS_THAN_OR_EQUAL, 1));
+
+		effect.addTriggeredEffect(e1);
+		effect.addTriggeredEffect(e2);
 		return effect;
 	}
 

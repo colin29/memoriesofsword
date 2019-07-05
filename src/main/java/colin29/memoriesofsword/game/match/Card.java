@@ -12,7 +12,7 @@ import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.CardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.EffectSource;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
-import colin29.memoriesofsword.game.match.cardeffect.SpellEffect;
+import colin29.memoriesofsword.game.match.cardeffect.SpellCardEffect;
 
 /**
  * A Card in the context of a match.
@@ -56,9 +56,9 @@ public class Card implements EffectSource, CardInfo {
 	private final List<AmuletCardEffect> amuletEffects = new ArrayList<AmuletCardEffect>();
 
 	/**
-	 * For Spell cards. When a spell is played, the effects are executed.
+	 * For Spell cards. When a spell is played, onCast effects are executed.
 	 */
-	private final List<SpellEffect> spellEffects = new ArrayList<SpellEffect>();
+	private final List<SpellCardEffect> spellEffects = new ArrayList<SpellCardEffect>();
 
 	public enum Type { // Card includes all the fields. Unused fields for a type (such as 'atk' for a spell) will simply be left default.
 		FOLLOWER, AMULET, SPELL;
@@ -150,15 +150,19 @@ public class Card implements EffectSource, CardInfo {
 		return Collections.unmodifiableList(amuletEffects);
 	}
 
+	public List<SpellCardEffect> getSpellEffects() {
+		return Collections.unmodifiableList(spellEffects);
+	}
+
 	@Override
 	public String generateOrigEffectsText() {
 		switch (type) {
 		case FOLLOWER:
-			return generateTextForListOfEffects(this.followerEffects);
+			return generateTextForListOfEffects(followerEffects);
 		case AMULET:
-			return generateTextForListOfEffects(this.amuletEffects);
+			return generateTextForListOfEffects(amuletEffects);
 		case SPELL:
-			return "No string-rep for Spell-type cards yet.";
+			return generateTextForListOfEffects(spellEffects);
 		default:
 			throw new AssertionError("Unknown card type!");
 
@@ -195,8 +199,8 @@ public class Card implements EffectSource, CardInfo {
 		for (AmuletCardEffect effect : listing.getAmuletEffects()) {
 			amuletEffects.add(new AmuletCardEffect(effect));
 		}
-		for (SpellEffect effect : listing.getSpellEffects()) {
-			spellEffects.add(new SpellEffect(effect));
+		for (SpellCardEffect effect : listing.getSpellEffects()) {
+			spellEffects.add(new SpellCardEffect(effect));
 		}
 	}
 

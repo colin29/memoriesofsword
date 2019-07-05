@@ -1,16 +1,10 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
 import java.util.ArrayList;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import colin29.memoriesofsword.util.StringUtil;
 
 public class AmuletCardEffect extends CardEffect {
-
-	Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	public enum Type {
 		PROPERTY, TRIGGERED_EFFECT;
@@ -41,7 +35,6 @@ public class AmuletCardEffect extends CardEffect {
 
 	// For triggered effects only
 	public TriggerType triggerType;
-	private List<Effect> triggeredEffects = new ArrayList<Effect>();
 
 	public PropertyEffectType propertyType;
 
@@ -71,14 +64,24 @@ public class AmuletCardEffect extends CardEffect {
 
 	}
 
-	public List<Effect> getTriggeredEffects() {
-		return triggeredEffects;
-	}
-
+	@Override
 	public void addTriggeredEffect(Effect effect) {
 		if (effect == null) {
 			logger.warn("Tried to add null targeted Effect.");
 			return;
+		}
+		if (type != Type.TRIGGERED_EFFECT) {
+			logger.warn("Tried to add trigger effects, but card effect doesn't have type triggered_effect");
+			return;
+		}
+
+		if (effect.isUsingUserTargeting()) {
+			if (triggerType != TriggerType.FANFARE) {
+				logger.warn(
+						"Tried to add effect '{}' to trigger type ({}) but selected targeting is only supported for fanfare triggers",
+						effect.toString(), triggerType.name());
+				return;
+			}
 		}
 		triggeredEffects.add(effect);
 	}

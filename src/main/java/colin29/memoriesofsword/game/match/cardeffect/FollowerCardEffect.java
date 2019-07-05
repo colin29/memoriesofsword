@@ -1,10 +1,6 @@
 package colin29.memoriesofsword.game.match.cardeffect;
 
 import java.util.ArrayList;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import colin29.memoriesofsword.util.StringUtil;
 
@@ -15,8 +11,6 @@ import colin29.memoriesofsword.util.StringUtil;
  *
  */
 public class FollowerCardEffect extends CardEffect {
-
-	Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	/**
 	 * 
@@ -80,7 +74,6 @@ public class FollowerCardEffect extends CardEffect {
 
 	// For triggered effects only
 	public TriggerType triggerType;
-	private List<Effect> triggeredEffects = new ArrayList<Effect>();
 
 	public PropertyType propertyType;
 
@@ -112,16 +105,13 @@ public class FollowerCardEffect extends CardEffect {
 		this.triggerType = src.triggerType;
 		this.propertyType = src.propertyType;
 		triggeredEffects = new ArrayList<Effect>();
-		for (Effect part : src.triggeredEffects) {
-			triggeredEffects.add(part.cloneObject());
+		for (Effect e : src.triggeredEffects) {
+			triggeredEffects.add(e.cloneObject());
 		}
 
 	}
 
-	public List<Effect> getTriggeredEffects() {
-		return triggeredEffects;
-	}
-
+	@Override
 	public void addTriggeredEffect(Effect effect) {
 		if (effect == null) {
 			logger.warn("Tried to add null targeted Effect.");
@@ -140,7 +130,6 @@ public class FollowerCardEffect extends CardEffect {
 				return;
 			}
 		}
-
 		triggeredEffects.add(effect);
 	}
 

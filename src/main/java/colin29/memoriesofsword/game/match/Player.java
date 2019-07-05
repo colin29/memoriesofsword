@@ -106,7 +106,7 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 			// Activate fanfare effects
 			if (card.type == Type.FOLLOWER) {
 				asyncCallMade = match.activateFanfareEffects((Follower) permanent, () -> {
-					finishResolvingPlayingTheCard(card, permanent, ignoreCost);
+					finishResolvingPermanentCard(card, permanent, ignoreCost);
 				});
 			} else if (card.type == Type.AMULET) {
 				match.activateFanfareEffects((Amulet) permanent);
@@ -117,24 +117,42 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 			if (asyncCallMade) {
 				return false;
 			} else {
-				finishResolvingPlayingTheCard(card, permanent, ignoreCost);
+				finishResolvingPermanentCard(card, permanent, ignoreCost);
 				return true;
 			}
 
-		} else {
+		} else if (card.type == Type.SPELL) {
 			logger.debug("Not yet supported: playing spells");
+			boolean asyncCallMade = match.activateOnCastEffects(card, () -> {
+				finishResolvingSpellCard(card, ignoreCost);
+			});
+			if (asyncCallMade) {
+				return false;
+			} else {
+				finishResolvingSpellCard(card, ignoreCost);
+				return true;
+			}
+		} else {
+			logger.warn("Unsupported card type");
 			return false;
 		}
 	}
 
 	/**
-	 * Called after fanfare effects are added to the effect queue
-	 * 
+	 * Should be called after fanfare effects are added to the effect queue
 	 */
-	private void finishResolvingPlayingTheCard(Card card, Permanent<?> permanent, boolean ignoreCost) {
+	private void finishResolvingPermanentCard(Card card, Permanent<?> permanent, boolean ignoreCost) {
 		actuallyPlayTheCard(card, permanent, ignoreCost);
 		match.processEffectQueue(); // execute fanfare effects
 		match.checkForFollowerETBEffects(permanent);
+	}
+
+	/**
+	 * Should be called after fanfare effects are added to the effect queue
+	 */
+	private void finishResolvingSpellCard(Card card, boolean ignoreCost) {
+		actuallyPlayTheCard(card, null, ignoreCost);
+		match.processEffectQueue();
 	}
 
 	/**
@@ -142,6 +160,7 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 	 * 
 	 * @param card
 	 * @param permanent
+	 *            can be null if card is a spell card
 	 * @param ignoreCost
 	 */
 	private void actuallyPlayTheCard(Card card, Permanent<?> permanent, boolean ignoreCost) {
@@ -151,7 +170,9 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 		}
 		hand.remove(card);
 
-		field.add(permanent);
+		if (card.type.isPermanent()) {
+			field.add(permanent);
+		}
 		notifyForPlayToFieldAction();
 
 		logger.debug("Card '{}' was played " + (ignoreCost ? "(ignoring cost)" : ""), card.getName());

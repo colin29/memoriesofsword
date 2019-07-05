@@ -4,9 +4,9 @@ import colin29.memoriesofsword.game.match.Card;
 import colin29.memoriesofsword.game.match.Player;
 
 /**
- * Marker interface: things that can be the source of an effect (ie. players and permanents)
+ * Marker interface: things that can be the source of an effect (ie. cards and permanents)
  * 
- * When a spell is cast, the source is considered the casting player, not the card.
+ * When a spell is cast, the source is considered the original spell card
  *
  */
 public interface EffectSource {
