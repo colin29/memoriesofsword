@@ -34,10 +34,6 @@ public class FollowerCard extends Card {
 	}
 
 	public void addFollowerEffect(FollowerCardEffect effect) {
-		if (type != Type.FOLLOWER) {
-			logger.warn("Tried to add Follower effect but card is not Follower type, ignoring. (effect would never be used anyways");
-			return;
-		}
 		effects.add(effect);
 	}
 
@@ -56,6 +52,11 @@ public class FollowerCard extends Card {
 		for (FollowerCardEffect effect : listing.getFollowerEffects()) {
 			effects.add(new FollowerCardEffect(effect));
 		}
+	}
+
+	@Override
+	public final boolean isPermanent() {
+		return true;
 	}
 
 }

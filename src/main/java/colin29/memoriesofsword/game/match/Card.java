@@ -35,24 +35,9 @@ public abstract class Card implements EffectSource, CardInfo {
 
 	private Player owner;
 
-	public enum Type {
-		FOLLOWER, AMULET, SPELL;
-
-		public boolean isPermanent() {
-			return (this == FOLLOWER || this == AMULET);
-		}
-	}
-
-	/**
-	 * Type always corresponds to the underlying type of the card
-	 */
-	public final Type type;
-
 	public Card(CardListing listing, Player owner, Match match) {
 		name = listing.getName();
 		cost = listing.getCost();
-
-		type = listing.getType();
 
 		this.owner = owner;
 		this.match = match;
@@ -75,11 +60,6 @@ public abstract class Card implements EffectSource, CardInfo {
 
 	public Match getMatch() {
 		return this.match;
-	}
-
-	@Override
-	public Type getType() {
-		return type;
 	}
 
 	public String getText() {
@@ -131,5 +111,7 @@ public abstract class Card implements EffectSource, CardInfo {
 	}
 
 	public abstract List<? extends CardEffect> getEffects();
+
+	public abstract boolean isPermanent();
 
 }

@@ -7,8 +7,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import colin29.memoriesofsword.game.match.Card;
-import colin29.memoriesofsword.game.match.Card.Type;
 import colin29.memoriesofsword.game.match.cardeffect.AmuletCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerCardEffect;
 import colin29.memoriesofsword.game.match.cardeffect.SpellCardEffect;
@@ -23,6 +21,10 @@ import colin29.memoriesofsword.game.match.cardeffect.SpellCardEffect;
  */
 public class CardListing {
 
+	public enum Type {
+		FOLLOWER, AMULET, SPELL;
+	}
+
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	private int cost;
@@ -31,7 +33,7 @@ public class CardListing {
 
 	private String text = "default card text";
 
-	final private Card.Type type;
+	final private Type type;
 
 	/**
 	 * Card listings may be stored on disk, however, their ids should always remain unique.
@@ -44,7 +46,7 @@ public class CardListing {
 	private final List<AmuletCardEffect> amuletEffects = new ArrayList<AmuletCardEffect>();
 	private final List<SpellCardEffect> spellEffects = new ArrayList<SpellCardEffect>();
 
-	CardListing(String name, int cost, int atk, int def, int id, Card.Type type) {
+	CardListing(String name, int cost, int atk, int def, int id, Type type) {
 		this.name = name;
 		this.cost = cost;
 		this.atk = atk;
@@ -86,7 +88,7 @@ public class CardListing {
 		return id;
 	}
 
-	public Card.Type getType() {
+	public Type getType() {
 		return type;
 	}
 

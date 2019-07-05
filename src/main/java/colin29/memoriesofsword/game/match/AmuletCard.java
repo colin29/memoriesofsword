@@ -18,10 +18,6 @@ public class AmuletCard extends Card {
 	}
 
 	public void addAmuletEffect(AmuletCardEffect effect) {
-		if (type != Type.AMULET) {
-			logger.warn("Tried to add Amulet effect but card is not Amulet type, ignoring. (effect would never be used anyways");
-			return;
-		}
 		effects.add(effect);
 	}
 
@@ -40,6 +36,11 @@ public class AmuletCard extends Card {
 		for (AmuletCardEffect effect : listing.getAmuletEffects()) {
 			effects.add(new AmuletCardEffect(effect));
 		}
+	}
+
+	@Override
+	public final boolean isPermanent() {
+		return true;
 	}
 
 }

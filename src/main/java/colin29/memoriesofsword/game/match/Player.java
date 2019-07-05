@@ -6,7 +6,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import colin29.memoriesofsword.game.match.Card.Type;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
 import colin29.memoriesofsword.game.matchscreen.PermanentOrPlayer;
 
@@ -87,32 +86,30 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 			return false;
 		}
 
-		if (card.type.isPermanent()) {
+		if (card.isPermanent()) {
 
-			// We create the permanent and see it's fanfare effects
+			// If card is permanent, we create the permanent and activate / start targeting for its fanfare effects
 
 			Permanent<?> permanent;
+			boolean asyncCallMade = false;
+
 			if (card instanceof FollowerCard) {
 				permanent = new Follower((FollowerCard) card);
+
+				asyncCallMade = match.activateFanfareEffects((Follower) permanent, () -> {
+					finishResolvingPermanentCard(card, permanent, ignoreCost);
+				});
+
 			} else if (card instanceof AmuletCard) {
 				permanent = new Amulet((AmuletCard) card);
+				match.activateFanfareEffects((Amulet) permanent);
 			} else {
 				throw new AssertionError("Unknown Permanent type");
 			}
 
-			boolean asyncCallMade = false;
-
-			// Activate fanfare effects
-			if (card.type == Type.FOLLOWER) {
-				asyncCallMade = match.activateFanfareEffects((Follower) permanent, () -> {
-					finishResolvingPermanentCard(card, permanent, ignoreCost);
-				});
-			} else if (card.type == Type.AMULET) {
-				match.activateFanfareEffects((Amulet) permanent);
-			}
-
 			// If an async call was made, we delay actually playing the card until all targeting is finished (or user cancels the targeting -->
 			// cancels playing the card)
+
 			if (asyncCallMade) {
 				return false;
 			} else {
@@ -166,7 +163,7 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 	 * 
 	 * @param card
 	 * @param permanent
-	 *            can be null if card is a spell card
+	 *            must be provided if the card is a permanent type, otherwise should be null
 	 * @param ignoreCost
 	 */
 	private void actuallyPlayTheCard(Card card, Permanent<?> permanent, boolean ignoreCost) {
@@ -176,7 +173,7 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 		}
 		hand.remove(card);
 
-		if (card.type.isPermanent()) {
+		if (card.isPermanent()) {
 			field.add(permanent);
 		}
 		notifyForPlayToFieldAction();

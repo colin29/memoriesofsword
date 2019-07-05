@@ -34,15 +34,12 @@ public class SpellCard extends Card {
 	}
 
 	/**
-	 * It is only valid to call this on spell cards
+	 * Returns true if the spell's on_cast triggered effects that are user target, all have valid targets. <br>
 	 * 
 	 * The effects' sources do not need to be set. All effects will be assumed to have source of this card (as they are contained in this spell card)
 	 * 
 	 */
 	public boolean areAllSpellCardTargetingEffectsMet() {
-		if (type != Type.SPELL) {
-			throw new UnsupportedOperationException("Can only call this method for spell cards");
-		}
 
 		List<PermanentOrPlayer> targets = match.getAllTargets();
 
@@ -73,6 +70,11 @@ public class SpellCard extends Card {
 		for (SpellCardEffect effect : listing.getSpellEffects()) {
 			effects.add(new SpellCardEffect(effect));
 		}
+	}
+
+	@Override
+	public final boolean isPermanent() {
+		return false;
 	}
 
 }
