@@ -4,10 +4,12 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 
 import colin29.memoriesofsword.game.match.Player;
+import colin29.memoriesofsword.util.RenderUtil;
 
 public class MiscUI {
 
 	private final MatchScreen parent;
+	final Color hpPlayerTextWoundedColor = RenderUtil.rgb(255, 128, 128); // pale red
 
 	public MiscUI(MatchScreen matchScreen) {
 		parent = matchScreen;
@@ -18,7 +20,7 @@ public class MiscUI {
 		Player player = parent.match.getPlayer(playerNumber);
 		hpText.setText("" + player.getHp());
 		if (player.getHp() != player.getMaxHp()) {
-			hpText.setColor(parent.hpTextWoundedColor);
+			hpText.setColor(hpPlayerTextWoundedColor);
 		} else {
 			hpText.setColor(Color.WHITE);
 		}
@@ -48,7 +50,7 @@ public class MiscUI {
 		} else {
 			elements.endTurnButton.setDisabled(true);
 		}
-	
+
 	}
 
 	void updateAllEndTurnButtonDisabledStatus(MatchScreen matchScreen) {

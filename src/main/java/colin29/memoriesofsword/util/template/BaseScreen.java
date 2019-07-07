@@ -27,7 +27,7 @@ public abstract class BaseScreen implements Screen {
 	protected Table root;
 	protected SpriteBatch batch;
 
-	protected ShapeRenderer shapeRenderer;
+	public ShapeRenderer shapeRenderer;
 
 	public AssetManager assets;
 

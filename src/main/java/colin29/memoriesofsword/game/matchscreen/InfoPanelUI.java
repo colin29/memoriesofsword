@@ -141,7 +141,6 @@ public class InfoPanelUI {
 		graphic.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
-				// logger.debug("{} was clicked", graphic.getPermanent().getName());
 				if (matchScreen.promptContext == PromptContext.IDLE) {
 					createAndDisplayInfoPanel(graphic);
 				}

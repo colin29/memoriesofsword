@@ -131,7 +131,7 @@ class UIConstructor {
 		elements.fieldPanel = fieldPanel;
 
 		parent.handUI.regenerateHandDisplay(playerNumber);
-		parent.regenerateFieldDisplay(playerNumber);
+		parent.fieldUI.regenerateFieldDisplay(playerNumber);
 
 		fieldPanel.setTouchable(Touchable.enabled);
 

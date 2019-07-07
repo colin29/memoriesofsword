@@ -13,25 +13,17 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop;
-import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload;
-import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source;
-import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target;
 
 import colin29.memoriesofsword.MyFonts;
 import colin29.memoriesofsword.game.CardRepository;
-import colin29.memoriesofsword.game.match.Attackable;
 import colin29.memoriesofsword.game.match.Card;
 import colin29.memoriesofsword.game.match.Follower;
 import colin29.memoriesofsword.game.match.ListOfCardsEmptyException;
@@ -39,7 +31,6 @@ import colin29.memoriesofsword.game.match.Match;
 import colin29.memoriesofsword.game.match.Match.FollowerCallback;
 import colin29.memoriesofsword.game.match.Match.FollowerOrPlayerCallback;
 import colin29.memoriesofsword.game.match.Match.PlayerCallback;
-import colin29.memoriesofsword.game.match.Permanent;
 import colin29.memoriesofsword.game.match.Player;
 import colin29.memoriesofsword.game.match.SimpleMatchStateListener;
 import colin29.memoriesofsword.game.match.cardeffect.Effect;
@@ -47,7 +38,6 @@ import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
-import colin29.memoriesofsword.game.matchscreen.graphics.PermanentGraphic;
 import colin29.memoriesofsword.util.RenderUtil;
 import colin29.memoriesofsword.util.UIUtil;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
@@ -60,7 +50,7 @@ import colin29.memoriesofsword.util.template.BaseScreen;
  */
 public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMatchStateListener, PromptableForUserSelection {
 
-	Logger logger = LoggerFactory.getLogger(this.getClass());
+	protected Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	public final Match match;
 
@@ -77,17 +67,9 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	AppWithResources app;
 
-	DragAndDrop dadAttacking = new DragAndDrop();
-
 	public OutlineRenderer outlineRenderer;
 
 	Table targetingInfoPanel; // shows info about the effect of the current targeting (user prompt)
-
-	/**
-	 * Represents the line to draw between follower and cursor, when the user is dragging to attack
-	 */
-	final Segment attackingLine = new Segment();
-	boolean attackingLineVisible = true;
 
 	/**
 	 * When user_prompt is on, the UI will respond to a Follower (other other graphic) being clicked. A valid targeting will fufill the prompt request
@@ -104,7 +86,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	// SubModules
 	MiscUI miscUI;
 	HandUI handUI;
-	FieldUI fieldUI;
+	public FieldUI fieldUI;
 	InfoPanelUI infoUI;
 
 	public MatchScreen(AppWithResources app, CardRepository cardRepo) {
@@ -142,126 +124,12 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	int cardGraphicWidth = 80;
 	int cardGraphicHeight = 100;
 
-	private int permanentGraphicWidth = 80;
-	private int permanentGraphicHeight = 100;
-
-	final Color hpTextWoundedColor = RenderUtil.rgb(255, 128, 128); // pale red
-
-	void regenerateFieldDisplay(int playerNumber) {
-		List<Permanent<?>> entitiesOnField = match.getPlayer(playerNumber).getFieldInfo();
-
-		PlayerPartitionUIElements elements = getUIElements(playerNumber);
-		elements.listOfFieldGraphics.clear();
-
-		Table fieldPanel = getUIElements(playerNumber).fieldPanel;
-		fieldPanel.clearChildren();
-		for (Permanent<?> entity : entitiesOnField) {
-			PermanentGraphic p = fieldUI.createPermanentGraphic(entity);
-			fieldPanel.add(p).size(permanentGraphicWidth, permanentGraphicHeight);
-			elements.listOfFieldGraphics.add(p);
-			p.addListener(new ClickListener() {
-				@Override
-				public void clicked(InputEvent event, float x, float y) {
-					logger.debug("Permanent Graphic {} clicked", entity.getPNumName());
-					onTargetableActorClicked(p);
-				}
-			});
-		}
-		makeValidUnitsAttackDraggable();
-	}
+	int permanentGraphicWidth = 80;
+	int permanentGraphicHeight = 100;
 
 	final Color DARK_BLUE = RenderUtil.rgb(51, 51, 204);
 	final Color DARK_RED = RenderUtil.rgb(128, 0, 0);
 	final Color FOREST = Color.FOREST;
-
-	private void makeValidUnitsAttackDraggable() {
-
-		dadAttacking.clear();
-
-		PlayerPartitionUIElements elements = getUIElements(match.getActivePlayerNumber());
-		PlayerPartitionUIElements elementsNonActive = getUIElements(match.getNonActivePlayerNumber());
-
-		for (PermanentGraphic p : elementsNonActive.listOfFieldGraphics) {
-			outlineRenderer.stopDrawingMyOutline(p);
-		}
-
-		for (PermanentGraphic p : elements.listOfFieldGraphics) {
-			if (p.getPermanent() instanceof Follower) {
-				Follower follower = (Follower) p.getPermanent();
-
-				if (follower.canAttackPlayers() || follower.canAttackFollowers()) {
-					makeAttackDraggable(p);
-				}
-
-				// Set outline around followers that can attack
-				if (follower.canAttackPlayers()) {
-					outlineRenderer.startDrawingMyOutline(p, Color.GREEN);
-				} else if (follower.canAttackFollowers()) {
-					outlineRenderer.startDrawingMyOutline(p, Color.YELLOW);
-				} else {
-					outlineRenderer.stopDrawingMyOutline(p);
-				}
-			}
-		}
-
-		addEnemyFollowersAndLeaderAsDragTargets();
-
-	}
-
-	private void disableValidUnitsAttackDraggable() {
-
-		dadAttacking.clear();
-
-		PlayerPartitionUIElements elements = getUIElements(match.getActivePlayerNumber());
-
-		for (PermanentGraphic p : elements.listOfFieldGraphics) {
-			outlineRenderer.stopDrawingMyOutline(p);
-		}
-
-	}
-
-	private void makeAttackDraggable(PermanentGraphic permGraphic) { // cards are cast by dragging to the field
-		dadAttacking.addSource(new Source(permGraphic) {
-			@Override
-			public Payload dragStart(InputEvent event, float x, float y, int pointer) {
-				attackingLine.start.set(permGraphic.localToStageCoordinates(new Vector2(permGraphic.getWidth() / 2, permGraphic.getHeight() / 2)));
-				attackingLineVisible = true;
-				return new Payload();
-			}
-
-			@Override
-			public void dragStop(InputEvent event, float x, float y, int pointer, Payload payload, Target target) {
-				attackingLineVisible = false;
-			}
-
-		});
-	}
-
-	private void addEnemyFollowersAndLeaderAsDragTargets() {
-		PlayerPartitionUIElements elements = getUIElements(match.getNonActivePlayerNumber());
-		for (PermanentGraphic p : elements.listOfFieldGraphics) {
-			if (p.getPermanent() instanceof Follower) {
-				Follower defender = (Follower) p.getPermanent();
-				addAttackableAsDragTarget(defender, p);
-			}
-		}
-		addAttackableAsDragTarget(match.getNonActivePlayer(), elements.getHandPanel());
-	}
-
-	private void addAttackableAsDragTarget(Attackable defender, Actor dropTarget) {
-		dadAttacking.addTarget(new Target(dropTarget) {
-			@Override
-			public boolean drag(Source source, Payload payload, float x, float y, int pointer) {
-				return true;
-			}
-
-			@Override
-			public void drop(Source source, Payload payload, float x, float y, int pointer) {
-				Follower attacker = (Follower) ((PermanentGraphic) source.getActor()).getPermanent();
-				attacker.attack(defender);
-			}
-		});
-	}
 
 	public PlayerPartitionUIElements getUIElements(int playerNumber) {
 		if (playerNumber > 0 && playerNumber <= NUM_PLAYERS) {
@@ -278,19 +146,10 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		outlineRenderer.renderOutlines();
 
-		renderAttackingLineIfVisible();
+		fieldUI.renderAttackingLineIfVisible();
 
 		stage.setDebugAll(Gdx.input.isKeyPressed(Keys.SPACE));
 
-	}
-
-	public void renderAttackingLineIfVisible() {
-		shapeRenderer.begin(ShapeType.Line);
-		shapeRenderer.setColor(Color.WHITE);
-		if (attackingLineVisible) {
-			shapeRenderer.line(attackingLine.start, attackingLine.end);
-		}
-		shapeRenderer.end();
 	}
 
 	@Override
@@ -347,14 +206,14 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
 		if (pointer == Input.Buttons.LEFT) {
 			Vector3 cursor = camera.unproject(new Vector3(screenX, screenY, 0));
-			attackingLine.end.set(cursor.x, cursor.y);
+			fieldUI.setAttackingLineEndPoint(cursor.x, cursor.y);
 		}
 		return false;
 	}
 
 	@Override
 	public boolean mouseMoved(int screenX, int screenY) {
-		attackingLineVisible = false;
+		fieldUI.attackingLineVisible = false;
 		return false;
 	}
 
@@ -370,7 +229,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		for (PlayerPartitionUIElements elements : playerUIElements) {
 			handUI.regenerateHandDisplay(elements.playerNumber);
-			regenerateFieldDisplay(elements.playerNumber);
+			fieldUI.regenerateFieldDisplay(elements.playerNumber);
 		}
 
 		handUI.makeValidHandCardsDraggable();
@@ -378,18 +237,18 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	@Override
 	public void cardOrPermanentEffectsModified() {
-		makeValidUnitsAttackDraggable();
+		fieldUI.makeValidUnitsAttackDraggable(this);
 	}
 
 	@Override
 	public void unitAttacked() {
-		makeValidUnitsAttackDraggable();
+		fieldUI.makeValidUnitsAttackDraggable(this);
 	}
 
 	@Override
 	public void fieldModified(int playerNumber) {
-		regenerateFieldDisplay(playerNumber);
-		makeValidUnitsAttackDraggable();
+		fieldUI.regenerateFieldDisplay(playerNumber);
+		fieldUI.makeValidUnitsAttackDraggable(this);
 	}
 
 	@Override
@@ -426,7 +285,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	public void turnChanged() {
 		miscUI.updateAllEndTurnButtonDisabledStatus(this);
 		handUI.makeValidHandCardsDraggable();
-		makeValidUnitsAttackDraggable();
+		fieldUI.makeValidUnitsAttackDraggable(this);
 	}
 
 	public Match getMatch() {
@@ -606,7 +465,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		createAndDisplayTargetingSourceCardPanel(effect.getSource().getSourceCard());
 
 		handUI.disableValidHandCardsDraggable();
-		disableValidUnitsAttackDraggable();
+		fieldUI.disableValidUnitsAttackDraggable();
 		disableActivePlayerEndTurnButton();
 
 		startDrawingOutlinesAroundValidTargetableActors(predicate); // do this after because disabling UI includes clearing actor outlines.
@@ -624,7 +483,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		stopDrawingOutlinesAroundTargetableActors();
 
 		handUI.makeValidHandCardsDraggable();
-		makeValidUnitsAttackDraggable();
+		fieldUI.makeValidUnitsAttackDraggable(this);
 		enableActivePlayerEndTurnButton();
 
 	}

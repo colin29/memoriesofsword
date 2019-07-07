@@ -24,7 +24,7 @@ public class PlayerPartitionUIElements {
 	TargetableTable handPanel;
 	public List<HandCardGraphic> listOfHandGraphics;
 
-	List<PermanentGraphic> listOfFieldGraphics;
+	public List<PermanentGraphic> listOfFieldGraphics;
 
 	public Table fieldPanel;
 
