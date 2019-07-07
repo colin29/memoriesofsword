@@ -22,7 +22,7 @@ public class PlayerPartitionUIElements {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	TargetableTable handPanel;
-	List<HandCardGraphic> listOfHandGraphics;
+	public List<HandCardGraphic> listOfHandGraphics;
 
 	List<PermanentGraphic> listOfFieldGraphics;
 

@@ -21,4 +21,5 @@ public interface AppWithResources {
 	public MyFonts getFonts();
 
 	public Skin getSkin();
+
 }

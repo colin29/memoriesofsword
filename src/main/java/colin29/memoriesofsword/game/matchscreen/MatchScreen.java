@@ -19,7 +19,6 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Container;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -29,7 +28,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 
 import colin29.memoriesofsword.MyFonts;
@@ -83,10 +81,9 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	AppWithResources app;
 
-	DragAndDrop dragAndDrop = new DragAndDrop();
 	DragAndDrop dadAttacking = new DragAndDrop();
 
-	OutlineRenderer outlineRenderer;
+	public OutlineRenderer outlineRenderer;
 
 	Table infoPanel; // shows detailed information about a clicked permanent
 
@@ -255,7 +252,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		int statLabelWidth = 15;
 
-		Label costText = createColoredLabel(String.valueOf(card.getCost()), largishStyle, FOREST, Align.center);
+		Label costText = handUI.parent.createColoredLabel(String.valueOf(card.getCost()), largishStyle, FOREST, Align.center);
 
 		// generateOrigEffectsText()
 
@@ -265,8 +262,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		if (card instanceof FollowerCard) {
 			FollowerCard cardFol = (FollowerCard) card;
-			Label atkText = createColoredLabel(String.valueOf(cardFol.getAtk()), largishStyle, DARK_BLUE, Align.center);
-			Label defText = createColoredLabel(String.valueOf(cardFol.getDef()), largishStyle, DARK_RED, Align.center);
+			Label atkText = handUI.parent.createColoredLabel(String.valueOf(cardFol.getAtk()), largishStyle, DARK_BLUE, Align.center);
+			Label defText = handUI.parent.createColoredLabel(String.valueOf(cardFol.getDef()), largishStyle, DARK_RED, Align.center);
 
 			statsRow.add(atkText);
 			statsRow.add(defText);
@@ -281,7 +278,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		info.add(nameText).row();
 		info.add(statsRow).row();
 
-		Label cardText = createColoredLabel("", largishStyle, Color.BLACK, Align.left);
+		Label cardText = handUI.parent.createColoredLabel("", largishStyle, Color.BLACK, Align.left);
 
 		cardText.setWrap(true);
 		info.add(cardText).expandX().fillX();
@@ -289,7 +286,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		Table effectsPanel = new Table(); // technically only for applied effects
 		effectsPanel.setBackground(RenderUtil.getSolidBG(Color.DARK_GRAY));
 
-		Label sampleEffectText = createColoredLabel("{Applied effects show up here}", largishStyle, Color.BLACK, Align.left);
+		Label sampleEffectText = handUI.parent.createColoredLabel("{Applied effects show up here}", largishStyle, Color.BLACK, Align.left);
 
 		effectsPanel.pad(10).left();
 		effectsPanel.defaults().space(5).expandX().fillX();
@@ -322,113 +319,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		if (infoPanel != null) {
 			infoPanel.remove();
 			infoPanel = null;
-		}
-	}
-
-	private Label createColoredLabel(String text, LabelStyle style, Color bgColor, int align) {
-		Label l = new Label(text, style);
-		RenderUtil.setLabelBackgroundColor(l, bgColor);
-		l.setAlignment(align);
-		return l;
-	}
-
-	void makeValidHandCardsDraggable() {
-		// Currently, cards in hand can be dragged on their owner's turn
-		// and the player has enough pp to play them
-		dragAndDrop.clear();
-
-		for (int playerNumber = 1; playerNumber <= 2; playerNumber++) {
-			List<HandCardGraphic> graphics = getUIElements(playerNumber).listOfHandGraphics;
-
-			Player activePlayer = match.getActivePlayer();
-
-			for (HandCardGraphic graphic : graphics) {
-				CardInfo card = graphic.getParentCard();
-				if (activePlayer == card.getOwner() &&
-						activePlayer.getPlayPoints() >= card.getCost()) {
-					makeDraggable(graphic);
-					outlineRenderer.startDrawingMyOutline(graphic);
-				} else {
-					outlineRenderer.stopDrawingMyOutline(graphic);
-				}
-			}
-		}
-
-		addFieldsAsDragTargets();
-	}
-
-	private void disableValidHandCardsDraggable() {
-		dragAndDrop.clear();
-		for (int playerNumber = 1; playerNumber <= 2; playerNumber++) {
-			List<HandCardGraphic> graphics = getUIElements(playerNumber).listOfHandGraphics;
-			for (HandCardGraphic graphic : graphics) {
-				outlineRenderer.stopDrawingMyOutline(graphic);
-			}
-		}
-
-	}
-
-	private void makeDraggable(HandCardGraphic cardGraphic) { // cards are cast by dragging to the field
-		dragAndDrop.addSource(new Source(cardGraphic) {
-
-			@Override
-			public Payload dragStart(InputEvent event, float x, float y, int pointer) {
-				Payload payload = new Payload();
-
-				payload.setObject(cardGraphic.getParentCard());
-
-				// Make a seperate temporary graphic based on the same card
-				Container<HandCardGraphic> dragGraphic = new Container<HandCardGraphic>(
-						handUI.createHandCardGraphic(cardGraphic.getParentCard()))
-								.width(cardGraphicWidth);
-
-				payload.setDragActor(dragGraphic);
-				payload.setInvalidDragActor(dragGraphic);
-				payload.setValidDragActor(dragGraphic);
-				return payload;
-			}
-		});
-	}
-
-	private void addFieldsAsDragTargets() {
-		for (int i = 1; i <= 2; i++) {
-			final int playerNumber = i;
-			Table fieldPanel = getUIElements(playerNumber).fieldPanel;
-			dragAndDrop.addTarget(new Target(fieldPanel) {
-
-				Drawable coloredBG = RenderUtil.getSolidBG(Color.DARK_GRAY);
-
-				private boolean isValidTarget(Payload payload) {
-					Card card = (Card) payload.getObject();
-					return match.getPlayer(playerNumber) == card.getOwner(); // can only drop cards onto their owner's field
-				}
-
-				@Override
-				public boolean drag(Source source, Payload payload, float x, float y, int pointer) {
-					if (isValidTarget(payload)) {
-
-						fieldPanel.background(coloredBG);
-						return true;
-					}
-
-					return false;
-				}
-
-				/** Called when the payload is no longer over the target, whether because the touch was moved or a drop occurred. */
-				@Override
-				public void reset(Source source, Payload payload) {
-					fieldPanel.background((Drawable) null);
-				}
-
-				@Override
-				public void drop(Source source, Payload payload, float x, float y, int pointer) {
-					if (isValidTarget(payload)) {
-						Card card = (Card) payload.getObject();
-						card.getOwner().playCard(card);
-					}
-
-				}
-			});
 		}
 	}
 
@@ -631,7 +521,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			regenerateFieldDisplay(elements.playerNumber);
 		}
 
-		makeValidHandCardsDraggable();
+		handUI.makeValidHandCardsDraggable();
 	}
 
 	@Override
@@ -653,7 +543,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	@Override
 	public void handModified(int playerNumber) {
 		handUI.regenerateHandDisplay(playerNumber);
-		makeValidHandCardsDraggable();
+		handUI.makeValidHandCardsDraggable();
 		miscUI.updateZoneCountTexts(playerNumber);
 	}
 
@@ -677,13 +567,13 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	@Override
 	public void playPointsModified(int playerNumber) {
 		miscUI.updatePlayPointsText(playerNumber);
-		makeValidHandCardsDraggable();
+		handUI.makeValidHandCardsDraggable();
 	}
 
 	@Override
 	public void turnChanged() {
 		miscUI.updateAllEndTurnButtonDisabledStatus(this);
-		makeValidHandCardsDraggable();
+		handUI.makeValidHandCardsDraggable();
 		makeValidUnitsAttackDraggable();
 	}
 
@@ -863,7 +753,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		createAndDisplayTargetingInfoPanel(effect, effect.getSource().getOwner().getPlayerNumber());
 		createAndDisplayTargetingSourceCardPanel(effect.getSource().getSourceCard());
 
-		disableValidHandCardsDraggable();
+		handUI.disableValidHandCardsDraggable();
 		disableValidUnitsAttackDraggable();
 		disableActivePlayerEndTurnButton();
 
@@ -881,7 +771,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		stopDrawingOutlinesAroundTargetableActors();
 
-		makeValidHandCardsDraggable();
+		handUI.makeValidHandCardsDraggable();
 		makeValidUnitsAttackDraggable();
 		enableActivePlayerEndTurnButton();
 
@@ -1000,6 +890,13 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	OutlineRenderer getOutlineRenderer() {
 		return outlineRenderer;
+	}
+
+	Label createColoredLabel(String text, LabelStyle style, Color bgColor, int align) {
+		Label l = new Label(text, style);
+		RenderUtil.setLabelBackgroundColor(l, bgColor);
+		l.setAlignment(align);
+		return l;
 	}
 
 }

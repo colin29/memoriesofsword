@@ -63,7 +63,7 @@ class UIConstructor {
 		constructPlayerPartition(root, elements, 2);
 		constructPlayerPartition(root, elements, 1); // Player 1's area should be on the bottom
 
-		parent.makeValidHandCardsDraggable();
+		parent.handUI.makeValidHandCardsDraggable();
 
 		root.pack();
 		root.setFillParent(true);
