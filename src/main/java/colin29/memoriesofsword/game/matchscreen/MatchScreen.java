@@ -13,16 +13,12 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Container;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
@@ -34,12 +30,10 @@ import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 
 import colin29.memoriesofsword.MyFonts;
 import colin29.memoriesofsword.game.CardRepository;
-import colin29.memoriesofsword.game.match.Amulet;
 import colin29.memoriesofsword.game.match.Attackable;
 import colin29.memoriesofsword.game.match.Card;
 import colin29.memoriesofsword.game.match.CardInfo;
@@ -58,11 +52,10 @@ import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
-import colin29.memoriesofsword.game.matchscreen.graphics.AmuletGraphic;
-import colin29.memoriesofsword.game.matchscreen.graphics.FollowerGraphic;
 import colin29.memoriesofsword.game.matchscreen.graphics.HandCardGraphic;
 import colin29.memoriesofsword.game.matchscreen.graphics.PermanentGraphic;
 import colin29.memoriesofsword.util.RenderUtil;
+import colin29.memoriesofsword.util.UIUtil;
 import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 import colin29.memoriesofsword.util.template.AppWithResources;
 import colin29.memoriesofsword.util.template.BaseScreen;
@@ -120,6 +113,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	// SubModules
 	MiscUI miscUI;
 	HandUI handUI;
+	FieldUI fieldUI;
 
 	public MatchScreen(AppWithResources app, CardRepository cardRepo) {
 		super(app);
@@ -141,6 +135,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		miscUI = new MiscUI(this);
 		handUI = new HandUI(this);
+		fieldUI = new FieldUI(this);
 
 		playerUIElements = constructor.initializeUIElementsRef();
 		constructor.constructUI(playerUIElements);
@@ -159,22 +154,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	final Color hpTextWoundedColor = RenderUtil.rgb(255, 128, 128); // pale red
 
-	private void updateAllEndTurnButtonDisabledStatus() {
-		for (int playerNumber = 1; playerNumber <= 2; playerNumber++) {
-			updateEndTurnButtonDisabledStatus(playerNumber);
-		}
-	}
-
-	void updateEndTurnButtonDisabledStatus(int playerNumber) {
-		PlayerPartitionUIElements elements = getUIElements(playerNumber);
-		if (playerNumber == match.getActivePlayerNumber()) {
-			elements.endTurnButton.setDisabled(false);
-		} else {
-			elements.endTurnButton.setDisabled(true);
-		}
-
-	}
-
 	void regenerateFieldDisplay(int playerNumber) {
 		List<Permanent<?>> entitiesOnField = match.getPlayer(playerNumber).getFieldInfo();
 
@@ -184,7 +163,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		Table fieldPanel = getUIElements(playerNumber).fieldPanel;
 		fieldPanel.clearChildren();
 		for (Permanent<?> entity : entitiesOnField) {
-			PermanentGraphic p = createPermanentGraphic(entity);
+			PermanentGraphic p = fieldUI.createPermanentGraphic(entity);
 			fieldPanel.add(p).size(permanentGraphicWidth, permanentGraphicHeight);
 			elements.listOfFieldGraphics.add(p);
 			p.addListener(new ClickListener() {
@@ -202,65 +181,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	final Color DARK_RED = RenderUtil.rgb(128, 0, 0);
 	final Color FOREST = Color.FOREST;
 
-	private PermanentGraphic createPermanentGraphic(final Permanent<?> permanent) {
-
-		// Should have a label that shows the card name
-
-		PermanentGraphic permanentGraphic;
-
-		if (permanent instanceof Follower) {
-			permanentGraphic = new FollowerGraphic((Follower) permanent);
-		} else if (permanent instanceof Amulet) {
-			permanentGraphic = new AmuletGraphic((Amulet) permanent);
-		} else {
-			permanentGraphic = new PermanentGraphic(permanent);
-		}
-
-		// Set the background card art
-
-		setPermanentGraphicBackGround(permanentGraphic);
-		permanentGraphic.bottom().defaults().space(10);
-
-		if (permanent instanceof Follower) {
-			final Follower follower = (Follower) permanent;
-
-			LabelStyle style = createLabelStyle(fonts.permanentStatsBorderedText());
-			LabelStyle woundedTextStyle = createLabelStyle(fonts.damagedFollowerDefText());
-			LabelStyle buffedTextStyle = createLabelStyle(fonts.buffedFollowerDefText());
-
-			Label atkText = new Label(String.valueOf(follower.getAtk()), style);
-			Label defText = new Label(String.valueOf(follower.getDef()), style);
-
-			if (follower.isAtkGreaterThanOrig()) {
-				atkText.setStyle(buffedTextStyle);
-			}
-
-			if (follower.isWounded()) {
-				defText.setStyle(woundedTextStyle);
-			} else if (follower.isDefGreaterThanOrig()) {
-				defText.setStyle(buffedTextStyle);
-			}
-
-			RenderUtil.setLabelBackgroundColor(atkText, DARK_BLUE);
-			RenderUtil.setLabelBackgroundColor(defText, DARK_RED);
-
-			atkText.setAlignment(Align.center);
-			defText.setAlignment(Align.center);
-			permanentGraphic.add(atkText).size(atkText.getWidth() + 7, atkText.getHeight() + 1);
-			permanentGraphic.add(defText).size(defText.getWidth() + 7, defText.getHeight() + 1);
-		}
-		permanentGraphic.setTouchable(Touchable.enabled);
-		makeClickShowInfoPanel(permanentGraphic);
-		return permanentGraphic;
-	}
-
-	private void setPermanentGraphicBackGround(PermanentGraphic permanentGraphic) {
-		Texture img = assets.get("img/image01.jpg", Texture.class);
-		TextureRegionDrawable imgDrawable = new TextureRegionDrawable(new TextureRegion(img));
-		permanentGraphic.setBackground(imgDrawable);
-	}
-
-	private void makeClickShowInfoPanel(PermanentGraphic graphic) {
+	void makeClickShowInfoPanel(PermanentGraphic graphic) {
 		graphic.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
@@ -325,7 +246,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		Table info = new Table();
 		info.setBackground(RenderUtil.getSolidBG(Color.DARK_GRAY));
 
-		LabelStyle largishStyle = createLabelStyle(fonts.largishFont());
+		LabelStyle largishStyle = UIUtil.createLabelStyle(fonts.largishFont());
 		Label nameText = new Label(card.getName(), largishStyle);
 
 		Table statsRow = new Table();
@@ -402,13 +323,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			infoPanel.remove();
 			infoPanel = null;
 		}
-	}
-
-	/**
-	 * Creates a label style, retaining the original font color
-	 */
-	LabelStyle createLabelStyle(BitmapFont font) {
-		return new LabelStyle(font, font.getColor());
 	}
 
 	private Label createColoredLabel(String text, LabelStyle style, Color bgColor, int align) {
@@ -768,7 +682,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	@Override
 	public void turnChanged() {
-		updateAllEndTurnButtonDisabledStatus();
+		miscUI.updateAllEndTurnButtonDisabledStatus(this);
 		makeValidHandCardsDraggable();
 		makeValidUnitsAttackDraggable();
 	}
@@ -1046,8 +960,8 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		Table tempRoot = new Table();
 		Table main = new Table();
 
-		Label titleText = new Label(effect.getSource().getName(), createLabelStyle(fonts.largishFont()));
-		Label effectText = new Label(effect.toString(), createLabelStyle(fonts.mediumFont()));
+		Label titleText = new Label(effect.getSource().getName(), UIUtil.createLabelStyle(fonts.largishFont()));
+		Label effectText = new Label(effect.toString(), UIUtil.createLabelStyle(fonts.mediumFont()));
 
 		tempRoot.setFillParent(true);
 

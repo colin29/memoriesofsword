@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -18,6 +17,7 @@ import colin29.memoriesofsword.game.match.CardInfo;
 import colin29.memoriesofsword.game.match.FollowerCard;
 import colin29.memoriesofsword.game.matchscreen.graphics.HandCardGraphic;
 import colin29.memoriesofsword.util.RenderUtil;
+import colin29.memoriesofsword.util.UIUtil;
 
 public class HandUI {
 
@@ -54,9 +54,9 @@ public class HandUI {
 		Table cardHeader = new Table();
 		Table cardBody = new Table();
 
-		LabelStyle smallStyle = createLabelStyle(fonts.smallFont());
-		LabelStyle mediumStyle = createLabelStyle(fonts.mediumFont());
-		LabelStyle largishStyle = createLabelStyle(fonts.smallFont());
+		LabelStyle smallStyle = UIUtil.createLabelStyle(fonts.smallFont());
+		LabelStyle mediumStyle = UIUtil.createLabelStyle(fonts.mediumFont());
+		LabelStyle largishStyle = UIUtil.createLabelStyle(fonts.smallFont());
 
 		// Set the background card art
 		Texture img = parent.assets.get("img/image01.jpg", Texture.class);
@@ -111,13 +111,6 @@ public class HandUI {
 
 		parent.makeClickShowInfoPanel(cardGraphic);
 		return cardGraphic;
-	}
-
-	/**
-	 * Creates a label style, retaining the original font color
-	 */
-	LabelStyle createLabelStyle(BitmapFont font) {
-		return new LabelStyle(font, font.getColor());
 	}
 
 }

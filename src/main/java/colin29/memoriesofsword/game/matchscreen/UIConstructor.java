@@ -100,7 +100,7 @@ class UIConstructor {
 			}
 		});
 		elements.endTurnButton = endTurnButton;
-		parent.updateEndTurnButtonDisabledStatus(playerNumber);
+		parent.miscUI.updateEndTurnButtonDisabledStatus(parent, playerNumber);
 		endTurnButton.pad(20, 10, 20, 10);
 
 		Table fieldPanel = new Table();

@@ -41,4 +41,20 @@ public class MiscUI {
 
 	}
 
+	void updateEndTurnButtonDisabledStatus(MatchScreen matchScreen, int playerNumber) {
+		PlayerPartitionUIElements elements = matchScreen.getUIElements(playerNumber);
+		if (playerNumber == matchScreen.match.getActivePlayerNumber()) {
+			elements.endTurnButton.setDisabled(false);
+		} else {
+			elements.endTurnButton.setDisabled(true);
+		}
+	
+	}
+
+	void updateAllEndTurnButtonDisabledStatus(MatchScreen matchScreen) {
+		for (int playerNumber = 1; playerNumber <= 2; playerNumber++) {
+			updateEndTurnButtonDisabledStatus(matchScreen, playerNumber);
+		}
+	}
+
 }
