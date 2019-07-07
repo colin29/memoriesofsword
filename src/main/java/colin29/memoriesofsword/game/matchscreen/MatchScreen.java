@@ -47,16 +47,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	public OutlineRenderer outlineRenderer;
 
-	/**
-	 * When user_prompt is on, the UI will respond to a Follower (other other graphic) being clicked. A valid targeting will fufill the prompt request
-	 * and UIContext will be set back to idle
-	 * 
-	 * Note: disabling the normal UI must be done separately.
-	 */
-	public enum PromptContext {
-		IDLE, USER_PROMPT;
-	}
-
 	final Match match;
 
 	// SubModules
@@ -167,7 +157,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		// A right click generally cancels the current operation, if allowed
 		if (button == Input.Buttons.RIGHT) {
-			if (userPrompter.getPromptContext() == PromptContext.USER_PROMPT) {
+			if (userPrompter.getPromptContext() == UserPrompter.PromptContext.USER_PROMPT) {
 				userPrompter.cancelUserTargetPrompt();
 			}
 		}

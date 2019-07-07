@@ -25,7 +25,6 @@ import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
-import colin29.memoriesofsword.game.matchscreen.MatchScreen.PromptContext;
 import colin29.memoriesofsword.util.RenderUtil;
 import colin29.memoriesofsword.util.UIUtil;
 
@@ -40,10 +39,10 @@ public class UserPrompter implements PromptableForUserSelection {
 	private FollowerOrPlayerCallback followerOrPlayerSelectedCallback;
 	private Predicate<PermanentOrPlayer> isTargetValid;
 	private Runnable selectionCancelledCallback;
-	private PromptedTargetType promptedTargetType;
+	private UserPrompter.PromptedTargetType promptedTargetType;
 	private Table targetingSourceCardPanel;
 
-	PromptContext promptContext = PromptContext.IDLE;
+	private UserPrompter.PromptContext promptContext = UserPrompter.PromptContext.IDLE;
 
 	private Table targetingInfoPanel; // shows info about the effect of the current targeting
 
@@ -63,7 +62,7 @@ public class UserPrompter implements PromptableForUserSelection {
 
 		followerSelectedCallback = callback;
 		selectionCancelledCallback = onCancelled;
-		promptedTargetType = PromptedTargetType.FOLLOWER;
+		promptedTargetType = UserPrompter.PromptedTargetType.FOLLOWER;
 
 		if ((getValidTargetableActors(predicate)).isEmpty()) {
 			effect.fizzledBecauseNoValidTargets();
@@ -78,7 +77,7 @@ public class UserPrompter implements PromptableForUserSelection {
 			Runnable onCancelled) {
 		playerSelectedCallback = callback;
 		selectionCancelledCallback = onCancelled;
-		promptedTargetType = PromptedTargetType.PLAYER;
+		promptedTargetType = UserPrompter.PromptedTargetType.PLAYER;
 		if ((getValidTargetableActors(predicate)).isEmpty()) {
 			effect.fizzledBecauseNoValidTargets();
 			fufillUserPromptForPlayerSelect((Player) null);
@@ -92,7 +91,7 @@ public class UserPrompter implements PromptableForUserSelection {
 			FollowerOrPlayerCallback callback, Runnable onCancelled) {
 		followerOrPlayerSelectedCallback = callback;
 		selectionCancelledCallback = onCancelled;
-		promptedTargetType = PromptedTargetType.FOLLOWER_OR_PLAYER;
+		promptedTargetType = UserPrompter.PromptedTargetType.FOLLOWER_OR_PLAYER;
 		if ((getValidTargetableActors(predicate)).isEmpty()) {
 			effect.fizzledBecauseNoValidTargets();
 			fufillUserPromptForFollowerOrPlayerSelect((FollowerOrPlayer) null);
@@ -102,138 +101,96 @@ public class UserPrompter implements PromptableForUserSelection {
 	}
 
 	void cancelUserTargetPrompt() {
-
+	
 		logger.debug("Targeting cancelled!");
-
+	
 		Runnable selectionCancelledCallbackTempRef = selectionCancelledCallback;
 		selectionCancelledCallback = null;
 		endFollowerTargettingContext();
-
+	
 		if (selectionCancelledCallbackTempRef == null) {
 			logger.warn("Follower selected callback is null. It shouldn't be.");
 		} else {
 			selectionCancelledCallbackTempRef.run();
 		}
-
-	}
-
-	void onTargetableActorClicked(TargetableActor actor) {
-
-		if (promptContext != PromptContext.USER_PROMPT) {
-			return;
-		}
-
-		PermanentOrPlayer target = actor.getTarget();
-
-		if (isTargetValid == null) {
-			logger.warn("istargetValid is null, it shouldn't be. Overwriting it with true predicate.");
-			isTargetValid = (PermanentOrPlayer) -> true;
-		}
-		if (!isTargetValid.test(target)) {
-			return;
-		}
-		switch (promptedTargetType) {
-
-		case PLAYER:
-			if (target instanceof Player) {
-				fufillUserPromptForPlayerSelect((Player) target);
-			}
-			break;
-		case FOLLOWER:
-			if (target instanceof Follower) {
-				fufillUserPromptForFollowerSelect((Follower) target);
-			}
-			break;
-		case FOLLOWER_OR_PLAYER:
-			if (target instanceof FollowerOrPlayer) {
-				fufillUserPromptForFollowerOrPlayerSelect((FollowerOrPlayer) target);
-			}
-			break;
-		default:
-			throw new AssertionError("Unsupported prompt target type");
-		}
-
-	}
-
-	PromptContext getPromptContext() {
-		return promptContext;
+	
 	}
 
 	private void fufillUserPromptForFollowerSelect(Follower follower) {
-
+	
 		// Need to copy a tempRef because we need to clear the main field BEFORE making the callback. Because the callback could make another async
 		// call, we don't want to modify related state after making the callback
-
+	
 		FollowerCallback followerSelectedCallbackTempRef = followerSelectedCallback;
 		followerSelectedCallback = null;
-
+	
 		endFollowerTargettingContext();
-
+	
 		if (followerSelectedCallbackTempRef == null) {
 			logger.warn("Follower selected callback is null. It shouldn't be.");
 			return;
 		}
 		followerSelectedCallbackTempRef.provideSelection(follower);
-
+	
 	}
 
 	private void fufillUserPromptForPlayerSelect(Player player) {
 		PlayerCallback callbackTempRef = playerSelectedCallback;
 		playerSelectedCallback = null;
-
+	
 		endFollowerTargettingContext();
-
+	
 		if (callbackTempRef == null) {
 			logger.warn("Player selected callback is null. It shouldn't be.");
 			return;
 		}
 		callbackTempRef.provideSelection(player);
-
+	
 	}
 
 	private void fufillUserPromptForFollowerOrPlayerSelect(FollowerOrPlayer followerOrPlayer) {
 		FollowerOrPlayerCallback callbackTempRef = followerOrPlayerSelectedCallback;
 		followerOrPlayerSelectedCallback = null;
-
+	
 		endFollowerTargettingContext();
-
+	
 		if (callbackTempRef == null) {
 			logger.warn("FollowerOrPlayer selected callback is null. It shouldn't be.");
 			return;
 		}
 		callbackTempRef.provideSelection(followerOrPlayer);
-
+	
 	}
 
 	private void beginTargetingContext(Effect effect, Predicate<PermanentOrPlayer> predicate) {
-		promptContext = PromptContext.USER_PROMPT;
+		promptContext = UserPrompter.PromptContext.USER_PROMPT;
 		isTargetValid = predicate;
-
+	
 		createAndDisplayTargetingInfoPanel(effect, effect.getSource().getOwner().getPlayerNumber());
 		createAndDisplayTargetingSourceCardPanel(effect.getSource().getSourceCard());
-
+	
 		parent.handUI.disableValidHandCardsDraggable();
 		parent.fieldUI.disableValidUnitsAttackDraggable();
 		parent.miscUI.disableActivePlayerEndTurnButton();
-
+	
 		startDrawingOutlinesAroundValidTargetableActors(predicate); // do this after because disabling UI includes clearing actor outlines.
 	}
 
 	private void endFollowerTargettingContext() {
-
-		promptContext = PromptContext.IDLE;
+	
+		promptContext = UserPrompter.PromptContext.IDLE;
 		promptedTargetType = null;
 		isTargetValid = null;
-
+	
 		removeTargetingInfoPanel();
 		removeTargetingSourceCardPanel();
-
+	
 		stopDrawingOutlinesAroundTargetableActors();
-
+	
 		parent.handUI.makeValidHandCardsDraggable();
 		parent.fieldUI.makeValidUnitsAttackDraggable();
 		parent.miscUI.enableActivePlayerEndTurnButton();
-
+	
 	}
 
 	private void startDrawingOutlinesAroundValidTargetableActors(Predicate<PermanentOrPlayer> predicate) {
@@ -338,8 +295,60 @@ public class UserPrompter implements PromptableForUserSelection {
 		}
 	}
 
+	void onTargetableActorClicked(TargetableActor actor) {
+	
+		if (promptContext != UserPrompter.PromptContext.USER_PROMPT) {
+			return;
+		}
+	
+		PermanentOrPlayer target = actor.getTarget();
+	
+		if (isTargetValid == null) {
+			logger.warn("istargetValid is null, it shouldn't be. Overwriting it with true predicate.");
+			isTargetValid = (PermanentOrPlayer) -> true;
+		}
+		if (!isTargetValid.test(target)) {
+			return;
+		}
+		switch (promptedTargetType) {
+	
+		case PLAYER:
+			if (target instanceof Player) {
+				fufillUserPromptForPlayerSelect((Player) target);
+			}
+			break;
+		case FOLLOWER:
+			if (target instanceof Follower) {
+				fufillUserPromptForFollowerSelect((Follower) target);
+			}
+			break;
+		case FOLLOWER_OR_PLAYER:
+			if (target instanceof FollowerOrPlayer) {
+				fufillUserPromptForFollowerOrPlayerSelect((FollowerOrPlayer) target);
+			}
+			break;
+		default:
+			throw new AssertionError("Unsupported prompt target type");
+		}
+	
+	}
+
+	UserPrompter.PromptContext getPromptContext() {
+		return promptContext;
+	}
+
 	private enum PromptedTargetType {
 		FOLLOWER, PLAYER, FOLLOWER_OR_PLAYER;
+	}
+
+	/**
+	 * When user_prompt is on, the UI will respond to a Follower (other other graphic) being clicked. A valid targeting will fufill the prompt request
+	 * and UIContext will be set back to idle
+	 * 
+	 * Note: Normal UI also has to be disabled
+	 */
+	enum PromptContext {
+		IDLE, USER_PROMPT;
 	}
 
 }

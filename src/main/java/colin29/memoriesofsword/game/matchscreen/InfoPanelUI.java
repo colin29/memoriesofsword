@@ -11,7 +11,7 @@ import com.badlogic.gdx.utils.Align;
 import colin29.memoriesofsword.game.match.CardInfo;
 import colin29.memoriesofsword.game.match.FollowerCard;
 import colin29.memoriesofsword.game.match.Permanent;
-import colin29.memoriesofsword.game.matchscreen.MatchScreen.PromptContext;
+import colin29.memoriesofsword.game.matchscreen.UserPrompter.PromptContext;
 import colin29.memoriesofsword.game.matchscreen.graphics.HandCardGraphic;
 import colin29.memoriesofsword.game.matchscreen.graphics.PermanentGraphic;
 import colin29.memoriesofsword.util.RenderUtil;
@@ -148,7 +148,7 @@ public class InfoPanelUI {
 		graphic.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
-				if (parent.userPrompter.getPromptContext() == PromptContext.IDLE) {
+				if (parent.userPrompter.getPromptContext() == UserPrompter.PromptContext.IDLE) {
 					createAndDisplayInfoPanel(graphic);
 				}
 			}
@@ -159,7 +159,7 @@ public class InfoPanelUI {
 		graphic.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
-				if (parent.userPrompter.getPromptContext() == PromptContext.IDLE) {
+				if (parent.userPrompter.getPromptContext() == UserPrompter.PromptContext.IDLE) {
 					createAndDisplayInfoPanel(graphic);
 				}
 			}
