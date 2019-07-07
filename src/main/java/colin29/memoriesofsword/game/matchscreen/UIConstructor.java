@@ -122,7 +122,7 @@ class UIConstructor {
 		handPanel.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
-				parent.onTargetableActorClicked(handPanel);
+				parent.userPrompter.onTargetableActorClicked(handPanel);
 			}
 
 		});

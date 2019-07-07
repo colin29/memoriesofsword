@@ -86,7 +86,7 @@ public class InfoPanelUI {
 
 		int statLabelWidth = 15;
 
-		Label costText = parent.handUI.parent.createColoredLabel(String.valueOf(card.getCost()), largishStyle, parent.FOREST, Align.center);
+		Label costText = createColoredLabel(String.valueOf(card.getCost()), largishStyle, parent.FOREST, Align.center);
 
 		// generateOrigEffectsText()
 
@@ -96,8 +96,8 @@ public class InfoPanelUI {
 
 		if (card instanceof FollowerCard) {
 			FollowerCard cardFol = (FollowerCard) card;
-			Label atkText = parent.handUI.parent.createColoredLabel(String.valueOf(cardFol.getAtk()), largishStyle, parent.DARK_BLUE, Align.center);
-			Label defText = parent.handUI.parent.createColoredLabel(String.valueOf(cardFol.getDef()), largishStyle, parent.DARK_RED, Align.center);
+			Label atkText = createColoredLabel(String.valueOf(cardFol.getAtk()), largishStyle, parent.DARK_BLUE, Align.center);
+			Label defText = createColoredLabel(String.valueOf(cardFol.getDef()), largishStyle, parent.DARK_RED, Align.center);
 
 			statsRow.add(atkText);
 			statsRow.add(defText);
@@ -112,7 +112,7 @@ public class InfoPanelUI {
 		info.add(nameText).row();
 		info.add(statsRow).row();
 
-		Label cardText = parent.handUI.parent.createColoredLabel("", largishStyle, Color.BLACK, Align.left);
+		Label cardText = createColoredLabel("", largishStyle, Color.BLACK, Align.left);
 
 		cardText.setWrap(true);
 		info.add(cardText).expandX().fillX();
@@ -120,7 +120,7 @@ public class InfoPanelUI {
 		Table effectsPanel = new Table(); // technically only for applied effects
 		effectsPanel.setBackground(RenderUtil.getSolidBG(Color.DARK_GRAY));
 
-		Label sampleEffectText = parent.handUI.parent.createColoredLabel("{Applied effects show up here}", largishStyle, Color.BLACK, Align.left);
+		Label sampleEffectText = createColoredLabel("{Applied effects show up here}", largishStyle, Color.BLACK, Align.left);
 
 		effectsPanel.pad(10).left();
 		effectsPanel.defaults().space(5).expandX().fillX();
@@ -137,22 +137,29 @@ public class InfoPanelUI {
 		return rootTemp;
 	}
 
-	void makeClickShowInfoPanel(final MatchScreen matchScreen, PermanentGraphic graphic) {
+	private Label createColoredLabel(String text, LabelStyle style, Color bgColor, int align) {
+		Label l = new Label(text, style);
+		RenderUtil.setLabelBackgroundColor(l, bgColor);
+		l.setAlignment(align);
+		return l;
+	}
+
+	void makeClickShowInfoPanel(PermanentGraphic graphic) {
 		graphic.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
-				if (matchScreen.promptContext == PromptContext.IDLE) {
+				if (parent.userPrompter.getPromptContext() == PromptContext.IDLE) {
 					createAndDisplayInfoPanel(graphic);
 				}
 			}
 		});
 	}
 
-	void makeClickShowInfoPanel(final MatchScreen matchScreen, HandCardGraphic graphic) {
+	void makeClickShowInfoPanel(HandCardGraphic graphic) {
 		graphic.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
-				if (matchScreen.promptContext == PromptContext.IDLE) {
+				if (parent.userPrompter.getPromptContext() == PromptContext.IDLE) {
 					createAndDisplayInfoPanel(graphic);
 				}
 			}

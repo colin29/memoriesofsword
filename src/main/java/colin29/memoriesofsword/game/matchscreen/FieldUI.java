@@ -28,7 +28,6 @@ import colin29.memoriesofsword.game.match.Amulet;
 import colin29.memoriesofsword.game.match.Attackable;
 import colin29.memoriesofsword.game.match.Follower;
 import colin29.memoriesofsword.game.match.Permanent;
-import colin29.memoriesofsword.game.matchscreen.MatchScreen.Segment;
 import colin29.memoriesofsword.game.matchscreen.graphics.AmuletGraphic;
 import colin29.memoriesofsword.game.matchscreen.graphics.FollowerGraphic;
 import colin29.memoriesofsword.game.matchscreen.graphics.PermanentGraphic;
@@ -70,11 +69,11 @@ public class FieldUI {
 				@Override
 				public void clicked(InputEvent event, float x, float y) {
 					logger.debug("Permanent Graphic {} clicked", entity.getPNumName());
-					parent.onTargetableActorClicked(p);
+					parent.userPrompter.onTargetableActorClicked(p);
 				}
 			});
 		}
-		makeValidUnitsAttackDraggable(parent);
+		makeValidUnitsAttackDraggable();
 	}
 
 	private PermanentGraphic createPermanentGraphic(final Permanent<?> permanent) {
@@ -125,7 +124,7 @@ public class FieldUI {
 			permanentGraphic.add(defText).size(defText.getWidth() + 7, defText.getHeight() + 1);
 		}
 		permanentGraphic.setTouchable(Touchable.enabled);
-		parent.infoUI.makeClickShowInfoPanel(parent, permanentGraphic);
+		parent.infoUI.makeClickShowInfoPanel(permanentGraphic);
 		return permanentGraphic;
 	}
 
@@ -135,7 +134,7 @@ public class FieldUI {
 		permanentGraphic.setBackground(imgDrawable);
 	}
 
-	void makeValidUnitsAttackDraggable(MatchScreen parent) {
+	void makeValidUnitsAttackDraggable() {
 
 		dadAttacking.clear();
 
@@ -178,12 +177,12 @@ public class FieldUI {
 				attackingLineVisible = true;
 				return new Payload();
 			}
-	
+
 			@Override
 			public void dragStop(InputEvent event, float x, float y, int pointer, Payload payload, Target target) {
 				attackingLineVisible = false;
 			}
-	
+
 		});
 	}
 
@@ -236,6 +235,11 @@ public class FieldUI {
 
 	void setAttackingLineEndPoint(float x, float y) {
 		attackingLine.end.set(x, y);
+	}
+
+	private static class Segment {
+		final Vector2 start = new Vector2();
+		final Vector2 end = new Vector2();
 	}
 
 }
