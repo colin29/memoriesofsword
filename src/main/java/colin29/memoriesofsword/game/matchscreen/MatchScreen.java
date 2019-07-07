@@ -437,7 +437,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		graphic.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
-				logger.debug("{} was clicked", graphic.getPermanent().getName());
+				// logger.debug("{} was clicked", graphic.getPermanent().getName());
 				if (promptContext == PromptContext.IDLE) {
 					createAndDisplayInfoPanel(graphic);
 				}
@@ -449,7 +449,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		graphic.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
-				logger.debug("{} was clicked", graphic.getParentCard().getName());
 				if (promptContext == PromptContext.IDLE) {
 					createAndDisplayInfoPanel(graphic);
 				}

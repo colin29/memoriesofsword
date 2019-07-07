@@ -21,8 +21,6 @@ import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
  */
 public class EffectOnFollower extends Effect {
 
-	// OTHER_ENEMY_FOLLOWERS and THE_ENEMY_FOLLOWER require the parent to be something that identifies an enemy follower, ie. clash or follower strike
-
 	/**
 	 * THIS_FOLLOWER AND OTHER_ALLIES is only valid if the source (which holds the effect) is a follower. <br>
 	 * This will be checked when match tries to execute the ability.
@@ -30,7 +28,7 @@ public class EffectOnFollower extends Effect {
 	 * Inherent Targeting: <br>
 	 * ETB_FOLLOWER is used for etb card effects <br>
 	 * 
-	 * THE_ENEMY_FOLLOWER is used for clash and follower-strike
+	 * THE_ENEMY_FOLLOWER and OTHER_ENEMY_FOLLOWERS is used for clash and follower-strike
 	 * 
 	 * SELECTED_FOLLOWER is a special targeting that indicates the user should be prompted and will chose a follower <br>
 	 * Because of complexity in async callbacks and task resuming, SELECTED FOLLOWER is ONLY supported with trigger types: FANFARE atm.
