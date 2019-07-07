@@ -75,7 +75,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
-	final Match match;
+	public final Match match;
 
 	final Skin skin;
 	final MyFonts fonts;
@@ -117,6 +117,10 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	private PromptContext promptContext = PromptContext.IDLE;
 
+	// SubModules
+	MiscUI miscUI;
+	HandUI handUI;
+
 	public MatchScreen(AppWithResources app, CardRepository cardRepo) {
 		super(app);
 		this.app = app;
@@ -133,10 +137,13 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		match.beginMatch();
 
 		// Set up UI modules
-		MatchScreenConstruction construction = new MatchScreenConstruction(this, app);
+		UIConstructor constructor = new UIConstructor(this, app);
 
-		playerUIElements = construction.initializeUIElementsRef();
-		construction.constructUI(playerUIElements);
+		miscUI = new MiscUI(this);
+		handUI = new HandUI(this);
+
+		playerUIElements = constructor.initializeUIElementsRef();
+		constructor.constructUI(playerUIElements);
 
 		match.addSimpleStateListener(this);
 
@@ -150,35 +157,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	private int permanentGraphicWidth = 80;
 	private int permanentGraphicHeight = 100;
 
-	private final Color hpTextWoundedColor = RenderUtil.rgb(255, 128, 128); // pale red
-
-	void updateHpText(int playerNumber) {
-		Label hpText = getUIElements(playerNumber).hpText;
-		Player player = match.getPlayer(playerNumber);
-		hpText.setText("" + player.getHp());
-		if (player.getHp() != player.getMaxHp()) {
-			hpText.setColor(hpTextWoundedColor);
-		} else {
-			hpText.setColor(Color.WHITE);
-		}
-	}
-
-	void updatePlayPointsText(int playerNumber) {
-		Label playPointsText = getUIElements(playerNumber).playPointsText;
-		Player player = match.getPlayer(playerNumber);
-		playPointsText.setText("PP: " + player.getPlayPoints() + " / " + player.getMaxPlayPoints());
-	}
-
-	void updateZoneCountTexts(int playerNumber) {
-
-		PlayerPartitionUIElements elements = getUIElements(playerNumber);
-		Player player = match.getPlayer(playerNumber);
-
-		elements.graveyardCountText.setText("" + player.getGraveyard().size());
-		elements.deckCountText.setText("" + player.getDeck().size());
-		elements.handCountText.setText("" + player.getHand().size());
-
-	}
+	final Color hpTextWoundedColor = RenderUtil.rgb(255, 128, 128); // pale red
 
 	private void updateAllEndTurnButtonDisabledStatus() {
 		for (int playerNumber = 1; playerNumber <= 2; playerNumber++) {
@@ -293,7 +272,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		});
 	}
 
-	private void makeClickShowInfoPanel(HandCardGraphic graphic) {
+	void makeClickShowInfoPanel(HandCardGraphic graphic) {
 		graphic.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
@@ -428,7 +407,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	/**
 	 * Creates a label style, retaining the original font color
 	 */
-	private LabelStyle createLabelStyle(BitmapFont font) {
+	LabelStyle createLabelStyle(BitmapFont font) {
 		return new LabelStyle(font, font.getColor());
 	}
 
@@ -437,89 +416,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		RenderUtil.setLabelBackgroundColor(l, bgColor);
 		l.setAlignment(align);
 		return l;
-	}
-
-	void regenerateHandDisplay(int playerNumber) {
-		PlayerPartitionUIElements elements = getUIElements(playerNumber);
-
-		elements.listOfHandGraphics.clear();
-
-		Table handPanel = elements.getHandPanel();
-		handPanel.clearChildren();
-
-		List<CardInfo> p1CardsInHand = match.getPlayer(playerNumber).getHand();
-		for (CardInfo card : p1CardsInHand) {
-			HandCardGraphic cardGraphic = createHandCardGraphic(card);
-			cardGraphic.setTouchable(Touchable.enabled);
-			handPanel.add(cardGraphic).width(cardGraphicWidth);
-
-			elements.listOfHandGraphics.add(cardGraphic);
-		}
-	}
-
-	private HandCardGraphic createHandCardGraphic(CardInfo card) {
-
-		HandCardGraphic cardGraphic = new HandCardGraphic(card);
-		Table cardHeader = new Table();
-		Table cardBody = new Table();
-
-		LabelStyle smallStyle = createLabelStyle(fonts.smallFont());
-		LabelStyle mediumStyle = createLabelStyle(fonts.mediumFont());
-		LabelStyle largishStyle = createLabelStyle(fonts.smallFont());
-
-		// Set the background card art
-		Texture img = assets.get("img/image01.jpg", Texture.class);
-		TextureRegionDrawable imgDrawable = new TextureRegionDrawable(new TextureRegion(img));
-		cardBody.setBackground(imgDrawable);
-
-		// make the cost symbol, etc.
-
-		Label costText = new Label(String.valueOf(card.getCost()), largishStyle);
-		costText.setAlignment(Align.top);
-
-		Table costPanel = new Table();
-		costPanel.add(costText);
-		costPanel.setBackground(RenderUtil.getSolidBG(Color.FOREST));
-
-		Label nameText = new Label(card.getName(), smallStyle);
-		nameText.setEllipsis(true);
-		nameText.setEllipsis("..");
-
-		RenderUtil.setLabelBackgroundColor(nameText, Color.GRAY);
-
-		cardBody.top().left();
-
-		cardBody.add(cardHeader).expandX().fillX().row();
-
-		if (card instanceof FollowerCard) {
-
-			Color DARK_BLUE = RenderUtil.rgb(51, 51, 204);
-			Color DARK_RED = RenderUtil.rgb(128, 0, 0);
-
-			FollowerCard cardFol = (FollowerCard) card;
-			Label atkText = new Label(String.valueOf(cardFol.getAtk()), mediumStyle);
-			RenderUtil.setLabelBackgroundColor(atkText, DARK_BLUE);
-			Label defText = new Label(String.valueOf(cardFol.getDef()), mediumStyle);
-			RenderUtil.setLabelBackgroundColor(defText, DARK_RED);
-
-			Table cardAtkDefColumn = new Table();
-			cardAtkDefColumn.defaults().left();
-			cardAtkDefColumn.add(atkText).row();
-			cardAtkDefColumn.add(defText).row();
-
-			cardBody.add(cardAtkDefColumn).left();
-		}
-
-		cardHeader.defaults().top();
-
-		final int costPanelWidth = 15;
-		cardHeader.add(costPanel).width(costPanelWidth).fill();
-		cardHeader.add(nameText).width(cardGraphicWidth - costPanelWidth);
-
-		cardGraphic.add(cardBody).height(cardGraphicHeight);
-
-		makeClickShowInfoPanel(cardGraphic);
-		return cardGraphic;
 	}
 
 	void makeValidHandCardsDraggable() {
@@ -568,8 +464,9 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 				payload.setObject(cardGraphic.getParentCard());
 
 				// Make a seperate temporary graphic based on the same card
-				Container<HandCardGraphic> dragGraphic = new Container<HandCardGraphic>(createHandCardGraphic(cardGraphic.getParentCard()))
-						.width(cardGraphicWidth);
+				Container<HandCardGraphic> dragGraphic = new Container<HandCardGraphic>(
+						handUI.createHandCardGraphic(cardGraphic.getParentCard()))
+								.width(cardGraphicWidth);
 
 				payload.setDragActor(dragGraphic);
 				payload.setInvalidDragActor(dragGraphic);
@@ -710,7 +607,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		});
 	}
 
-	private PlayerPartitionUIElements getUIElements(int playerNumber) {
+	public PlayerPartitionUIElements getUIElements(int playerNumber) {
 		if (playerNumber > 0 && playerNumber <= NUM_PLAYERS) {
 			return playerUIElements[playerNumber - 1];
 		} else {
@@ -816,7 +713,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		// need to update values in hand and field
 
 		for (PlayerPartitionUIElements elements : playerUIElements) {
-			regenerateHandDisplay(elements.playerNumber);
+			handUI.regenerateHandDisplay(elements.playerNumber);
 			regenerateFieldDisplay(elements.playerNumber);
 		}
 
@@ -841,31 +738,31 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	@Override
 	public void handModified(int playerNumber) {
-		regenerateHandDisplay(playerNumber);
+		handUI.regenerateHandDisplay(playerNumber);
 		makeValidHandCardsDraggable();
-		updateZoneCountTexts(playerNumber);
+		miscUI.updateZoneCountTexts(playerNumber);
 	}
 
 	@Override
 	public void deckModified(int playerNumber) {
-		updateZoneCountTexts(playerNumber);
+		miscUI.updateZoneCountTexts(playerNumber);
 	}
 
 	@Override
 	public void graveyardModified(int playerNumber) {
-		updateZoneCountTexts(playerNumber);
+		miscUI.updateZoneCountTexts(playerNumber);
 
 	}
 
 	@Override
 	public void playerHPModified(int playerNumber) {
-		updateHpText(playerNumber);
+		miscUI.updateHpText(playerNumber);
 
 	}
 
 	@Override
 	public void playPointsModified(int playerNumber) {
-		updatePlayPointsText(playerNumber);
+		miscUI.updatePlayPointsText(playerNumber);
 		makeValidHandCardsDraggable();
 	}
 
@@ -1122,7 +1019,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		tempRoot.setFillParent(true);
 		tempRoot.left().pad(40);
 		stage.addActor(tempRoot);
-		tempRoot.add(createHandCardGraphic(card)).size(cardGraphicWidth, cardGraphicHeight);
+		tempRoot.add(handUI.createHandCardGraphic(card)).size(cardGraphicWidth, cardGraphicHeight);
 
 		targetingSourceCardPanel = tempRoot;
 	}

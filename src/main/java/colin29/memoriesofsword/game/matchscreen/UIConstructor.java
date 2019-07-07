@@ -21,7 +21,7 @@ import colin29.memoriesofsword.game.match.Match;
 import colin29.memoriesofsword.util.RenderUtil;
 import colin29.memoriesofsword.util.template.AppWithResources;
 
-class MatchScreenConstruction {
+class UIConstructor {
 
 	private final MatchScreen parent;
 	private Stage stage;
@@ -32,7 +32,7 @@ class MatchScreenConstruction {
 
 	private final Match match;
 
-	MatchScreenConstruction(MatchScreen parent, AppWithResources app) {
+	UIConstructor(MatchScreen parent, AppWithResources app) {
 		this.parent = parent;
 		this.stage = parent.getStage();
 
@@ -130,7 +130,7 @@ class MatchScreenConstruction {
 		elements.setHandPanel(handPanel);
 		elements.fieldPanel = fieldPanel;
 
-		parent.regenerateHandDisplay(playerNumber);
+		parent.handUI.regenerateHandDisplay(playerNumber);
 		parent.regenerateFieldDisplay(playerNumber);
 
 		fieldPanel.setTouchable(Touchable.enabled);
@@ -197,9 +197,9 @@ class MatchScreenConstruction {
 		elements.deckCountText = deckCountText;
 		elements.handCountText = handCountText;
 
-		parent.updateHpText(playerNumber);
-		parent.updatePlayPointsText(playerNumber);
-		parent.updateZoneCountTexts(playerNumber);
+		parent.miscUI.updateHpText(playerNumber);
+		parent.miscUI.updatePlayPointsText(playerNumber);
+		parent.miscUI.updateZoneCountTexts(playerNumber);
 
 		return sidePanel;
 	}

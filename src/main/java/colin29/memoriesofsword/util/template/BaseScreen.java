@@ -29,7 +29,7 @@ public abstract class BaseScreen implements Screen {
 
 	protected ShapeRenderer shapeRenderer;
 
-	protected AssetManager assets;
+	public AssetManager assets;
 
 	public BaseScreen(final AppWithResources game) {
 		this.game = game;

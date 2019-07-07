@@ -17,7 +17,7 @@ import colin29.memoriesofsword.game.matchscreen.graphics.PermanentGraphic;
  * Is not the Partition itself, but the UI elements we need a reference to.
  * 
  */
-class PlayerPartitionUIElements {
+public class PlayerPartitionUIElements {
 
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 
