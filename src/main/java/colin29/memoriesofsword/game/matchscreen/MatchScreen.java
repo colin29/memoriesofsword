@@ -21,16 +21,13 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Container;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.Value;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload;
@@ -40,7 +37,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 
-import colin29.memoriesofsword.GameException;
 import colin29.memoriesofsword.MyFonts;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.match.Amulet;
@@ -79,7 +75,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
-	private Match match;
+	final Match match;
 
 	final Skin skin;
 	final MyFonts fonts;
@@ -90,7 +86,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	/**
 	 * Use the helper {@link #getUIElements(int), getComponentAt} to access
 	 */
-	PlayerPartitionUIElements[] playerUIElements = new PlayerPartitionUIElements[NUM_PLAYERS];
+	PlayerPartitionUIElements[] playerUIElements;
 
 	AppWithResources app;
 
@@ -128,9 +124,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		skin = app.getSkin();
 
 		outlineRenderer = new OutlineRenderer(app.getShapeRenderer());
-		for (int i = 0; i < NUM_PLAYERS; i++) {
-			playerUIElements[i] = new PlayerPartitionUIElements(outlineRenderer, i + 1);
-		}
 
 		/// Set up Match
 
@@ -138,14 +131,18 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		match.useTestDecks();
 		match.beginMatch();
-		constructUI();
+
+		// Set up UI modules
+		MatchScreenConstruction construction = new MatchScreenConstruction(this, app);
+
+		playerUIElements = construction.initializeUIElementsRef();
+		construction.constructUI(playerUIElements);
+
 		match.addSimpleStateListener(this);
 
 		multiplexer.addProcessor(this);
 		multiplexer.addProcessor(stage);
 	}
-
-	private int sidePanelWidth = 150;
 
 	int cardGraphicWidth = 80;
 	int cardGraphicHeight = 100;
@@ -153,158 +150,9 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	private int permanentGraphicWidth = 80;
 	private int permanentGraphicHeight = 100;
 
-	/**
-	 * Also Initializes fields which refer to UI elements, thus regenerate/refresh calls (including those from a listener) should not be invoked
-	 * before this method is called.
-	 */
-	private void constructUI() {
-
-		constructPlayerPartition(2);
-		constructPlayerPartition(1); // Player 1's area should be on the bottom
-
-		makeValidHandCardsDraggable();
-
-		root.pack();
-	}
-
-	private void constructPlayerPartition(int playerNumber) {
-
-		final boolean normalOrientation = playerNumber == 1; // normal orientation has your hand on the bottom of your area
-
-		PlayerPartitionUIElements elements = getUIElements(playerNumber);
-
-		Table playerPartition = new Table();
-
-		root.add(playerPartition).height(Value.percentHeight(0.5f, root)).expandX().fill();
-		root.row();
-
-		playerPartition.add(constructSidePanel(playerNumber)).width(sidePanelWidth).expandY().fill();
-		Table mainArea = new Table();
-		playerPartition.add(mainArea).expand().fill();
-
-		TextButtonStyle bigTextButtonStyle = skin.get(TextButtonStyle.class);
-		bigTextButtonStyle.font = fonts.largishFont();
-
-		TextButton endTurnButton = new TextButton("End Turn", bigTextButtonStyle);
-		endTurnButton.addListener(new ChangeListener() {
-			@Override
-			public void changed(ChangeEvent event, Actor actor) {
-				if (playerNumber == match.getActivePlayerNumber()) {
-					match.nextTurn();
-				}
-
-			}
-		});
-		elements.endTurnButton = endTurnButton;
-		updateEndTurnButtonDisabledStatus(playerNumber);
-		endTurnButton.pad(20, 10, 20, 10);
-
-		Table fieldPanel = new Table();
-		fieldPanel.defaults().space(20);
-		TargetableTable handPanel = new TargetableTable(match.getPlayer(playerNumber));
-
-		if (normalOrientation) {
-			mainArea.add(fieldPanel).expand().fill();
-			mainArea.add(endTurnButton);
-			mainArea.row();
-			mainArea.add(handPanel).expandX().colspan(2).fill();
-		} else {
-			mainArea.add(handPanel).expandX().colspan(2).fill();
-			mainArea.row();
-			mainArea.add(fieldPanel).expand().fill();
-			mainArea.add(endTurnButton);
-		}
-		handPanel.setTouchable(Touchable.enabled);
-		handPanel.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				onTargetableActorClicked(handPanel);
-			}
-
-		});
-
-		elements.setHandPanel(handPanel);
-		elements.fieldPanel = fieldPanel;
-
-		regenerateHandDisplay(playerNumber);
-		regenerateFieldDisplay(playerNumber);
-
-		fieldPanel.setTouchable(Touchable.enabled);
-
-	}
-
-	private Table constructSidePanel(int playerNumber) {
-		Table sidePanel = new Table();
-		sidePanel.defaults().expandX().left();
-
-		Color DARK_GRAY = RenderUtil.rgb(40, 40, 40);
-		Color DARK_RED = RenderUtil.rgb(128, 0, 0);
-
-		Label nameText = new Label(match.getPlayer(playerNumber).getName(), skin);
-		RenderUtil.setLabelBackgroundColor(nameText, DARK_GRAY);
-
-		Label hpText = new Label("initial hp text", skin);
-		RenderUtil.setLabelBackgroundColor(hpText, DARK_RED);
-
-		Label aTwoDigitLabel = new Label("00", skin); // example label for sizing purposes
-		int hpTextPadding = 8;
-		Container<Label> hpTextWrapper = new Container<Label>(hpText);
-		hpTextWrapper.size(aTwoDigitLabel.getWidth() + hpTextPadding,
-				hpText.getHeight() + hpTextPadding);
-		hpText.setAlignment(Align.center);
-
-		Label playPointsText = new Label("intial pp text", skin);
-		RenderUtil.setLabelBackgroundColor(playPointsText, DARK_GRAY);
-
-		Table zoneCountPanel = new Table(); // contains counts for current graveyard, deck, and hand size
-		zoneCountPanel.defaults().left().padLeft(5).padRight(5).spaceLeft(10);
-		zoneCountPanel.pad(5);
-		zoneCountPanel.setBackground(RenderUtil.getSolidBG(DARK_GRAY));
-
-		Label graveyardCountText = new Label("", skin);
-		Label deckCountText = new Label("", skin);
-		Label handCountText = new Label("", skin);
-
-		zoneCountPanel.add(new Label("Graveyard:", skin));
-		zoneCountPanel.add(graveyardCountText).row();
-		zoneCountPanel.add(new Label("Deck:", skin));
-		zoneCountPanel.add(deckCountText).row();
-		zoneCountPanel.add(new Label("Hand:", skin));
-		zoneCountPanel.add(handCountText);
-
-		// add ui elements to panel
-
-		sidePanel.defaults().padLeft(5).padRight(5).spaceTop(5);
-
-		sidePanel.add(nameText);
-		sidePanel.row();
-		sidePanel.add(hpTextWrapper).center();
-		sidePanel.row();
-		sidePanel.add(playPointsText).center();
-		sidePanel.row();
-		sidePanel.add(zoneCountPanel).expandX();
-
-		PlayerPartitionUIElements elements = getUIElements(playerNumber);
-
-		// store reference to elements that need to be updated
-
-		elements.hpText = hpText;
-		elements.playPointsText = playPointsText;
-
-		elements.graveyardCountText = graveyardCountText;
-		elements.deckCountText = deckCountText;
-		elements.handCountText = handCountText;
-
-		updateHpText(playerNumber);
-		updatePlayPointsText(playerNumber);
-		updateZoneCountTexts(playerNumber);
-
-		return sidePanel;
-	}
-
 	private final Color hpTextWoundedColor = RenderUtil.rgb(255, 128, 128); // pale red
 
-	private void updateHpText(int playerNumber) {
+	void updateHpText(int playerNumber) {
 		Label hpText = getUIElements(playerNumber).hpText;
 		Player player = match.getPlayer(playerNumber);
 		hpText.setText("" + player.getHp());
@@ -315,13 +163,13 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		}
 	}
 
-	private void updatePlayPointsText(int playerNumber) {
+	void updatePlayPointsText(int playerNumber) {
 		Label playPointsText = getUIElements(playerNumber).playPointsText;
 		Player player = match.getPlayer(playerNumber);
 		playPointsText.setText("PP: " + player.getPlayPoints() + " / " + player.getMaxPlayPoints());
 	}
 
-	private void updateZoneCountTexts(int playerNumber) {
+	void updateZoneCountTexts(int playerNumber) {
 
 		PlayerPartitionUIElements elements = getUIElements(playerNumber);
 		Player player = match.getPlayer(playerNumber);
@@ -338,7 +186,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		}
 	}
 
-	private void updateEndTurnButtonDisabledStatus(int playerNumber) {
+	void updateEndTurnButtonDisabledStatus(int playerNumber) {
 		PlayerPartitionUIElements elements = getUIElements(playerNumber);
 		if (playerNumber == match.getActivePlayerNumber()) {
 			elements.endTurnButton.setDisabled(false);
@@ -348,7 +196,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	}
 
-	private void regenerateFieldDisplay(int playerNumber) {
+	void regenerateFieldDisplay(int playerNumber) {
 		List<Permanent<?>> entitiesOnField = match.getPlayer(playerNumber).getFieldInfo();
 
 		PlayerPartitionUIElements elements = getUIElements(playerNumber);
@@ -591,7 +439,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		return l;
 	}
 
-	private void regenerateHandDisplay(int playerNumber) {
+	void regenerateHandDisplay(int playerNumber) {
 		PlayerPartitionUIElements elements = getUIElements(playerNumber);
 
 		elements.listOfHandGraphics.clear();
@@ -674,7 +522,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		return cardGraphic;
 	}
 
-	private void makeValidHandCardsDraggable() {
+	void makeValidHandCardsDraggable() {
 		// Currently, cards in hand can be dragged on their owner's turn
 		// and the player has enough pp to play them
 		dragAndDrop.clear();
@@ -1032,58 +880,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		return match;
 	}
 
-	/**
-	 * Is not the Partition itself, but the UI elements we need a reference to.
-	 * 
-	 */
-	private static class PlayerPartitionUIElements {
-
-		private Logger logger = LoggerFactory.getLogger(this.getClass());
-
-		private TargetableTable handPanel;
-		List<HandCardGraphic> listOfHandGraphics;
-
-		List<PermanentGraphic> listOfFieldGraphics;
-
-		public Table fieldPanel;
-
-		public Label playPointsText;
-		public Label hpText;
-
-		public Label graveyardCountText;
-		public Label deckCountText;
-		public Label handCountText;
-
-		public TextButton endTurnButton;
-
-		public final int playerNumber;
-
-		public PlayerPartitionUIElements(OutlineRenderer outlineRenderer, int playerNumber) {
-			listOfHandGraphics = new OutlineSmartArrayList<HandCardGraphic>(outlineRenderer);
-			listOfFieldGraphics = new OutlineSmartArrayList<PermanentGraphic>(outlineRenderer);
-			this.playerNumber = playerNumber;
-		}
-
-		public TargetableTable getHandPanel() {
-			return handPanel;
-		}
-
-		/**
-		 * Hand panel is effectively final, it can only be set once
-		 */
-		public void setHandPanel(TargetableTable handPanel) {
-			if (handPanel == null) {
-				logger.warn("Hand panel can't be set to null");
-				return;
-			}
-			if (this.handPanel != null) {
-				throw new GameException("HandPanel can't be re-assigned after it is set");
-			}
-			this.handPanel = handPanel;
-		}
-
-	}
-
 	static class Segment {
 		final Vector2 start = new Vector2();
 		final Vector2 end = new Vector2();
@@ -1385,6 +1181,14 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 			targetingInfoPanel.remove();
 			targetingInfoPanel = null;
 		}
+	}
+
+	Stage getStage() {
+		return stage;
+	}
+
+	OutlineRenderer getOutlineRenderer() {
+		return outlineRenderer;
 	}
 
 }
