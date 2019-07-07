@@ -257,21 +257,13 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	@Override
 	public void turnChanged() {
-		miscUI.updateAllEndTurnButtonDisabledStatus(this);
+		miscUI.updateAllEndTurnButtonDisabledStatus();
 		handUI.makeValidHandCardsDraggable();
 		fieldUI.makeValidUnitsAttackDraggable();
 	}
 
 	public Match getMatch() {
 		return match;
-	}
-
-	void disableActivePlayerEndTurnButton() {
-		getUIElements(match.getActivePlayerNumber()).endTurnButton.setDisabled(true);
-	}
-
-	void enableActivePlayerEndTurnButton() {
-		getUIElements(match.getActivePlayerNumber()).endTurnButton.setDisabled(false);
 	}
 
 	Stage getStage() {

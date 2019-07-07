@@ -214,7 +214,7 @@ public class UserPrompter implements PromptableForUserSelection {
 
 		parent.handUI.disableValidHandCardsDraggable();
 		parent.fieldUI.disableValidUnitsAttackDraggable();
-		parent.disableActivePlayerEndTurnButton();
+		parent.miscUI.disableActivePlayerEndTurnButton();
 
 		startDrawingOutlinesAroundValidTargetableActors(predicate); // do this after because disabling UI includes clearing actor outlines.
 	}
@@ -232,7 +232,7 @@ public class UserPrompter implements PromptableForUserSelection {
 
 		parent.handUI.makeValidHandCardsDraggable();
 		parent.fieldUI.makeValidUnitsAttackDraggable();
-		parent.enableActivePlayerEndTurnButton();
+		parent.miscUI.enableActivePlayerEndTurnButton();
 
 	}
 
