@@ -72,7 +72,7 @@ public class FieldUI {
 			permanentGraphic.add(defText).size(defText.getWidth() + 7, defText.getHeight() + 1);
 		}
 		permanentGraphic.setTouchable(Touchable.enabled);
-		parent.makeClickShowInfoPanel(permanentGraphic);
+		parent.infoUI.makeClickShowInfoPanel(parent, permanentGraphic);
 		return permanentGraphic;
 	}
 

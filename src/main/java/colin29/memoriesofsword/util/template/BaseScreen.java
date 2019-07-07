@@ -23,7 +23,7 @@ public abstract class BaseScreen implements Screen {
 	protected OrthographicCamera camera; // Used for rendering world objects (that use world coordinates)
 	protected OrthographicCamera fixedCam; // Used for rendering objects on the screen coordinate.
 
-	protected Stage stage;
+	public Stage stage;
 	protected Table root;
 	protected SpriteBatch batch;
 

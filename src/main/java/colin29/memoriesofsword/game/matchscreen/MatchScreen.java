@@ -28,15 +28,12 @@ import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target;
-import com.badlogic.gdx.utils.Align;
 
 import colin29.memoriesofsword.MyFonts;
 import colin29.memoriesofsword.game.CardRepository;
 import colin29.memoriesofsword.game.match.Attackable;
 import colin29.memoriesofsword.game.match.Card;
-import colin29.memoriesofsword.game.match.CardInfo;
 import colin29.memoriesofsword.game.match.Follower;
-import colin29.memoriesofsword.game.match.FollowerCard;
 import colin29.memoriesofsword.game.match.ListOfCardsEmptyException;
 import colin29.memoriesofsword.game.match.Match;
 import colin29.memoriesofsword.game.match.Match.FollowerCallback;
@@ -50,7 +47,6 @@ import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollower;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnFollowerOrPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.EffectOnPlayer;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
-import colin29.memoriesofsword.game.matchscreen.graphics.HandCardGraphic;
 import colin29.memoriesofsword.game.matchscreen.graphics.PermanentGraphic;
 import colin29.memoriesofsword.util.RenderUtil;
 import colin29.memoriesofsword.util.UIUtil;
@@ -85,8 +81,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	public OutlineRenderer outlineRenderer;
 
-	Table infoPanel; // shows detailed information about a clicked permanent
-
 	Table targetingInfoPanel; // shows info about the effect of the current targeting (user prompt)
 
 	/**
@@ -105,12 +99,13 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		IDLE, USER_PROMPT;
 	}
 
-	private PromptContext promptContext = PromptContext.IDLE;
+	PromptContext promptContext = PromptContext.IDLE;
 
 	// SubModules
 	MiscUI miscUI;
 	HandUI handUI;
 	FieldUI fieldUI;
+	InfoPanelUI infoUI;
 
 	public MatchScreen(AppWithResources app, CardRepository cardRepo) {
 		super(app);
@@ -133,6 +128,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 		miscUI = new MiscUI(this);
 		handUI = new HandUI(this);
 		fieldUI = new FieldUI(this);
+		infoUI = new InfoPanelUI(this);
 
 		playerUIElements = constructor.initializeUIElementsRef();
 		constructor.constructUI(playerUIElements);
@@ -177,150 +173,6 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	final Color DARK_BLUE = RenderUtil.rgb(51, 51, 204);
 	final Color DARK_RED = RenderUtil.rgb(128, 0, 0);
 	final Color FOREST = Color.FOREST;
-
-	void makeClickShowInfoPanel(PermanentGraphic graphic) {
-		graphic.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				// logger.debug("{} was clicked", graphic.getPermanent().getName());
-				if (promptContext == PromptContext.IDLE) {
-					createAndDisplayInfoPanel(graphic);
-				}
-			}
-		});
-	}
-
-	void makeClickShowInfoPanel(HandCardGraphic graphic) {
-		graphic.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				if (promptContext == PromptContext.IDLE) {
-					createAndDisplayInfoPanel(graphic);
-				}
-			}
-		});
-	}
-
-	private void createAndDisplayInfoPanel(PermanentGraphic graphic) {
-		removeInfoPanel();
-		this.infoPanel = createInfoPanel(graphic.getPermanent());
-	}
-
-	private void createAndDisplayInfoPanel(HandCardGraphic graphic) {
-		removeInfoPanel();
-		this.infoPanel = createInfoPanel(graphic.getParentCard());
-	}
-
-	private Table createInfoPanel(Permanent<?> permanent) {
-		InfoTable infoTable = createInfoTableSkeleton(permanent.getParentCard());
-		infoTable.elements.origEffectsText.setText(permanent.generateOrigEffectsText());
-		return infoTable;
-	}
-
-	private Table createInfoPanel(CardInfo card) {
-		InfoTable infoTable = createInfoTableSkeleton(card);
-		infoTable.elements.origEffectsText.setText(card.generateOrigEffectsText());
-		return infoTable;
-	}
-
-	/**
-	 * Creates the shape of the info table and fills in all the areas in common (Selected target can be Card or Permanent)
-	 * 
-	 * @param card:
-	 *            If the selected target is a card, that card. If the selected targeted is a permanent, its parent card.
-	 * 
-	 * @return References to table elements so that callers can fill in the rest
-	 */
-	public InfoTable createInfoTableSkeleton(final CardInfo card) {
-
-		int infoPanelWidth = 300;
-
-		InfoTable rootTemp = new InfoTable();
-
-		rootTemp.setFillParent(true);
-		stage.addActor(rootTemp);
-
-		Table info = new Table();
-		info.setBackground(RenderUtil.getSolidBG(Color.DARK_GRAY));
-
-		LabelStyle largishStyle = UIUtil.createLabelStyle(fonts.largishFont());
-		Label nameText = new Label(card.getName(), largishStyle);
-
-		Table statsRow = new Table();
-		statsRow.defaults().uniform().fill().spaceRight(10);
-		statsRow.left();
-
-		int statLabelWidth = 15;
-
-		Label costText = handUI.parent.createColoredLabel(String.valueOf(card.getCost()), largishStyle, FOREST, Align.center);
-
-		// generateOrigEffectsText()
-
-		statsRow.defaults().width(statLabelWidth);
-
-		statsRow.add(costText);
-
-		if (card instanceof FollowerCard) {
-			FollowerCard cardFol = (FollowerCard) card;
-			Label atkText = handUI.parent.createColoredLabel(String.valueOf(cardFol.getAtk()), largishStyle, DARK_BLUE, Align.center);
-			Label defText = handUI.parent.createColoredLabel(String.valueOf(cardFol.getDef()), largishStyle, DARK_RED, Align.center);
-
-			statsRow.add(atkText);
-			statsRow.add(defText);
-		}
-
-		statsRow.row();
-
-		info.defaults().space(5);
-		info.pad(10).left();
-		info.defaults().left();
-
-		info.add(nameText).row();
-		info.add(statsRow).row();
-
-		Label cardText = handUI.parent.createColoredLabel("", largishStyle, Color.BLACK, Align.left);
-
-		cardText.setWrap(true);
-		info.add(cardText).expandX().fillX();
-
-		Table effectsPanel = new Table(); // technically only for applied effects
-		effectsPanel.setBackground(RenderUtil.getSolidBG(Color.DARK_GRAY));
-
-		Label sampleEffectText = handUI.parent.createColoredLabel("{Applied effects show up here}", largishStyle, Color.BLACK, Align.left);
-
-		effectsPanel.pad(10).left();
-		effectsPanel.defaults().space(5).expandX().fillX();
-		effectsPanel.add(sampleEffectText).row();
-
-		rootTemp.top().left().pad(10);
-		rootTemp.defaults().space(10).left().uniformX().fillX();
-		rootTemp.add(info).top().width(infoPanelWidth).left().row();
-		rootTemp.add(effectsPanel);
-
-		rootTemp.elements.origEffectsText = cardText;
-		rootTemp.elements.appliedEffectsPanel = effectsPanel;
-
-		return rootTemp;
-	}
-
-	private class InfoTable extends Table {
-		public final InfoTableElements elements = new InfoTableElements();
-	}
-
-	private class InfoTableElements {
-		Label origEffectsText;
-		Table appliedEffectsPanel;
-	}
-
-	/**
-	 * OK if info panel is already null
-	 */
-	private void removeInfoPanel() {
-		if (infoPanel != null) {
-			infoPanel.remove();
-			infoPanel = null;
-		}
-	}
 
 	private void makeValidUnitsAttackDraggable() {
 
@@ -474,7 +326,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 		if (button == Input.Buttons.LEFT) {
-			removeInfoPanel();
+			infoUI.removeInfoPanel();
 		}
 
 		// A right click generally signals a cancel of the current operation, if allowed

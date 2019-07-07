@@ -102,7 +102,7 @@ class HandUI {
 
 		cardGraphic.add(cardBody).height(parent.cardGraphicHeight);
 
-		parent.makeClickShowInfoPanel(cardGraphic);
+		parent.infoUI.makeClickShowInfoPanel(parent, cardGraphic);
 		return cardGraphic;
 	}
 
