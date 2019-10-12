@@ -88,12 +88,12 @@ public class ListOfCards {
 	}
 
 	/**
-	 * Return a list of the cards in read-only format.
+	 * Return a read-only list of cards
 	 * 
 	 * @return
 	 */
 	List<CardInfo> getCardInfos() {
-		return new ArrayList<CardInfo>(cards);
+		return Collections.unmodifiableList(cards);
 	}
 
 	public boolean contains(Card card) {

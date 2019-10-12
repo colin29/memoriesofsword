@@ -252,7 +252,7 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 		simple.notifyFieldModified(playerNumber);
 	}
 
-	public boolean isOnMyField(Permanent permanent) {
+	public boolean isOnMyField(Permanent<?> permanent) {
 		return field.contains(permanent);
 	}
 
@@ -312,7 +312,7 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 
 	public List<Follower> getAllFollowers() {
 		List<Follower> followers = new ArrayList<Follower>();
-		for (Permanent p : field) {
+		for (Permanent<?> p : field) {
 			if (p instanceof Follower) {
 				followers.add((Follower) p);
 			}

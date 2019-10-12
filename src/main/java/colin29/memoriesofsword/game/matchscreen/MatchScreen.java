@@ -49,7 +49,7 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	final Match match;
 
-	// SubModules
+	// Sub-modules
 	MiscUI miscUI;
 	HandUI handUI;
 	FieldUI fieldUI;
@@ -73,13 +73,13 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 		// Set up UI modules
 		UIConstructor constructor = new UIConstructor(this, app);
+		playerUIElements = constructor.getUIElements();
 
 		miscUI = new MiscUI(this);
 		handUI = new HandUI(this);
 		fieldUI = new FieldUI(this);
 		infoUI = new InfoPanelUI(this);
 
-		playerUIElements = constructor.initializeUIElementsRef();
 		constructor.constructUI(playerUIElements);
 
 		match.addSimpleStateListener(this);

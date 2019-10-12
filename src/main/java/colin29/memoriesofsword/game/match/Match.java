@@ -45,7 +45,7 @@ public class Match {
 	private final Player player1;
 	private final Player player2;
 
-	private Deck deck1; // the original decks brought into the match. These are probably a copy and should not be modified anyways.
+	private Deck deck1; // the original decks brought into the match. These should not be modified.
 	private Deck deck2;
 
 	private final CardRepository cardRepo;
@@ -112,9 +112,22 @@ public class Match {
 			if (deck1 == null || deck2 == null) {
 				throw new GameException("Decks must be specified before starting a match");
 			}
+			// Read from decks to generate players' initial libraries
+			for (Integer id : deck1.getCardCounts().keySet()) {
+				var cardListing = cardRepo.getCardById(id);
+				var count = deck1.getCardCounts().get(id);
+				for (int i = 0; i < count; i++) {
+					player1.deck.addCardToBottom(createCard(cardListing, player1));
+				}
+			}
+			for (Integer id : deck2.getCardCounts().keySet()) {
+				var cardListing = cardRepo.getCardById(id);
+				var count = deck2.getCardCounts().get(id);
+				for (int i = 0; i < count; i++) {
+					player2.deck.addCardToBottom(createCard(cardListing, player2));
+				}
+			}
 		}
-
-		// TODO: Actually read from decks to generate players' initial libraries
 
 		player1.drawCardsFromDeck(3);
 		player2.drawCardsFromDeck(4);
@@ -133,21 +146,21 @@ public class Match {
 	}
 
 	private void addTestCardsToDeck(Player player) {
-		ArrayList<CardListing> testListings = new ArrayList<CardListing>();
+		var testCards = new ArrayList<CardListing>();
 
-		testListings.add(cardRepo.getCardById(9000));
-		testListings.add(cardRepo.getCardById(9001));
-		testListings.add(cardRepo.getCardById(9002));
-		testListings.add(cardRepo.getCardById(9003));
-		testListings.add(cardRepo.getCardById(9004));
-		testListings.add(cardRepo.getCardById(9005));
-		testListings.add(cardRepo.getCardById(9006));
+		testCards.add(cardRepo.getCardById(9000));
+		testCards.add(cardRepo.getCardById(9001));
+		testCards.add(cardRepo.getCardById(9002));
+		testCards.add(cardRepo.getCardById(9003));
+		testCards.add(cardRepo.getCardById(9004));
+		testCards.add(cardRepo.getCardById(9005));
+		testCards.add(cardRepo.getCardById(9006));
 
 		// Let's make a deck of 10 cards, alternating between these
 
 		for (int n = 0; n < 10; n++) {
-			int index = n % testListings.size();
-			CardListing listing = testListings.get(index);
+			int index = n % testCards.size();
+			CardListing listing = testCards.get(index);
 			player.deck.addCardToBottom((createCard(listing, player)));
 		}
 	}
@@ -203,9 +216,8 @@ public class Match {
 	 */
 	boolean activateFanfareEffects(Follower newFollower, Runnable ifAsyncOnCompleted) {
 
-		// Get all all triggered fanfare effects
-		List<Effect> triggeredEffects = new ArrayList<Effect>();
-
+		// Get all triggered fanfare effects
+		var triggeredEffects = new ArrayList<Effect>();
 		for (FollowerCardEffect cardEffect : newFollower.getCardEffects()) {
 			if (cardEffect.triggerType == FollowerCardEffect.TriggerType.FANFARE) {
 				for (Effect effect : cardEffect.getTriggeredEffects()) {
@@ -230,7 +242,7 @@ public class Match {
 	boolean activateOnCastEffects(SpellCard spellCard, Runnable ifAsyncOnCompleted) {
 
 		// Get all all triggered fanfare effects
-		List<Effect> triggeredEffects = new ArrayList<Effect>();
+		var triggeredEffects = new ArrayList<Effect>();
 
 		for (SpellCardEffect cardEffect : spellCard.getEffects()) {
 			if (cardEffect.triggerType == SpellCardEffect.TriggerType.ON_CAST) {
@@ -311,28 +323,24 @@ public class Match {
 
 			Effect effect = effectsLeftThatNeedUserSelection.remove(0);
 
-			if (effect instanceof EffectOnFollower) {
-				EffectOnFollower e = (EffectOnFollower) effect;
+			Predicate<PermanentOrPlayer> predicate = effect::isValidTarget;
 
-				Predicate<PermanentOrPlayer> predicate = e::isValidTarget;
+			if (effect instanceof EffectOnFollower) {
+				var e = (EffectOnFollower) effect;
 
 				userUI.promptUserForFollowerSelect(e, predicate, (Follower follower) -> {
 					e.SELECTED_FOLLOWER = follower;
 					ifSelectionStillRequiredPromptUserElseContinue(onCompleted);
 				}, onCancel);
 			} else if (effect instanceof EffectOnPlayer) {
-				EffectOnPlayer e = (EffectOnPlayer) effect;
-
-				Predicate<PermanentOrPlayer> predicate = e::isValidTarget;
+				var e = (EffectOnPlayer) effect;
 
 				userUI.promptUserForPlayerSelect(e, predicate, (Player player) -> {
 					e.SELECTED_PLAYER = player;
 					ifSelectionStillRequiredPromptUserElseContinue(onCompleted);
 				}, onCancel);
 			} else if (effect instanceof EffectOnFollowerOrPlayer) {
-				EffectOnFollowerOrPlayer e = (EffectOnFollowerOrPlayer) effect;
-
-				Predicate<PermanentOrPlayer> predicate = e::isValidTarget;
+				var e = (EffectOnFollowerOrPlayer) effect;
 
 				userUI.promptUserForFollowerOrPlayerSelect(e, predicate, (FollowerOrPlayer target) -> {
 					e.SELECTED_TARGET = target;

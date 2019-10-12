@@ -40,15 +40,21 @@ class UIConstructor {
 
 		fonts = app.getFonts();
 		skin = app.getSkin();
+
+		initializeUIElementsRef();
 	}
 
 	private int sidePanelWidth = 150;
+	private PlayerPartitionUIElements[] elements;
 
-	PlayerPartitionUIElements[] initializeUIElementsRef() {
-		PlayerPartitionUIElements[] elements = new PlayerPartitionUIElements[2];
+	private void initializeUIElementsRef() {
+		elements = new PlayerPartitionUIElements[2];
 		for (int playerNumber = 1; playerNumber <= 2; playerNumber++) {
 			elements[playerNumber - 1] = new PlayerPartitionUIElements(parent.getOutlineRenderer(), playerNumber);
 		}
+	}
+
+	PlayerPartitionUIElements[] getUIElements() {
 		return elements;
 	}
 
