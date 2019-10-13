@@ -17,4 +17,8 @@ public class InvalidArgumentException extends GameException {
 		super(msg);
 	}
 
+	public InvalidArgumentException(String msg, Throwable cause) {
+		super(msg, cause);
+	}
+
 }

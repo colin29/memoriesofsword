@@ -165,7 +165,7 @@ public class Match {
 		}
 	}
 
-	private Card createCard(CardListing listing, Player owner) {
+	Card createCard(CardListing listing, Player owner) {
 		switch (listing.getType()) {
 		case AMULET:
 			return new AmuletCard(listing, owner, this);

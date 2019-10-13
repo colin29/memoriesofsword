@@ -10,6 +10,10 @@ public class GameException extends RuntimeException {
 		super(string);
 	}
 
+	public GameException(String string, Throwable cause) {
+		super(string, cause);
+	}
+
 	/**
 	 * 
 	 */

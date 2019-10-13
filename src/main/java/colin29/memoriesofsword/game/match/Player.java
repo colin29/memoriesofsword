@@ -6,8 +6,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import colin29.memoriesofsword.game.CardListing;
 import colin29.memoriesofsword.game.match.cardeffect.FollowerOrPlayer;
 import colin29.memoriesofsword.game.matchscreen.PermanentOrPlayer;
+import colin29.memoriesofsword.util.exceptions.InvalidArgumentException;
 
 /**
  * A player in the context of a match. Atm is mostly a data class for Match: contains all the match state information that can be divided off to a
@@ -93,18 +95,12 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 			Permanent<?> permanent;
 			boolean asyncCallMade = false;
 
-			if (card instanceof FollowerCard) {
-				permanent = new Follower((FollowerCard) card);
+			permanent = makePermanent(card);
 
+			if (card instanceof FollowerCard) {
 				asyncCallMade = match.activateFanfareEffects((Follower) permanent, () -> {
 					finishResolvingPermanentCard(card, permanent, ignoreCost);
 				});
-
-			} else if (card instanceof AmuletCard) {
-				permanent = new Amulet((AmuletCard) card);
-				match.activateFanfareEffects((Amulet) permanent);
-			} else {
-				throw new AssertionError("Unknown Permanent type");
 			}
 
 			// If an async call was made, we delay actually playing the card until all targeting is finished (or user cancels the targeting -->
@@ -180,6 +176,61 @@ public class Player implements Attackable, FollowerOrPlayer, PermanentOrPlayer {
 
 		logger.debug("Card '{}' was played " + (ignoreCost ? "(ignoring cost)" : ""), card.getName());
 
+	}
+
+	private Permanent<?> makePermanent(Card card) {
+		Permanent<?> permanent;
+		if (card instanceof FollowerCard) {
+			permanent = new Follower((FollowerCard) card);
+		} else if (card instanceof AmuletCard) {
+			permanent = new Amulet((AmuletCard) card);
+			match.activateFanfareEffects((Amulet) permanent);
+		} else {
+			throw new InvalidArgumentException(card.getClass().getName() + " is not a recognized permanent card type");
+		}
+		return permanent;
+	}
+
+	/**
+	 * Summons a permanent described by the cardListing. Generates the parent card(s) automatically.
+	 */
+	public Permanent<?> summonPermanent(CardListing cardListing) {
+		Card card = match.createCard(cardListing, this);
+		return summonPermanent(card);
+	}
+
+	/**
+	 * Summons multiple copies described by the cardListing. Generates the parent card(s) automatically.
+	 */
+	public void summonPermanents(CardListing cardListing, int count) {
+		for (int i = 0; i < count; i++) {
+			Card card = match.createCard(cardListing, this);
+			summonPermanent(card);
+		}
+	}
+
+	/**
+	 * Note: You cannot summon multiple permanents with the same Card, use summonPermanent(CardListing) instead.
+	 * 
+	 * @param parentCard
+	 */
+	public Permanent<?> summonPermanent(Card parentCard) {
+		Permanent<?> permanent;
+		try {
+			permanent = makePermanent(parentCard);
+		} catch (InvalidArgumentException e) {
+			throw new InvalidArgumentException("Tried to summon permanent but parent card wasn't a permanent:", e);
+		}
+
+		field.add(permanent);
+		simple.notifyFieldModified(playerNumber);
+
+		logger.debug("Permanent '{}' was summoned ", parentCard.getName());
+
+		// no fanfare effects, EtB effects like in MtG do not exist atm.
+		match.checkForFollowerETBEffects(permanent);
+
+		return permanent;
 	}
 
 	void onTurnStart() {

@@ -35,9 +35,16 @@ public abstract class Card implements EffectSource, CardInfo {
 
 	private Player owner;
 
+	/**
+	 * Technically is allowed to be null, if the card was say, created manually
+	 */
+	private final CardListing cardListing;
+
 	public Card(CardListing listing, Player owner, Match match) {
 		name = listing.getName();
 		cost = listing.getCost();
+
+		cardListing = listing;
 
 		this.owner = owner;
 		this.match = match;
@@ -114,4 +121,7 @@ public abstract class Card implements EffectSource, CardInfo {
 
 	public abstract boolean isPermanent();
 
+	public CardListing getCardListing() {
+		return cardListing;
+	}
 }

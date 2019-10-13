@@ -56,6 +56,18 @@ public class CardListing {
 		this.type = type;
 	}
 
+	public static CardListing makeFollowerCardListing(String name, int cost, int atk, int def, int id) {
+		return new CardListing(name, cost, atk, def, id, Type.FOLLOWER);
+	}
+
+	public static CardListing makeAmuletCardListing(String name, int cost, int id) {
+		return new CardListing(name, cost, 0, 0, id, Type.AMULET);
+	}
+
+	public static CardListing makeSpellCardListing(String name, int cost, int id) {
+		return new CardListing(name, cost, 0, 0, id, Type.SPELL);
+	}
+
 	public static CardListing makeFollowerTempCardListing(String name, int cost, int atk, int def) {
 		return new CardListing(name, cost, atk, def, generateNextTempId(), Type.FOLLOWER);
 	}
