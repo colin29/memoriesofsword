@@ -6,8 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -21,7 +19,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Payload;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Source;
 import com.badlogic.gdx.scenes.scene2d.utils.DragAndDrop.Target;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 
 import colin29.memoriesofsword.game.match.Amulet;
@@ -92,7 +89,8 @@ public class FieldUI {
 
 		// Set the background card art
 
-		setPermanentGraphicBackGround(permanentGraphic);
+		var card = permanent.getParentCard();
+		permanentGraphic.setPermanentGraphicBackGround(parent.getCardImage(card.getName(), card.getListingId()));
 		permanentGraphic.bottom().defaults().space(10);
 
 		if (permanent instanceof Follower) {
@@ -126,12 +124,6 @@ public class FieldUI {
 		permanentGraphic.setTouchable(Touchable.enabled);
 		parent.infoUI.makeClickShowInfoPanel(permanentGraphic);
 		return permanentGraphic;
-	}
-
-	private void setPermanentGraphicBackGround(PermanentGraphic permanentGraphic) {
-		Texture img = parent.assets.get("img/image01.jpg", Texture.class);
-		TextureRegionDrawable imgDrawable = new TextureRegionDrawable(new TextureRegion(img));
-		permanentGraphic.setBackground(imgDrawable);
 	}
 
 	void makeValidUnitsAttackDraggable() {

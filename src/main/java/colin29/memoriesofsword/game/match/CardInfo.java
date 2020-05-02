@@ -10,4 +10,6 @@ public interface CardInfo {
 
 	String generateOrigEffectsText();
 
+	int getListingId();
+
 }

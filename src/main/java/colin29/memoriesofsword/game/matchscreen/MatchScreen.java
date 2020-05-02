@@ -9,6 +9,7 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -262,6 +263,33 @@ public class MatchScreen extends BaseScreen implements InputProcessor, SimpleMat
 
 	OutlineRenderer getOutlineRenderer() {
 		return outlineRenderer;
+	}
+
+	/**
+	 * Defaults to a default img if the card's image could not be found
+	 * 
+	 * @return
+	 */
+	Texture getCardImage(String cardName, int id) {
+		Texture cardImg;
+
+		cardImg = getTextureIfExists("img/" + cardName + ".jpg");
+		if (cardImg == null)
+			cardImg = getTextureIfExists("img/" + cardName + ".png");
+		if (cardImg == null)
+			cardImg = assets.get("img/default.jpg", Texture.class);
+
+		return cardImg;
+	}
+
+	Texture getTextureIfExists(String handle) {
+		handle = handle.toLowerCase();
+		System.out.println("handle: " + handle);
+
+		if (assets.isLoaded(handle, Texture.class)) {
+			return assets.get(handle, Texture.class);
+		}
+		return null;
 	}
 
 }

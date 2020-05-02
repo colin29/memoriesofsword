@@ -29,6 +29,8 @@ public class MyFonts {
 	private final String MS_GOTHIC_path = "fonts/MS_Gothic.ttf";
 	private final String OPEN_SANS_path = "fonts/OpenSans.ttf";
 	private final String ALTE_HAAS_path = "fonts/alte-haas-grotesk.bold.ttf";
+	private final String BREATH_FIRE_path = "fonts/BreatheFire-65pg.ttf";
+	private final String TEMPUS_SANS_path = "fonts/TEMPSITC.ttf";
 
 	final String ASSETS_PATH = App.ASSETS_PATH;
 
@@ -46,9 +48,9 @@ public class MyFonts {
 		font_goth12 = generateFont("fonts/MS_Gothic.ttf", Color.WHITE, 12);
 		font_goth24 = generateFont("fonts/MS_Gothic.ttf", Color.WHITE, 24);
 
-		smallFont = generateFont(OPEN_SANS_path, Color.WHITE, 12);
-		moderateFont = generateFont(OPEN_SANS_path, Color.WHITE, 15);
-		largishFont = generateFont(OPEN_SANS_path, Color.WHITE, 18);
+		smallFont = generateFont(TEMPUS_SANS_path, Color.WHITE, 12);
+		moderateFont = generateFont(TEMPUS_SANS_path, Color.WHITE, 15);
+		largishFont = generateFont(TEMPUS_SANS_path, Color.WHITE, 18);
 
 		largeThickFont = generateFont(ALTE_HAAS_path, Color.WHITE, 25);
 

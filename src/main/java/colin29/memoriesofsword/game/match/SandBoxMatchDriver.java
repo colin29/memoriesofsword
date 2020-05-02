@@ -44,6 +44,8 @@ public class SandBoxMatchDriver {
 
 		match.nextTurn();
 		match.nextTurn();
+
+		matchScreen.printAllLoadedAssets();
 	}
 
 }

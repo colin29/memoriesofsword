@@ -68,7 +68,7 @@ public class App extends Game implements AppWithResources {
 		File[] images = dir.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String filename) {
-				return filename.endsWith(".jpg");
+				return filename.endsWith(".jpg") || filename.endsWith(".png");
 			}
 		});
 

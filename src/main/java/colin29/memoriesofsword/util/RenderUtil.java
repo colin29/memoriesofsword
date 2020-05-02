@@ -40,6 +40,9 @@ public class RenderUtil {
 		label.setStyle(style);
 	}
 
+	/**
+	 * The returned drawable can be used to set a background for a widget, such as a table
+	 */
 	public static Drawable getSolidBG(Color color) {
 		Pixmap labelColor = new Pixmap(1, 1, Pixmap.Format.RGB888);
 		labelColor.setColor(color);

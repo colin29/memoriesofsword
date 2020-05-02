@@ -52,7 +52,7 @@ class HandUI {
 		LabelStyle largishStyle = UIUtil.createLabelStyle(fonts.smallFont());
 
 		// Set the background card art
-		Texture img = parent.assets.get("img/image01.jpg", Texture.class);
+		Texture img = parent.getCardImage(card.getName(), card.getListingId());
 		TextureRegionDrawable imgDrawable = new TextureRegionDrawable(new TextureRegion(img));
 		cardBody.setBackground(imgDrawable);
 

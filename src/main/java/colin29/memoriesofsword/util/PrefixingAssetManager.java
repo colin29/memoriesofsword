@@ -35,4 +35,15 @@ public class PrefixingAssetManager extends AssetManager {
 		}
 
 	}
+
+	@Override
+	public synchronized boolean isLoaded(String fileName) {
+		return super.isLoaded(prefixPath + fileName);
+	}
+
+	@Override
+	public synchronized boolean isLoaded(String fileName, Class type) {
+		return super.isLoaded(prefixPath + fileName, type);
+	}
+
 }

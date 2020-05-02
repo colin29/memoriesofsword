@@ -81,4 +81,10 @@ public abstract class BaseScreen implements Screen {
 		stage.addActor(root);
 		root.top().left();
 	}
+
+	public void printAllLoadedAssets() {
+		for (String asset : assets.getAssetNames()) {
+			System.out.println(asset);
+		}
+	}
 }

@@ -74,6 +74,16 @@ public abstract class Card implements EffectSource, CardInfo {
 	}
 
 	@Override
+	public int getListingId() {
+		if (cardListing == null) {
+			return -1;
+		} else {
+			return cardListing.getId();
+		}
+
+	}
+
+	@Override
 	public abstract String generateOrigEffectsText();
 
 	/**
